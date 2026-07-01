@@ -1,0 +1,50 @@
+# Legal Affairs Project
+
+Source: `Legal Affairs Request Management Platform.pdf` (Developer Onboarding Guide, Intern Edition, v1.0).
+
+- Product: university Legal Affairs Request Management Platform for centralized intake, classification, assignment, review, tracking, reporting, and archiving of legal requests.
+- Objective: replace scattered email/shared-doc/manual tracking with a controlled workflow that improves workload visibility, response time, consistency, searchable institutional knowledge, and legal review traceability.
+- Core domain invariant: AI is support only. Final review, approval, legal judgment, document changes, and institutional decisions remain with Legal Affairs humans.
+- Build scope context: current app is a Version 1 frontend-only implementation based on the PDF's V1 requirements. AI must not do backend at all: no backend/API/server/database/auth-storage implementation. Backend is handled by another teammate.
+- Version 1 focus:
+  - legal request intake form
+  - request categorization
+  - document upload
+  - request assignment
+  - status tracking
+  - reviewer comments
+  - basic AI document summary
+  - contract review checklist
+  - dashboard for request volume/pending items
+  - audit log and role-based access control
+- Legal categories:
+  - `LEG-A` Legal Advice / Opinion: HR/legal questions, policy interpretation, payment clarification; assign reviewer, draft/approve opinion, archive decision.
+  - `LEG-B` Contract Review: contracts, MoUs, NDAs, service/procurement/vendor/sponsorship agreements; extract clauses, find missing terms/risks, suggest revisions, track negotiation.
+  - `LEG-C` Research Agreements: sponsored research, data sharing, collaborations, AI research partnerships; check IP, confidentiality, publication rights, data usage, funding, liability, ethics clauses.
+  - `LEG-D` Student Agreements: internship/exchange/training/payment/student commitments; review obligations, responsibilities, insurance, liability, payments, approvals.
+  - `LEG-E` Committee / Investigation / Disciplinary Matters: complaints, appeals, governance/disciplinary cases; restricted access, evidence tracking, confidential records.
+  - `LEG-F` Administrative Legal Work: POA, visa-related documents, letters, certificates, board/payment documents; confirm authority, prepare legal note, route approval, archive.
+  - `LEG-G` Legal Operations / Reporting: dashboards, workload summaries, templates, knowledge base; reports, KPIs, repository maintenance.
+- Data sources/integrations:
+  - V1 can be manual intake/upload.
+  - Future integrations: Legal Affairs email/intake, document repository, legal knowledge base, HR, procurement, research office, student affairs, finance.
+  - Sensitive documents require access control; all important actions should be audit logged; AI drafts clearly marked.
+- Main modules/features:
+  - Legal Request Management: create request, upload docs, select type, requester/department/priority/deadline/description, assign reviewer, status/history, final response/documents.
+  - Document Intake + Classification: contracts, MoUs, NDAs, research/student/HR/procurement/legal/committee/payment docs; AI may extract parties, dates, governing law, obligations, payment/confidentiality/IP/termination clauses, missing info, risks.
+  - AI Legal Review Engine: suggest category, extract clauses, identify missing/unusual clauses, compare approved templates, highlight high-risk terms, summarize obligations, draft review note/questions, recommend previous opinions/cases.
+  - Contract/Agreement Review: metadata, checklist comparison, risky language, reviewer comments, negotiation versions, final approved version, links to department/project/partner/requester.
+  - Legal Opinion + Knowledge Base: store final opinions, tag by topic/department/risk/category, search/link similar cases, maintain templates/standard clauses, AI-assisted retrieval.
+  - Workflow/Approval: configurable by request type; examples include Legal Affairs + department confirmation, Research Office/PI/Finance, Student Affairs, HR, Procurement/Finance.
+  - Dashboard/Reporting: total/category/department/pending/overdue/turnaround/high-risk/contract/research/student/waiting/closed metrics; weekly/monthly/aging/department/risk/turnaround reports.
+  - Notifications/Communication: received, assigned, more-info, completed, approval required, overdue, closed, revision requested; communication should stay linked to request record.
+  - Audit + Access Control: RBAC, restricted sensitive cases, logs for view/edit/download/approve/close, document version history, separate AI draft output from approved legal output.
+- Roles:
+  - Requester: submit requests, upload documents, respond to clarification, view own requests.
+  - Legal Reviewer: review docs, comment, classify risk, prepare response, request info.
+  - Legal Manager: assign reviewers, approve responses, monitor dashboard, close/escalate.
+  - Department Approver: review department-specific content, approve/comment.
+  - Admin User: manage users, roles, categories, templates, config.
+  - AI Assistant: draft classification/extraction/summaries/risk suggestions/similar-case retrieval only.
+- Main workflow: submission → classification/assignment → AI extraction + manual legal review/comments/info requests → approval/response → closure/archive/knowledge-base capture.
+- Future enhancements: email inbox integration, university system integrations, advanced AI clause comparison, template recommendations, automated deadlines, workflow engine, digital signatures, analytics, legal knowledge graph, multilingual document support.
