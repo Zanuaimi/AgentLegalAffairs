@@ -18,7 +18,6 @@ export const departments = [
   "Legal Affairs",
   "Academic Affairs",
   "IT",
-  "Other",
 ];
 
 export const legalCategories = [
@@ -50,6 +49,8 @@ export const initialUsers = [
   {
     id: "USR-001",
     name: "Aisha Mohamed",
+    username: "aisha.mohamed",
+    prefix: "Ms.",
     email: "aisha.mohamed@university.edu",
     role: "Requester",
     department: "Procurement",
@@ -58,6 +59,8 @@ export const initialUsers = [
   {
     id: "USR-002",
     name: "Khalid Ali",
+    username: "khalid.ali",
+    prefix: "Mr.",
     email: "khalid.ali@university.edu",
     role: "Requester",
     department: "HR",
@@ -65,7 +68,9 @@ export const initialUsers = [
   },
   {
     id: "USR-003",
-    name: "Dr. Sara Nasser",
+    name: "Sara Nasser",
+    username: "sara.nasser",
+    prefix: "Dr.",
     email: "sara.nasser@university.edu",
     role: "Requester",
     department: "Research Office",
@@ -74,6 +79,8 @@ export const initialUsers = [
   {
     id: "USR-004",
     name: "Omar Hassan",
+    username: "omar.hassan",
+    prefix: "Mr.",
     email: "omar.hassan@university.edu",
     role: "Legal Reviewer",
     department: "Legal Affairs",
@@ -82,6 +89,8 @@ export const initialUsers = [
   {
     id: "USR-005",
     name: "Fatima Salem",
+    username: "fatima.salem",
+    prefix: "Ms.",
     email: "fatima.salem@university.edu",
     role: "Legal Manager",
     department: "Legal Affairs",
@@ -90,6 +99,8 @@ export const initialUsers = [
   {
     id: "USR-006",
     name: "Mariam Ahmed",
+    username: "mariam.ahmed",
+    prefix: "Ms.",
     email: "mariam.ahmed@university.edu",
     role: "Department Approver",
     department: "Finance",
@@ -98,6 +109,8 @@ export const initialUsers = [
   {
     id: "USR-007",
     name: "Admin User",
+    username: "admin",
+    prefix: "None",
     email: "admin@university.edu",
     role: "Admin User",
     department: "IT",
@@ -475,6 +488,7 @@ export const initialRequests = [
     categoryName: "Contract Review",
     department: "Procurement",
     requester: "Demo User",
+    requesterUsername: "demo.user",
     assignedReviewer: "Omar Hassan",
     priority: "High",
     riskLevel: "Medium",
@@ -487,8 +501,14 @@ export const initialRequests = [
     aiSummary:
       "AI draft: This appears to be a vendor service agreement. Key review areas include payment terms, termination, liability, confidentiality, and signature authority.",
     reviewerComments: [
-      "Please confirm whether Finance has reviewed the payment schedule.",
-      "Liability clause needs additional review before approval.",
+      {
+        reviewerName: "Omar Hassan",
+        text: "Please confirm whether Finance has reviewed the payment schedule.",
+      },
+      {
+        reviewerName: "Omar Hassan",
+        text: "Liability clause needs additional review before approval.",
+      },
     ],
   },
   {
@@ -498,7 +518,8 @@ export const initialRequests = [
     categoryName: "Legal Advice / Opinion",
     department: "HR",
     requester: "Demo User",
-    assignedReviewer: "Fatima Salem",
+    requesterUsername: "demo.user",
+    assignedReviewer: "Omar Hassan",
     priority: "Medium",
     riskLevel: "Low",
     status: "Waiting for More Information",
@@ -510,7 +531,10 @@ export const initialRequests = [
     aiSummary:
       "AI draft: This request asks for legal interpretation of an HR policy. More background information may be needed before final advice is prepared.",
     reviewerComments: [
-      "Requester should provide the current approved policy for comparison.",
+      {
+        reviewerName: "Omar Hassan",
+        text: "Requester should provide the current approved policy for comparison.",
+      },
     ],
   },
   {
@@ -519,7 +543,8 @@ export const initialRequests = [
     categoryCode: "LEG-C",
     categoryName: "Research Agreements",
     department: "Research Office",
-    requester: "Dr. Sara Nasser",
+    requester: "Sara Nasser",
+    requesterUsername: "sara.nasser",
     assignedReviewer: "Omar Hassan",
     priority: "Urgent",
     riskLevel: "High",

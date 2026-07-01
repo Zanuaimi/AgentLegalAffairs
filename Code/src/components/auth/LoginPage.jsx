@@ -1,4 +1,5 @@
 import { useState } from "react";
+import kuLogo from "../../../Assets/KULogo.png";
 
 function LoginPage({ onLogin, onShowRegister, theme, onToggleTheme }) {
   // State stores what the user types into the login form.
@@ -43,7 +44,12 @@ function LoginPage({ onLogin, onShowRegister, theme, onToggleTheme }) {
         </div>
 
         <div className="mb-8 text-center">
-          <p className="text-sm font-semibold text-blue-700">
+          <img
+            className="mx-auto h-20 w-40 rounded-2xl border border-slate-200 bg-white object-contain p-4 shadow-sm"
+            src={kuLogo}
+            alt="Khalifa University logo"
+          />
+          <p className="text-sm font-semibold text-blue-700 mt-4">
             Legal Affairs Platform
           </p>
           <h1 className="text-3xl font-bold text-slate-900 mt-2">Login</h1>

@@ -57,7 +57,7 @@ function ContractChecklist({ document, canManageReview }) {
 
       {!canManageReview && (
         <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
-          Requester view: you can see review progress, but only Legal Affairs
+          View-only: you can see review progress, but only the Legal Reviewer
           can change checklist items.
         </div>
       )}
@@ -71,13 +71,17 @@ function ContractChecklist({ document, canManageReview }) {
               key={`${item.criteria}-${item.page}`}
               className={`block rounded-xl border p-3 ${
                 isChecked
-                  ? "border-green-200 bg-green-50"
-                  : "border-slate-200 bg-slate-50"
-              } ${canManageReview ? "cursor-pointer hover:bg-blue-50" : "cursor-not-allowed"}`}
+                  ? "border-green-200 bg-green-50 dark:border-green-700 dark:bg-green-950/40"
+                  : "border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800"
+              } ${
+                canManageReview
+                  ? "cursor-pointer hover:bg-blue-50 dark:hover:bg-slate-700"
+                  : "cursor-not-allowed"
+              }`}
             >
               <div className="flex items-start gap-3">
                 <input
-                  className="mt-1"
+                  className="mt-1 accent-blue-700 disabled:opacity-80"
                   type="checkbox"
                   checked={isChecked}
                   disabled={!canManageReview}
@@ -86,21 +90,25 @@ function ContractChecklist({ document, canManageReview }) {
 
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-semibold text-slate-800 break-words">
+                    <p className="font-semibold text-slate-800 dark:text-slate-100 break-words">
                       {item.criteria}
                     </p>
-                    {item.checked && (
-                      <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-bold text-green-700">
-                        AI selected
-                      </span>
-                    )}
+                    <span
+                      className={`rounded-full px-2 py-1 text-xs font-bold ${
+                        item.checked
+                          ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200"
+                          : "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200"
+                      }`}
+                    >
+                      {item.checked ? "AI selected" : "Needs Review"}
+                    </span>
                   </div>
 
-                  <p className="mt-2 text-sm text-slate-600 break-words">
+                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 break-words">
                     {item.note}
                   </p>
 
-                  <span className="mt-3 inline-flex rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-700">
+                  <span className="mt-3 inline-flex rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-900 dark:text-blue-200">
                     Page {item.page}
                   </span>
                 </div>
@@ -124,8 +132,8 @@ The AI draft can mark criteria it found in the PDF. That gives reviewers a start
 2. Why can legal reviewers change it?
 AI is not final. Legal Affairs reviewers need to confirm or correct the checklist manually.
 
-3. Why are requesters blocked from editing it?
-Requesters should see the review status, but they should not manage Legal Affairs review work.
+3. Why are some roles blocked from editing it?
+Requesters, Legal Managers, and Department Approvers should see the review status, but only Legal Reviewer manages checklist review work.
 
 4. What does disabled mean on a checkbox?
 disabled makes a form control visible but not editable.

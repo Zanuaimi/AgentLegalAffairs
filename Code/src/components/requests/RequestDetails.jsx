@@ -1,12 +1,104 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AiSummaryBox from "../review/AiSummaryBox";
 import ContractChecklist from "../review/ContractChecklist";
 import ReviewerComments from "../review/ReviewerComments";
+import DepartmentApprovalPanel from "./DepartmentApprovalPanel";
+import ManagerActions from "./ManagerActions";
 import PdfReviewModal from "./PdfReviewModal";
 
-function RequestDetails({ request, canManageReview }) {
+function ReviewStatusCard({
+  request,
+  document,
+  canManageReview,
+  canManageManagerActions,
+  canManageDepartmentApproval,
+}) {
+  const checklistItems = document?.checklist || [];
+  const completedItems = checklistItems.filter((item) => item.checked).length;
+  const totalItems = checklistItems.length;
+  const departmentDecision = request.departmentDecision;
+  const managerDecision = request.managerDecision;
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-2xl p-5">
+      <h3 className="font-bold text-slate-900">Review Status</h3>
+      <p className="text-sm text-slate-500 mt-1">
+        This card summarizes who can act on this request and what is still
+        pending.
+      </p>
+
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+        <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
+          <p className="text-slate-500">Current Request Status</p>
+          <p className="mt-1 font-bold text-slate-900">{request.status}</p>
+        </div>
+        <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
+          <p className="text-slate-500">Legal Reviewer</p>
+          <p className="mt-1 font-bold text-slate-900">
+            {request.assignedReviewer || "Not assigned"}
+          </p>
+        </div>
+        <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
+          <p className="text-slate-500">AI Checklist Progress</p>
+          <p className="mt-1 font-bold text-slate-900">
+            {totalItems === 0
+              ? "No PDF checklist yet"
+              : `${completedItems} of ${totalItems} AI-selected`}
+          </p>
+        </div>
+        <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
+          <p className="text-slate-500">Department Review</p>
+          <p className="mt-1 font-bold text-slate-900">{departmentDecision}</p>
+        </div>
+        <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
+          <p className="text-slate-500">Legal Manager Review</p>
+          <p className="mt-1 font-bold text-slate-900">{managerDecision}</p>
+        </div>
+        <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
+          <p className="text-slate-500">Your Access on This Page</p>
+          <p className="mt-1 font-bold text-slate-900">
+            {canManageReview
+              ? "Legal Reviewer actions enabled"
+              : canManageManagerActions
+                ? "Legal Manager actions enabled"
+                : canManageDepartmentApproval
+                  ? "Department actions enabled"
+                  : "View-only"}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RequestDetails({
+  request,
+  canManageReview,
+  canManageManagerActions,
+  canManageDepartmentApproval,
+}) {
   // selectedDocument stores the PDF the user clicked, so we can show it in the popup.
   const [selectedDocument, setSelectedDocument] = useState(null);
+
+  // These two pieces of state make the status card update immediately in this frontend demo.
+  // BACKEND TODO: later, these values should come from the real request workflow API.
+  const [managerDecision, setManagerDecision] = useState(
+    "Pending Legal Manager Review",
+  );
+  const [departmentDecision, setDepartmentDecision] = useState(
+    "Pending Department Review",
+  );
+
+  useEffect(() => {
+    if (!request) return;
+
+    setManagerDecision(
+      request.managerDecision || "Pending Legal Manager Review",
+    );
+    setDepartmentDecision(
+      request.departmentDecision || "Pending Department Review",
+    );
+  }, [request]);
 
   if (!request) {
     return (
@@ -113,9 +205,28 @@ function RequestDetails({ request, canManageReview }) {
           </div>
 
           <AiSummaryBox summary={request.aiSummary} />
+          <ReviewStatusCard
+            request={{ ...request, managerDecision, departmentDecision }}
+            document={firstDocument}
+            canManageReview={canManageReview}
+            canManageManagerActions={canManageManagerActions}
+            canManageDepartmentApproval={canManageDepartmentApproval}
+          />
+          <ManagerActions
+            request={request}
+            canManageManagerActions={canManageManagerActions}
+            onManagerDecisionChange={setManagerDecision}
+          />
+          <DepartmentApprovalPanel
+            request={request}
+            canManageDepartmentApproval={canManageDepartmentApproval}
+            decision={departmentDecision}
+            onDecisionChange={setDepartmentDecision}
+          />
           <ReviewerComments
             initialComments={request.reviewerComments}
             canManageReview={canManageReview}
+            reviewerName={request.assignedReviewer}
           />
         </div>
 

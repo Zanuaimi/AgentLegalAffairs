@@ -2,8 +2,8 @@
 
 - Main flow is controlled by `Code/src/App.jsx`:
   - switches between login/register and main app screens
-  - tracks `currentPage`, `selectedRequestId`, `currentUser`, `demoRole`, `requests`, `theme`
-  - role-based sidebar navigation is implemented with local state, not a routing library
+  - tracks `currentPage`, `selectedRequestId`, `currentUser`, `demoRole`, `demoDepartment`, `requests`, `users`, `auditLogs`, `theme`
+  - role-based sidebar navigation comes from `Code/src/config/navigation.js`; page switching is still local state, not a routing library
   - request creation prepends a new mock request and then navigates requester users to `requests`, legal staff to `details`
   - light/dark theme toggles `.dark` on `<html>` and persists `legal-affairs-theme` in `localStorage`
 - No React Router. Pages are rendered by `renderCurrentPage()` in `App.jsx` using string page IDs.
@@ -14,15 +14,15 @@
   - `components/layout/Header.jsx`: app title, frontend-only note, demo role selector, demo department selector for future visibility logic, theme toggle, Profile dropdown, Settings popup, and logout inside Profile menu. Header no longer shows the user name block directly.
   - `components/layout/Sidebar.jsx`: role-based navigation buttons received from `App.jsx`.
   - `components/dashboard/DashboardCards.jsx`: derives total requests, pending items, under review, and high-risk counts from mock requests.
-  - `components/requests/RequestForm.jsx`: creates a new frontend-only legal request; requester name input is removed because requester is derived from `currentUser`; requires one PDF attachment only; uses `accept="application/pdf,.pdf"`, JavaScript PDF validation, and `URL.createObjectURL()` for browser-only preview.
-  - `components/requests/RequestTable.jsx`: displays request rows, including sortable `Sent Time` from request `submittedAt`; table headers are clickable and maintain one active ascending/descending sort at a time. In Requester role, `App.jsx` filters rows to requests whose `requester` matches `currentUser.name`; legal roles see all requests.
-  - `components/requests/RequestDetails.jsx`: shows selected request details and composes AI summary, reviewer comments, and contract checklist; PDF attachment buttons open `PdfReviewModal`.
+  - `components/requests/RequestForm.jsx`: creates a new frontend-only legal request; requester name input is removed because requester is derived from `currentUser`; stores both full-name `requester` and stable `requesterUsername`; defaults department from `currentUser.department`; requires one PDF attachment only; uses `accept="application/pdf,.pdf"`, JavaScript PDF validation, and `utils/demoPdfReview.js` to generate a full criteria checklist and browser-only PDF preview URL.
+  - `components/requests/RequestTable.jsx`: displays request rows, including sortable `Sent Time` from request `submittedAt`; table headers are clickable and maintain one active ascending/descending sort at a time. Requester role sees requests by `requesterUsername`; Department Approver sees selected-department requests; Legal Reviewer/Manager see all requests in this frontend demo.
+  - `components/requests/RequestDetails.jsx`: shows selected request details and composes AI summary, role-specific action panels, reviewer comments, and contract checklist; PDF attachment buttons open `PdfReviewModal`. Legal Reviewer can edit checklist/comments; Legal Manager gets manager actions; Department Approver gets department approval/comment panel.
   - `components/requests/PdfReviewModal.jsx`: popup/modal with browser PDF viewer on the left; right side uses two separate flex scroll regions to avoid text collision: read-only AI checklist with page/status on top and AI draft suggestions with page indexes on bottom. No checklist toggles inside the popup.
   - `components/review/AiSummaryBox.jsx`: labels AI summary as draft only and reinforces human legal review requirement.
-  - `components/review/ContractChecklist.jsx`: manual legal review checklist shown in Request Details; always receives the full master criteria list from each PDF document checklist, with AI-preselected checked criteria depending on that PDF. Legal staff can toggle items; requester users see checklist/status read-only. Criteria reference is in `Code/legal-review-criteria.txt`.
+  - `components/review/ContractChecklist.jsx`: manual Legal Affairs review checklist shown in Request Details; always receives the full master criteria list from each PDF document checklist, with AI-preselected checked criteria depending on that PDF. Only `Legal Reviewer` can toggle checklist items; requester, legal manager, and department approver see checklist/status read-only. Criteria reference is in `Code/legal-review-criteria.txt`.
   - `components/review/ReviewerComments.jsx`: local comment list state; adding comments is frontend-only.
-  - `components/admin/AdminUsers.jsx`: frontend-only user/role/department management demo with local state.
-  - `components/audit/AuditLog.jsx`: audit log display component, currently not wired into `App.jsx` navigation.
+  - `components/admin/AdminUsers.jsx`: frontend-only user/role/department management demo; users state is lifted into `App.jsx` so changes persist while switching pages; role/department changes create demo audit log events.
+  - `components/audit/AuditLog.jsx`: audit log display page available to `Admin User`; displays seeded audit logs plus frontend events such as request submission and admin role/department changes.
   - `components/roles/RoleSelector.jsx`: role/permission demo component, currently not wired into `App.jsx` navigation.
 - `Code/src/data/mockData.js` is the central mock data source:
   - `roles`, `departments`, `legalCategories`, `requestStatuses`, `priorityLevels`

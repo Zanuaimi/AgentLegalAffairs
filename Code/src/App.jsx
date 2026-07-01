@@ -8,31 +8,24 @@ import RequestTable from "./components/requests/RequestTable";
 import RequestForm from "./components/requests/RequestForm";
 import RequestDetails from "./components/requests/RequestDetails";
 import AdminUsers from "./components/admin/AdminUsers";
-import { initialRequests } from "./data/mockData";
-
-const navigationByRole = {
-  Requester: [
-    { id: "new-request", label: "Send Request" },
-    { id: "requests", label: "My Requests" },
-    { id: "details", label: "Request Details" },
-  ],
-  "Admin User": [{ id: "admin", label: "Admin" }],
-  "Legal Reviewer": [
-    { id: "dashboard", label: "Dashboard" },
-    { id: "requests", label: "Legal Requests" },
-    { id: "details", label: "Request Details" },
-  ],
-  "Legal Manager": [
-    { id: "dashboard", label: "Dashboard" },
-    { id: "requests", label: "Legal Requests" },
-    { id: "details", label: "Request Details" },
-  ],
-  "Department Approver": [
-    { id: "dashboard", label: "Dashboard" },
-    { id: "requests", label: "Legal Requests" },
-    { id: "details", label: "Request Details" },
-  ],
-};
+import AuditLog from "./components/audit/AuditLog";
+import LegalReviewers from "./components/reviewers/LegalReviewers";
+import { navigationByRole } from "./config/navigation";
+import {
+  auditLogs as initialAuditLogs,
+  initialRequests,
+  initialUsers,
+} from "./data/mockData";
+import { formatDateTimeForAudit } from "./utils/dateFormat";
+import {
+  canManageDepartmentApproval,
+  canManageManagerActions,
+  canManageReview,
+} from "./utils/permissions";
+import {
+  getSelectedVisibleRequest,
+  getVisibleRequests,
+} from "./utils/requestFilters";
 
 function App() {
   // isLoggedIn controls whether the user sees auth screens or the main platform.
@@ -57,10 +50,15 @@ function App() {
   // requests begins with mock data and can grow when the user submits a demo request.
   const [requests, setRequests] = useState(initialRequests);
 
+  // users stores frontend demo users for the Admin page.
+  const [users, setUsers] = useState(initialUsers);
+
+  // auditLogs stores frontend demo audit events for admin users.
+  const [auditLogs, setAuditLogs] = useState(initialAuditLogs);
+
   // selectedRequestId controls which request appears on the Request Details page.
-  const [selectedRequestId, setSelectedRequestId] = useState(
-    initialRequests[0]?.id,
-  );
+  // It starts as null so users must open a request from a table before seeing details.
+  const [selectedRequestId, setSelectedRequestId] = useState(null);
 
   // demoRole is the role perspective selected from the header dropdown.
   const [demoRole, setDemoRole] = useState("Requester");
@@ -80,13 +78,27 @@ function App() {
   const accessiblePageIds = accessibleNavigation.map((item) => item.id);
 
   // Requesters should see only their own requests. Legal roles can see all requests.
-  const visibleRequests =
-    demoRole === "Requester"
-      ? requests.filter((request) => request.requester === currentUser.name)
-      : requests;
-  const selectedRequest = requests.find(
-    (request) => request.id === selectedRequestId,
-  );
+  const visibleRequests = getVisibleRequests({
+    requests,
+    role: demoRole,
+    currentUser,
+    department: demoDepartment,
+  });
+  const selectedRequest = getSelectedVisibleRequest({
+    requests: visibleRequests,
+    selectedRequestId,
+  });
+  const hasSelectedVisibleRequest = Boolean(selectedRequest);
+
+  const navigationItemsForSidebar = accessibleNavigation.map((item) => {
+    if (item.id !== "details") return item;
+
+    return {
+      ...item,
+      disabled: !hasSelectedVisibleRequest,
+      disabledReason: !hasSelectedVisibleRequest ? "Open a request first" : "",
+    };
+  });
 
   // useEffect runs after React updates the screen.
   // This effect applies the theme to the <html> tag and saves it across sessions.
@@ -102,10 +114,34 @@ function App() {
     }
   }, [demoRole, currentPage, accessibleNavigation, accessiblePageIds]);
 
+  // Changing role or department changes which requests are visible.
+  // We clear the selected request so each role must intentionally open a row first.
+  useEffect(() => {
+    setSelectedRequestId(null);
+  }, [demoRole, demoDepartment]);
+
+  // If someone reaches Request Details without an opened request, send them back
+  // to their request list. This supports the disabled sidebar and protects the route.
+  useEffect(() => {
+    if (currentPage === "details" && !hasSelectedVisibleRequest) {
+      const fallbackPage = accessiblePageIds.includes("requests")
+        ? "requests"
+        : accessibleNavigation[0].id;
+
+      setCurrentPage(fallbackPage);
+    }
+  }, [
+    currentPage,
+    hasSelectedVisibleRequest,
+    accessiblePageIds,
+    accessibleNavigation,
+  ]);
+
   function handleLogin(user) {
     setCurrentUser(user);
     setDemoRole(user.role);
     setDemoDepartment(user.department);
+    setSelectedRequestId(null);
     setIsLoggedIn(true);
     setCurrentPage(navigationByRole[user.role]?.[0]?.id || "new-request");
   }
@@ -123,9 +159,22 @@ function App() {
     setAuthMode("login");
   }
 
+  function addAuditLog(action, user = currentUser.name, requestId = "System") {
+    const newLog = {
+      id: Date.now(),
+      requestId,
+      action,
+      user,
+      time: formatDateTimeForAudit(new Date()),
+    };
+
+    setAuditLogs((currentLogs) => [newLog, ...currentLogs]);
+  }
+
   function handleCreateRequest(newRequest) {
     setRequests([newRequest, ...requests]);
     setSelectedRequestId(newRequest.id);
+    addAuditLog("Request submitted", newRequest.requester, newRequest.id);
 
     // Requester users should return to My Requests so they can see the status.
     // Legal staff can go directly to the details screen.
@@ -174,11 +223,19 @@ function App() {
           requests={visibleRequests}
           onSelectRequest={handleSelectRequest}
           canOpenDetails={accessiblePageIds.includes("details")}
-          title={demoRole === "Requester" ? "My Requests" : "Legal Requests"}
+          title={
+            demoRole === "Requester"
+              ? "My Requests"
+              : demoRole === "Department Approver"
+                ? `Department Legal Requests for ${demoDepartment}`
+                : "Legal Requests"
+          }
           description={
             demoRole === "Requester"
               ? "View submitted requests and track their current status."
-              : "Track request category, department, priority, reviewer, deadline, and status."
+              : demoRole === "Department Approver"
+                ? `Review legal requests for your current department: ${demoDepartment}.`
+                : "Track request category, department, priority, reviewer, deadline, and status."
           }
         />
       );
@@ -197,13 +254,36 @@ function App() {
       return (
         <RequestDetails
           request={selectedRequest}
-          canManageReview={demoRole !== "Requester"}
+          canManageReview={canManageReview(demoRole)}
+          canManageManagerActions={canManageManagerActions(demoRole)}
+          canManageDepartmentApproval={canManageDepartmentApproval(demoRole)}
+        />
+      );
+    }
+
+    if (currentPage === "reviewers") {
+      return (
+        <LegalReviewers
+          users={users}
+          requests={requests}
+          onSelectRequest={handleSelectRequest}
         />
       );
     }
 
     if (currentPage === "admin") {
-      return <AdminUsers />;
+      return (
+        <AdminUsers
+          users={users}
+          setUsers={setUsers}
+          onAuditEvent={addAuditLog}
+          currentUser={currentUser}
+        />
+      );
+    }
+
+    if (currentPage === "audit") {
+      return <AuditLog logs={auditLogs} />;
     }
 
     return (
@@ -219,7 +299,7 @@ function App() {
       <Sidebar
         currentPage={currentPage}
         onChangePage={setCurrentPage}
-        navigationItems={accessibleNavigation}
+        navigationItems={navigationItemsForSidebar}
       />
 
       <div className="flex-1 min-w-0">

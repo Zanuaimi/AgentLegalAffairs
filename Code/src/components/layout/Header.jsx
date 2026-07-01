@@ -150,6 +150,15 @@ function Header({
             <div className="mt-6 space-y-4">
               <div className="rounded-xl bg-slate-50 p-4">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Full Name
+                </p>
+                <p className="mt-1 font-semibold text-slate-900">
+                  {currentUser.name}
+                </p>
+              </div>
+
+              <div className="rounded-xl bg-slate-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Username
                 </p>
                 <p className="mt-1 font-semibold text-slate-900">

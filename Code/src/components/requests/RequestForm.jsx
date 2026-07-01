@@ -4,11 +4,12 @@ import {
   legalCategories,
   priorityLevels,
 } from "../../data/mockData";
+import { createFrontendPdfDocument } from "../../utils/demoPdfReview";
 
 function RequestForm({ onCreateRequest, currentUser }) {
   const [formData, setFormData] = useState({
     title: "",
-    department: "HR",
+    department: currentUser?.department || "HR",
     categoryCode: "LEG-A",
     priority: "Medium",
     deadline: "",
@@ -45,46 +46,6 @@ function RequestForm({ onCreateRequest, currentUser }) {
     setFileError("");
   }
 
-  function createFrontendPdfDocument(file) {
-    return {
-      name: file.name,
-      type: "application/pdf",
-      url: URL.createObjectURL(file),
-      checklist: [
-        {
-          criteria: "PDF opened and reviewed",
-          page: 1,
-          checked: true,
-          note: "Frontend demo checklist starts on page 1 for newly uploaded PDFs.",
-        },
-        {
-          criteria: "Request description compared with attachment",
-          page: 1,
-          checked: false,
-          note: "Reviewer should compare the requester's description with the PDF content.",
-        },
-        {
-          criteria: "Missing clauses or information checked",
-          page: 1,
-          checked: false,
-          note: "Reviewer can update this later when backend/AI analysis is connected.",
-        },
-      ],
-      aiSuggestions: [
-        {
-          page: 1,
-          type: "Frontend Demo",
-          text: "AI draft placeholder: Review page 1 and confirm whether key legal clauses are present.",
-        },
-        {
-          page: 1,
-          type: "Human Review Required",
-          text: "AI draft placeholder: This suggestion is not a final legal decision. Legal Affairs must review the PDF manually.",
-        },
-      ],
-    };
-  }
-
   function handleSubmit(event) {
     event.preventDefault();
 
@@ -112,6 +73,7 @@ function RequestForm({ onCreateRequest, currentUser }) {
       categoryName: selectedCategory.name,
       department: formData.department,
       requester: currentUser?.name || "Demo Requester",
+      requesterUsername: currentUser?.username || "demo.requester",
       assignedReviewer: "Not Assigned",
       priority: formData.priority,
       riskLevel: "Not Classified",
@@ -136,7 +98,7 @@ function RequestForm({ onCreateRequest, currentUser }) {
 
     setFormData({
       title: "",
-      department: "HR",
+      department: currentUser?.department || "HR",
       categoryCode: "LEG-A",
       priority: "Medium",
       deadline: "",

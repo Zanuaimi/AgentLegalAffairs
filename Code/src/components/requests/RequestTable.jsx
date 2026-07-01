@@ -42,6 +42,12 @@ function RequestTable({
     const sorted = [...requests];
 
     sorted.sort((firstRequest, secondRequest) => {
+      if (sortConfig.column === "submittedAt") {
+        const firstTime = Date.parse(firstRequest.submittedAt || "") || 0;
+        const secondTime = Date.parse(secondRequest.submittedAt || "") || 0;
+        return firstTime - secondTime;
+      }
+
       const firstValue = String(firstRequest[sortConfig.column] || "");
       const secondValue = String(secondRequest[sortConfig.column] || "");
 
@@ -152,6 +158,17 @@ function RequestTable({
               </tr>
             </thead>
             <tbody>
+              {sortedRequests.length === 0 && (
+                <tr>
+                  <td
+                    className="p-6 text-center text-slate-500"
+                    colSpan={canOpenDetails ? 9 : 8}
+                  >
+                    No requests found for this view.
+                  </td>
+                </tr>
+              )}
+
               {sortedRequests.map((request) => (
                 <tr
                   key={request.id}
@@ -232,4 +249,7 @@ Sorting rearranges rows by one column, such as request title, sent time, request
 
 6. Why use useMemo?
 useMemo recalculates the sorted list only when requests or sortConfig changes, instead of sorting again on every render.
+
+7. Why does Sent Time sort differently?
+Dates should be compared as time values, not only as text.
 */

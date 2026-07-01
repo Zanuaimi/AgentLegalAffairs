@@ -1,38 +1,90 @@
-import { departments, roles } from '../../data/mockData';
+import { departments, roles } from "../../data/mockData";
 
-function RoleSelector({ demoRole, demoDepartment, onRoleChange, onDepartmentChange }) {
+function RoleSelector({
+  demoRole,
+  demoDepartment,
+  onRoleChange,
+  onDepartmentChange,
+}) {
   const permissionExamples = {
-    Requester: ['Submit legal request', 'Upload documents', 'View own requests', 'Respond to clarification'],
-    'Legal Reviewer': ['Review documents', 'Add comments', 'Use checklist', 'Prepare draft response'],
-    'Legal Manager': ['Assign reviewers', 'Approve responses', 'Monitor dashboard', 'Close or escalate requests'],
-    'Department Approver': ['Review department content', 'Approve department section', 'Add department comments'],
-    'Admin User': ['Manage users', 'Manage roles', 'Manage categories', 'View system configuration'],
+    Requester: [
+      "Submit legal request",
+      "Upload documents",
+      "View own requests",
+      "Respond to clarification",
+    ],
+    "Legal Reviewer": [
+      "Review documents",
+      "Add reviewer comments",
+      "Use Legal Affairs checklist",
+      "Prepare draft response",
+    ],
+    "Legal Manager": [
+      "Assign reviewers",
+      "Approve responses",
+      "Monitor dashboard",
+      "Close or escalate requests",
+      "Review Legal Reviewer workload",
+    ],
+    "Department Approver": [
+      "Review department-specific content",
+      "Approve department section",
+      "Add department comments",
+    ],
+    "Admin User": [
+      "Manage users",
+      "Manage roles",
+      "Manage categories",
+      "View system configuration",
+    ],
   };
 
   return (
     <section>
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-slate-900">Roles / Admin Demo</h2>
-        <p className="text-slate-500 mt-1">Frontend-only role-based access control placeholder.</p>
+        <h2 className="text-2xl font-bold text-slate-900">
+          Roles / Admin Demo
+        </h2>
+        <p className="text-slate-500 mt-1">
+          Frontend-only role-based access control placeholder.
+        </p>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div>
           <h3 className="font-bold text-slate-900">Demo User Context</h3>
-          <p className="text-sm text-slate-500 mt-1">HR is treated as a department, not a role.</p>
+          <p className="text-sm text-slate-500 mt-1">
+            HR is treated as a department, not a role.
+          </p>
 
           <div className="mt-5 space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
-              <select className="w-full rounded-lg border border-slate-300 px-4 py-3" value={demoRole} onChange={(event) => onRoleChange(event.target.value)}>
-                {roles.map((role) => <option key={role}>{role}</option>)}
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Role
+              </label>
+              <select
+                className="w-full rounded-lg border border-slate-300 px-4 py-3"
+                value={demoRole}
+                onChange={(event) => onRoleChange(event.target.value)}
+              >
+                {roles.map((role) => (
+                  <option key={role}>{role}</option>
+                ))}
               </select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Department</label>
-              <select className="w-full rounded-lg border border-slate-300 px-4 py-3" value={demoDepartment} onChange={(event) => onDepartmentChange(event.target.value)}>
-                {departments.map((department) => <option key={department}>{department}</option>)}
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Department
+              </label>
+              <select
+                className="w-full rounded-lg border border-slate-300 px-4 py-3"
+                value={demoDepartment}
+                onChange={(event) => onDepartmentChange(event.target.value)}
+              >
+                {departments.map((department) => (
+                  <option key={department}>{department}</option>
+                ))}
               </select>
             </div>
           </div>
