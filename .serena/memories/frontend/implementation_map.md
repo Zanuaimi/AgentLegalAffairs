@@ -1,0 +1,35 @@
+# Frontend Implementation Map
+
+- Main flow is controlled by `Code/src/App.jsx`:
+  - switches between login/register and main app screens
+  - tracks `currentPage`, `selectedRequestId`, `currentUser`, `demoRole`, `requests`, `theme`
+  - role-based sidebar navigation is implemented with local state, not a routing library
+  - request creation prepends a new mock request and then navigates requester users to `requests`, legal staff to `details`
+  - light/dark theme toggles `.dark` on `<html>` and persists `legal-affairs-theme` in `localStorage`
+- No React Router. Pages are rendered by `renderCurrentPage()` in `App.jsx` using string page IDs.
+- Current pages/components:
+  - `components/auth/LoginPage.jsx`: dummy login; any username/password works; returns user role `Requester`, department `HR`.
+  - `components/auth/RegisterPage.jsx`: dummy registration; lets user choose role and department from mock data.
+  - `components/layout/Header.jsx`: app title, frontend-only note, demo role selector, theme toggle, user info, logout.
+  - `components/layout/Sidebar.jsx`: role-based navigation buttons received from `App.jsx`.
+  - `components/dashboard/DashboardCards.jsx`: derives total requests, pending items, under review, and high-risk counts from mock requests.
+  - `components/requests/RequestForm.jsx`: creates a new frontend-only legal request; file input stores only selected file name, not file contents.
+  - `components/requests/RequestTable.jsx`: displays request rows; legal roles can open details, requester view mainly tracks status.
+  - `components/requests/RequestDetails.jsx`: shows selected request details and composes AI summary, reviewer comments, and contract checklist.
+  - `components/review/AiSummaryBox.jsx`: labels AI summary as draft only and reinforces human legal review requirement.
+  - `components/review/ContractChecklist.jsx`: local checkbox state for contract review checklist.
+  - `components/review/ReviewerComments.jsx`: local comment list state; adding comments is frontend-only.
+  - `components/admin/AdminUsers.jsx`: frontend-only user/role/department management demo with local state.
+  - `components/audit/AuditLog.jsx`: audit log display component, currently not wired into `App.jsx` navigation.
+  - `components/roles/RoleSelector.jsx`: role/permission demo component, currently not wired into `App.jsx` navigation.
+- `Code/src/data/mockData.js` is the central mock data source:
+  - `roles`, `departments`, `legalCategories`, `requestStatuses`, `priorityLevels`
+  - `initialUsers`, `contractChecklistItems`, `initialRequests`, `auditLogs`
+- Styling:
+  - Tailwind utility classes are used directly in JSX.
+  - `Code/src/index.css` adds global body styles, form font inheritance, smooth color transitions, and manual dark-mode overrides for common Tailwind classes.
+  - Dark mode depends on the `.dark` class on `<html>`.
+- Beginner teaching style:
+  - Most files include explanatory comments near logic and a `BEGINNER DOCUMENTATION` block at the bottom.
+  - Preserve this style when adding frontend features: explain HTML/CSS/JavaScript/React concepts simply without overcomplicating code.
+- Validation baseline: `npm run build` from `AgentLegalAffairs/Code` passed after review.

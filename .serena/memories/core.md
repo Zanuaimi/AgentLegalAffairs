@@ -18,4 +18,5 @@
 - HARD SCOPE RULE: AI must do frontend only. Do not create, edit, scaffold, or implement backend/API/server/database/auth-storage code in this project.
 - Current implementation is Version 1 frontend-only/demo, generated in a previous now-deleted thread from the PDF V1 requirements; backend is intentionally out of scope because a teammate owns backend development.
 - Backend integration points may be documented with `BACKEND TODO` comments throughout components, but frontend tasks must stop at UI/state/mock-data integration and must not implement backend/API/server code.
+- Read `mem:frontend/implementation_map` for the current React app flow, component responsibilities, mock data map, styling approach, and unwired components.
 - Read `mem:tech_stack` for framework/build details, `mem:conventions` for coding/style conventions, `mem:suggested_commands` for useful commands, and `mem:task_completion` for done-checks.
