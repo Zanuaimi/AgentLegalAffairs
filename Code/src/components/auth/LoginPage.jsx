@@ -15,6 +15,11 @@ function LoginPage({ onLogin, onShowRegister, theme, onToggleTheme }) {
 
     onLogin({
       name: username || "Demo User",
+      username: username || "demo.user",
+      email: username
+        ? `${username}@university.edu`
+        : "demo.user@university.edu",
+      prefix: "None",
       role: "Requester",
       department: "HR",
     });

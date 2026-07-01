@@ -8,16 +8,18 @@
   - light/dark theme toggles `.dark` on `<html>` and persists `legal-affairs-theme` in `localStorage`
 - No React Router. Pages are rendered by `renderCurrentPage()` in `App.jsx` using string page IDs.
 - Current pages/components:
+  - `components/common/InfoButton.jsx`: reusable hover/title info icon using `Assets/InfoButtonIcon.png`.
   - `components/auth/LoginPage.jsx`: dummy login; any username/password works; returns user role `Requester`, department `HR`.
-  - `components/auth/RegisterPage.jsx`: dummy registration; lets user choose role and department from mock data.
-  - `components/layout/Header.jsx`: app title, frontend-only note, demo role selector, theme toggle, user info, logout.
+  - `components/auth/RegisterPage.jsx`: dummy registration; lets user choose prefix (`None`, `Mr.`, `Ms.`, `Mrs.`, `Dr.`, `Prof.`), role, and department from mock data; passes username/email/prefix into the logged-in demo user.
+  - `components/layout/Header.jsx`: app title, frontend-only note, demo role selector, demo department selector for future visibility logic, theme toggle, Profile dropdown, Settings popup, and logout inside Profile menu. Header no longer shows the user name block directly.
   - `components/layout/Sidebar.jsx`: role-based navigation buttons received from `App.jsx`.
   - `components/dashboard/DashboardCards.jsx`: derives total requests, pending items, under review, and high-risk counts from mock requests.
-  - `components/requests/RequestForm.jsx`: creates a new frontend-only legal request; file input stores only selected file name, not file contents.
-  - `components/requests/RequestTable.jsx`: displays request rows; legal roles can open details, requester view mainly tracks status.
-  - `components/requests/RequestDetails.jsx`: shows selected request details and composes AI summary, reviewer comments, and contract checklist.
+  - `components/requests/RequestForm.jsx`: creates a new frontend-only legal request; requester name input is removed because requester is derived from `currentUser`; requires one PDF attachment only; uses `accept="application/pdf,.pdf"`, JavaScript PDF validation, and `URL.createObjectURL()` for browser-only preview.
+  - `components/requests/RequestTable.jsx`: displays request rows, including sortable `Sent Time` from request `submittedAt`; table headers are clickable and maintain one active ascending/descending sort at a time. In Requester role, `App.jsx` filters rows to requests whose `requester` matches `currentUser.name`; legal roles see all requests.
+  - `components/requests/RequestDetails.jsx`: shows selected request details and composes AI summary, reviewer comments, and contract checklist; PDF attachment buttons open `PdfReviewModal`.
+  - `components/requests/PdfReviewModal.jsx`: popup/modal with browser PDF viewer on the left; right side uses two separate flex scroll regions to avoid text collision: read-only AI checklist with page/status on top and AI draft suggestions with page indexes on bottom. No checklist toggles inside the popup.
   - `components/review/AiSummaryBox.jsx`: labels AI summary as draft only and reinforces human legal review requirement.
-  - `components/review/ContractChecklist.jsx`: local checkbox state for contract review checklist.
+  - `components/review/ContractChecklist.jsx`: manual legal review checklist shown in Request Details; always receives the full master criteria list from each PDF document checklist, with AI-preselected checked criteria depending on that PDF. Legal staff can toggle items; requester users see checklist/status read-only. Criteria reference is in `Code/legal-review-criteria.txt`.
   - `components/review/ReviewerComments.jsx`: local comment list state; adding comments is frontend-only.
   - `components/admin/AdminUsers.jsx`: frontend-only user/role/department management demo with local state.
   - `components/audit/AuditLog.jsx`: audit log display component, currently not wired into `App.jsx` navigation.
@@ -25,6 +27,7 @@
 - `Code/src/data/mockData.js` is the central mock data source:
   - `roles`, `departments`, `legalCategories`, `requestStatuses`, `priorityLevels`
   - `initialUsers`, `contractChecklistItems`, `initialRequests`, `auditLogs`
+  - request `documents` are PDF objects with `name`, `type`, `url`, `checklist`, and `aiSuggestions`; demo PDF files live in `Code/public/demo-pdfs/`
 - Styling:
   - Tailwind utility classes are used directly in JSX.
   - `Code/src/index.css` adds global body styles, form font inheritance, smooth color transitions, and manual dark-mode overrides for common Tailwind classes.

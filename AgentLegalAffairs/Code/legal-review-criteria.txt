@@ -1,0 +1,38 @@
+Legal Affairs Request Review Criteria Reference
+Source: Legal Affairs Request Management Platform PDF, Version 1 requirements
+
+Use these criteria when editing mock PDF checklist demo data. The frontend AI demo should evaluate every criterion for each attached PDF, then mark only the criteria that appear satisfied as checked.
+
+Core request/document criteria:
+1. Document type identified
+2. Parties correctly identified
+3. Request category matches the document
+4. Request description matches the attached document
+5. Effective date identified
+6. Expiry date or end date identified
+7. Scope clearly defined
+8. Key obligations summarized
+9. Payment terms included, if relevant
+10. Funding terms included, if relevant
+11. Term and termination clauses included
+12. Confidentiality clause included
+13. Data protection clause included, if relevant
+14. Intellectual property clause included, if relevant
+15. Publication rights reviewed, if relevant
+16. Liability and indemnity reviewed
+17. Insurance requirements reviewed, if relevant
+18. Governing law and jurisdiction reviewed
+19. Signature authority confirmed
+20. Internal approvals obtained or identified
+21. Missing clauses or missing information identified
+22. Unusual or high-risk terms highlighted
+23. Compared against university-approved template or standard position
+24. Similar past legal opinion or reviewed agreement considered
+25. Reviewer questions for requester identified
+26. Final approved response/document storage needed
+
+Notes:
+- AI output is draft support only.
+- Legal Affairs reviewers can manually adjust the checklist.
+- Requesters can see checklist progress but cannot edit it.
+- Criteria may be marked checked when the PDF satisfies them; unchecked means needs review, missing, unclear, or not applicable but not confirmed yet.

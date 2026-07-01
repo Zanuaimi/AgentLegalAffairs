@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { departments, roles } from "../../data/mockData";
 
+const prefixOptions = ["None", "Mr.", "Ms.", "Mrs.", "Dr.", "Prof."];
+
 function RegisterPage({ onRegister, onShowLogin, theme, onToggleTheme }) {
   // One object stores all registration form fields together.
   const [formData, setFormData] = useState({
+    prefix: "None",
     fullName: "",
     username: "",
     email: "",
@@ -27,6 +30,9 @@ function RegisterPage({ onRegister, onShowLogin, theme, onToggleTheme }) {
 
     onRegister({
       name: formData.fullName || "Registered Demo User",
+      username: formData.username || "registered.demo",
+      email: formData.email || "registered.demo@university.edu",
+      prefix: formData.prefix,
       role: formData.role,
       department: formData.department,
     });
@@ -63,6 +69,23 @@ function RegisterPage({ onRegister, onShowLogin, theme, onToggleTheme }) {
           onSubmit={handleSubmit}
           className="grid grid-cols-1 md:grid-cols-2 gap-5"
         >
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Prefix
+            </label>
+            <select
+              className="w-full rounded-lg border border-slate-300 px-4 py-3"
+              value={formData.prefix}
+              onChange={(event) => updateField("prefix", event.target.value)}
+            >
+              {prefixOptions.map((prefix) => (
+                <option key={prefix} value={prefix}>
+                  {prefix}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
               Full Name

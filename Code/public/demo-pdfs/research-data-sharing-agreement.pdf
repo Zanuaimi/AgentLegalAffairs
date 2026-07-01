@@ -1,0 +1,102 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R] /Count 3 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Length 362 >>
+stream
+BT
+/F1 14 Tf
+72 760 Td
+(Research Data Sharing Agreement - Demo) Tj
+0 -26 Td
+/F1 10 Tf
+(Page 1) Tj
+0 -28 Td
+(Parties: Khalifa University and Gulf Research Partner.) Tj
+0 -18 Td
+(Purpose: shared research dataset for AI safety study.) Tj
+0 -18 Td
+(Data: anonymized research records only.) Tj
+0 -18 Td
+(Review note: confirm ethics approval reference.) Tj
+0 -18 Td
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 391 >>
+stream
+BT
+/F1 14 Tf
+72 760 Td
+(Research Data Sharing Agreement - Demo) Tj
+0 -26 Td
+/F1 10 Tf
+(Page 2) Tj
+0 -28 Td
+(Confidentiality: recipient must restrict access to project team.) Tj
+0 -18 Td
+(Publication rights: university review period required.) Tj
+0 -18 Td
+(IP: background IP remains with original owner.) Tj
+0 -18 Td
+(Risk: publication clause does not include review timeline.) Tj
+0 -18 Td
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 364 >>
+stream
+BT
+/F1 14 Tf
+72 760 Td
+(Research Data Sharing Agreement - Demo) Tj
+0 -26 Td
+/F1 10 Tf
+(Page 3) Tj
+0 -28 Td
+(Data retention: delete or return data after project end.) Tj
+0 -18 Td
+(Governing law: clause currently missing.) Tj
+0 -18 Td
+(Liability: no indemnity for data misuse.) Tj
+0 -18 Td
+(Suggested action: add data breach notification requirement.) Tj
+0 -18 Td
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 8 0 R >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000197 00000 n 
+0000000610 00000 n 
+0000000736 00000 n 
+0000001178 00000 n 
+0000001304 00000 n 
+0000001719 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+1845
+%%EOF

@@ -14,6 +14,7 @@ const navigationByRole = {
   Requester: [
     { id: "new-request", label: "Send Request" },
     { id: "requests", label: "My Requests" },
+    { id: "details", label: "Request Details" },
   ],
   "Admin User": [{ id: "admin", label: "Admin" }],
   "Legal Reviewer": [
@@ -46,6 +47,9 @@ function App() {
   // currentUser is demo user information shown in the header.
   const [currentUser, setCurrentUser] = useState({
     name: "Demo User",
+    username: "demo.user",
+    email: "demo.user@university.edu",
+    prefix: "None",
     role: "Requester",
     department: "HR",
   });
@@ -61,6 +65,9 @@ function App() {
   // demoRole is the role perspective selected from the header dropdown.
   const [demoRole, setDemoRole] = useState("Requester");
 
+  // demoDepartment is a frontend variable for future department-based visibility rules.
+  const [demoDepartment, setDemoDepartment] = useState("HR");
+
   // theme remembers whether the user wants light mode or dark mode.
   // The function inside useState runs once when the app first loads.
   const [theme, setTheme] = useState(() => {
@@ -72,9 +79,11 @@ function App() {
     navigationByRole[demoRole] || navigationByRole.Requester;
   const accessiblePageIds = accessibleNavigation.map((item) => item.id);
 
-  // Requesters should see request submission and request status only.
-  // In this demo, requester perspective shows all seeded requester submissions plus any newly created request.
-  const visibleRequests = demoRole === "Requester" ? requests : requests;
+  // Requesters should see only their own requests. Legal roles can see all requests.
+  const visibleRequests =
+    demoRole === "Requester"
+      ? requests.filter((request) => request.requester === currentUser.name)
+      : requests;
   const selectedRequest = requests.find(
     (request) => request.id === selectedRequestId,
   );
@@ -96,6 +105,7 @@ function App() {
   function handleLogin(user) {
     setCurrentUser(user);
     setDemoRole(user.role);
+    setDemoDepartment(user.department);
     setIsLoggedIn(true);
     setCurrentPage(navigationByRole[user.role]?.[0]?.id || "new-request");
   }
@@ -175,18 +185,33 @@ function App() {
     }
 
     if (currentPage === "new-request") {
-      return <RequestForm onCreateRequest={handleCreateRequest} />;
+      return (
+        <RequestForm
+          onCreateRequest={handleCreateRequest}
+          currentUser={currentUser}
+        />
+      );
     }
 
     if (currentPage === "details") {
-      return <RequestDetails request={selectedRequest} />;
+      return (
+        <RequestDetails
+          request={selectedRequest}
+          canManageReview={demoRole !== "Requester"}
+        />
+      );
     }
 
     if (currentPage === "admin") {
       return <AdminUsers />;
     }
 
-    return <RequestForm onCreateRequest={handleCreateRequest} />;
+    return (
+      <RequestForm
+        onCreateRequest={handleCreateRequest}
+        currentUser={currentUser}
+      />
+    );
   }
 
   return (
@@ -205,6 +230,8 @@ function App() {
           onToggleTheme={handleToggleTheme}
           viewingRole={demoRole}
           onViewingRoleChange={setDemoRole}
+          viewingDepartment={demoDepartment}
+          onViewingDepartmentChange={setDemoDepartment}
         />
 
         <main className="p-6 lg:p-8">{renderCurrentPage()}</main>
