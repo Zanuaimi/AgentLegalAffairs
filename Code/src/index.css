@@ -1,0 +1,178 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* These styles affect the whole application. */
+body {
+    margin: 0;
+    font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+    background: #f8fafc;
+}
+
+/* This makes form controls use the same font as the rest of the app. */
+input,
+select,
+textarea,
+button {
+    font: inherit;
+}
+
+/* Smoothly animate color changes when switching between light mode and dark mode. */
+body,
+div,
+section,
+header,
+aside,
+main,
+button,
+input,
+select,
+textarea,
+table,
+tr,
+td,
+th,
+p,
+h1,
+h2,
+h3,
+h4,
+span,
+li {
+    transition:
+        background-color 180ms ease,
+        border-color 180ms ease,
+        color 180ms ease;
+}
+
+/* Dark mode base page color. JavaScript adds the "dark" class to the <html> tag. */
+.dark body {
+    background: #020617;
+}
+
+/* Dark mode overrides for common Tailwind utility classes used in this beginner project. */
+.dark .bg-slate-100 {
+    background-color: #020617;
+}
+.dark .bg-white {
+    background-color: #0f172a;
+}
+.dark .bg-slate-50 {
+    background-color: #1e293b;
+}
+.dark .bg-blue-50 {
+    background-color: #172554;
+}
+.dark .bg-white\/70 {
+    background-color: rgba(15, 23, 42, 0.7);
+}
+.dark .border-slate-100 {
+    border-color: #334155;
+}
+.dark .border-slate-200 {
+    border-color: #334155;
+}
+.dark .border-slate-300 {
+    border-color: #475569;
+}
+.dark .border-blue-200 {
+    border-color: #1d4ed8;
+}
+.dark .text-slate-900 {
+    color: #f8fafc;
+}
+.dark .text-slate-800 {
+    color: #e2e8f0;
+}
+.dark .text-slate-700 {
+    color: #cbd5e1;
+}
+.dark .text-slate-600 {
+    color: #cbd5e1;
+}
+.dark .text-slate-500 {
+    color: #94a3b8;
+}
+.dark .text-blue-950 {
+    color: #dbeafe;
+}
+.dark .text-blue-900 {
+    color: #bfdbfe;
+}
+.dark .text-blue-700 {
+    color: #93c5fd;
+}
+.dark .text-green-700 {
+    color: #86efac;
+}
+.dark .text-yellow-700 {
+    color: #fde68a;
+}
+.dark .text-orange-700 {
+    color: #fdba74;
+}
+.dark .text-red-700 {
+    color: #fca5a5;
+}
+.dark td,
+.dark th {
+    color: #cbd5e1;
+}
+.dark .bg-green-100 {
+    background-color: rgba(22, 101, 52, 0.35);
+}
+.dark .bg-yellow-100 {
+    background-color: rgba(133, 77, 14, 0.35);
+}
+.dark .bg-orange-100 {
+    background-color: rgba(154, 52, 18, 0.35);
+}
+.dark .bg-red-100 {
+    background-color: rgba(153, 27, 27, 0.35);
+}
+.dark .bg-blue-100 {
+    background-color: rgba(30, 64, 175, 0.35);
+}
+.dark .hover\:bg-slate-50:hover {
+    background-color: #1e293b;
+}
+.dark input,
+.dark select,
+.dark textarea {
+    background-color: #0f172a;
+    color: #f8fafc;
+    border-color: #475569;
+}
+.dark input::placeholder,
+.dark textarea::placeholder {
+    color: #94a3b8;
+}
+
+/*
+BEGINNER DOCUMENTATION:
+
+1. What is CSS?
+CSS controls how HTML looks: colors, spacing, fonts, layout, and more.
+
+2. What are @tailwind lines?
+These lines import Tailwind's generated CSS layers into our project.
+
+3. What is body?
+body is the main visible area of the webpage.
+
+4. What is a selector?
+A selector chooses which HTML elements receive styles. Example: body selects the <body> element.
+
+5. How does dark mode work here?
+When the app is in dark mode, JavaScript adds the class "dark" to the <html> tag. CSS selectors like .dark .bg-white then override light colors.
+
+6. Why use transition?
+transition makes color changes smoother when switching between light mode and dark mode.
+*/

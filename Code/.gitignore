@@ -1,0 +1,10 @@
+node_modules
+dist
+.env
+.env.local
+
+# Beginner note:
+# .gitignore tells Git which generated or private files should not be committed.
+# node_modules is recreated by npm install.
+# dist is recreated by npm run build.
+# .env files may contain secrets, so they should not be committed.
