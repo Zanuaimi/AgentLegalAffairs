@@ -2,8 +2,12 @@ import { supabase } from "./supabaseClient";
 
 function describeError(value) {
   if (!value) return "Unknown error";
-  if (typeof value === "string") return value;
-  if (value instanceof Error) return value.message;
+  if (typeof value === "string") {
+    return value === "[object Object]" ? "Unknown object error" : value;
+  }
+  if (value instanceof Error && value.message !== "[object Object]") {
+    return value.message;
+  }
 
   if (typeof value === "object") {
     const candidates = [

@@ -25,9 +25,11 @@ import {
   createBackendManagerAction,
   createBackendRequest,
   createBackendRequestComment,
+  createLegalAffairEngineEvent,
   fetchBackendAuditLogs,
   fetchBackendRequests,
   fetchBackendUsers,
+  fetchLegalAffairEngineEvents,
   fetchLegalAffairEngineState,
   setLegalAffairEngineRunning,
   updateAiReviewJobQueueOrder,
@@ -50,6 +52,41 @@ import {
   getSelectedVisibleRequest,
   getVisibleRequests,
 } from "./utils/requestFilters";
+
+function describeAppError(value) {
+  if (!value) return "Unknown error";
+  if (typeof value === "string") return value;
+
+  if (value instanceof Error) {
+    if (value.message && value.message !== "[object Object]") {
+      return value.message;
+    }
+  }
+
+  if (typeof value === "object") {
+    const candidates = [
+      value.message,
+      value.error,
+      value.details,
+      value.hint,
+      value.statusText,
+      value.name,
+    ].filter(Boolean);
+
+    if (candidates.length > 0) {
+      const described = candidates.map(describeAppError).join(" | ");
+      if (described && described !== "[object Object]") return described;
+    }
+
+    try {
+      return JSON.stringify(value);
+    } catch (_error) {
+      return String(value);
+    }
+  }
+
+  return String(value);
+}
 
 function App() {
   // isLoggedIn controls whether the user sees auth screens or the main platform.
@@ -77,6 +114,7 @@ function App() {
   const [users, setUsers] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
   const [engineState, setEngineState] = useState(null);
+  const [engineEvents, setEngineEvents] = useState([]);
 
   // selectedRequestId controls which request appears on the Request Details page.
   // It starts as null so users must open a request from a table before seeing details.
@@ -208,17 +246,20 @@ function App() {
       backendUsers,
       backendAuditLogs,
       backendEngineState,
+      backendEngineEvents,
     ] = await Promise.all([
       fetchBackendRequests(),
       fetchBackendUsers(),
       fetchBackendAuditLogs().catch(() => []),
       fetchLegalAffairEngineState().catch(() => null),
+      fetchLegalAffairEngineEvents().catch(() => []),
     ]);
 
     setRequests(backendRequests);
     setUsers(backendUsers);
     setAuditLogs(backendAuditLogs);
     setEngineState(backendEngineState);
+    setEngineEvents(backendEngineEvents);
     setBackendMessage("Loaded data from Supabase PostgreSQL.");
   }
 
@@ -236,14 +277,22 @@ function App() {
 
     const intervalId = window.setInterval(async () => {
       try {
-        const [refreshedRequests, refreshedEngineState] = await Promise.all([
+        const [
+          refreshedRequests,
+          refreshedEngineState,
+          refreshedEngineEvents,
+        ] = await Promise.all([
           fetchBackendRequests(),
           currentPage === "legal-engine"
             ? fetchLegalAffairEngineState().catch(() => null)
             : Promise.resolve(engineState),
+          currentPage === "legal-engine"
+            ? fetchLegalAffairEngineEvents().catch(() => [])
+            : Promise.resolve(engineEvents),
         ]);
         setRequests(refreshedRequests);
         setEngineState(refreshedEngineState);
+        setEngineEvents(refreshedEngineEvents);
       } catch (error) {
         setBackendMessage(
           `Could not refresh AI review queue status: ${
@@ -347,9 +396,9 @@ function App() {
           })
           .catch((error) => {
             setBackendMessage(
-              `Request was saved, but AI queue processing did not start: ${
-                error instanceof Error ? error.message : String(error)
-              }`,
+              `Request was saved, but AI queue processing did not start: ${describeAppError(
+                error,
+              )}`,
             );
           });
       }
@@ -367,13 +416,16 @@ function App() {
   }
 
   async function refreshRequestsAndEngineState() {
-    const [refreshedRequests, refreshedEngineState] = await Promise.all([
-      fetchBackendRequests(),
-      fetchLegalAffairEngineState().catch(() => null),
-    ]);
+    const [refreshedRequests, refreshedEngineState, refreshedEngineEvents] =
+      await Promise.all([
+        fetchBackendRequests(),
+        fetchLegalAffairEngineState().catch(() => null),
+        fetchLegalAffairEngineEvents().catch(() => []),
+      ]);
 
     setRequests(refreshedRequests);
     setEngineState(refreshedEngineState);
+    setEngineEvents(refreshedEngineEvents);
   }
 
   async function handleEngineRunningChange(isRunning) {
@@ -382,6 +434,13 @@ function App() {
       currentUser,
     );
     setEngineState(nextEngineState);
+    await createLegalAffairEngineEvent({
+      eventType: isRunning ? "engine_started" : "engine_stopped",
+      level: "status",
+      message: `${currentUser.name} ${isRunning ? "started" : "stopped"} the Legal Affair Engine.`,
+      currentUser,
+    });
+    await refreshRequestsAndEngineState();
     await addAuditLog(
       `${isRunning ? "Started" : "Stopped"} Legal Affair Engine`,
       currentUser.name,
@@ -391,14 +450,37 @@ function App() {
 
   async function handleProcessNextAiReviewJob() {
     try {
-      await triggerAiReviewQueue();
+      await createLegalAffairEngineEvent({
+        eventType: "manual_process_next_requested",
+        level: "status",
+        message: `${currentUser.name} requested processing for the next queued AI review job.`,
+        currentUser,
+      });
+      const result = await triggerAiReviewQueue();
+      await createLegalAffairEngineEvent({
+        eventType: "manual_process_next_finished",
+        level: result?.processed ? "status" : "warning",
+        message: result?.processed
+          ? `Processed next queued request ${result.requestId || "unknown request"}.`
+          : result?.message || "No queued AI review jobs were available.",
+        currentUser,
+        requestId: result?.requestId || null,
+        jobId: result?.jobId || null,
+        metadata: result || {},
+      });
       await refreshRequestsAndEngineState();
       setBackendMessage("Legal Affair Engine processed the next queued request.");
     } catch (error) {
+      const message = describeAppError(error);
+      await createLegalAffairEngineEvent({
+        eventType: "manual_process_next_failed",
+        level: "error",
+        message,
+        currentUser,
+      }).catch(() => {});
+      await refreshRequestsAndEngineState();
       setBackendMessage(
-        `Legal Affair Engine could not process the next request: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `Legal Affair Engine could not process the next request: ${message}`,
       );
     }
   }
@@ -424,6 +506,16 @@ function App() {
         updateAiReviewJobQueueOrder(item.aiReviewJob.id, index + 1),
       ),
     );
+
+    await createLegalAffairEngineEvent({
+      eventType: "queue_position_changed",
+      level: "status",
+      message: `${currentUser.name} moved ${request.id} to position #${clampedPosition} in the ${request.priority} priority queue.`,
+      currentUser,
+      requestId: request.id,
+      jobId: request.aiReviewJob?.id || null,
+      metadata: { priority: request.priority, position: clampedPosition },
+    });
 
     await refreshRequestsAndEngineState();
     await addAuditLog("Changed Legal Affair Engine queue position", currentUser.name);
@@ -671,6 +763,7 @@ function App() {
       return (
         <LegalAffairEngine
           requests={requests}
+          engineEvents={engineEvents}
           engineState={engineState}
           onToggleRunning={handleEngineRunningChange}
           onProcessNext={handleProcessNextAiReviewJob}

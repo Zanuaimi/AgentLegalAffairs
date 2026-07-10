@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const priorityOrder = ["Urgent", "High", "Medium", "Low"];
 
@@ -206,15 +206,15 @@ function PriorityQueueCard({
   );
 }
 
-function EngineTerminalCard({ requestsWithJobs }) {
+function EngineTerminalCard({ requestsWithJobs, engineEvents }) {
   const currentlyProcessing = requestsWithJobs.find(
     (request) => request.aiReviewJob?.status === "processing",
   );
   const failedRequests = requestsWithJobs.filter(
     (request) => request.aiReviewJob?.status === "failed" || request.aiReviewJob?.lastError,
   );
-  const terminalLines = requestsWithJobs
-    .flatMap((request) => {
+  const terminalRef = useRef(null);
+  const jobTerminalLines = requestsWithJobs.flatMap((request) => {
       const job = request.aiReviewJob;
       const traceLines = (job?.operationalTrace || []).map((entry) => ({
         at: entry.at || job.updatedAt,
@@ -249,9 +249,24 @@ function EngineTerminalCard({ requestsWithJobs }) {
         : [];
 
       return [...traceLines, ...statusLine, ...errorLine];
-    })
-    .sort((a, b) => new Date(b.at || 0) - new Date(a.at || 0))
-    .slice(0, 80);
+    });
+
+  const engineTerminalLines = (engineEvents || []).map((event) => ({
+    at: event.createdAt,
+    level: event.level || "info",
+    requestId: event.requestId || "ENGINE",
+    title: event.eventType || "engine_event",
+    text: event.message,
+  }));
+
+  const terminalLines = [...jobTerminalLines, ...engineTerminalLines]
+    .sort((a, b) => new Date(a.at || 0) - new Date(b.at || 0))
+    .slice(-250);
+
+  useEffect(() => {
+    if (!terminalRef.current) return;
+    terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
+  }, [terminalLines.length]);
 
   return (
     <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5 shadow-sm">
@@ -260,7 +275,7 @@ function EngineTerminalCard({ requestsWithJobs }) {
           <h3 className="text-lg font-bold text-white">Live Engine Terminal</h3>
           <p className="mt-1 text-sm text-slate-400">
             Latest backend-saved AI events, queue steps, and errors. Newest lines
-            appear first.
+            appear at the bottom.
           </p>
         </div>
         <span className="rounded-full bg-emerald-400/10 px-3 py-1 text-xs font-bold text-emerald-300">
@@ -313,7 +328,10 @@ function EngineTerminalCard({ requestsWithJobs }) {
         </div>
       )}
 
-      <div className="max-h-96 overflow-y-auto rounded-xl border border-slate-800 bg-black p-4 font-mono text-xs leading-6">
+      <div
+        ref={terminalRef}
+        className="h-[34rem] overflow-y-auto rounded-xl border border-slate-800 bg-black p-4 font-mono text-xs leading-6"
+      >
         {terminalLines.length === 0 ? (
           <p className="text-slate-500">
             $ waiting for AI queue activity...
@@ -459,6 +477,7 @@ function EngineOutputsCard({ activeRequests }) {
 
 function LegalAffairEngine({
   requests,
+  engineEvents,
   engineState,
   onToggleRunning,
   onProcessNext,
@@ -531,7 +550,10 @@ function LegalAffairEngine({
           </div>
         </div>
 
-        <EngineTerminalCard requestsWithJobs={requestsWithJobs} />
+        <EngineTerminalCard
+          requestsWithJobs={requestsWithJobs}
+          engineEvents={engineEvents}
+        />
       </div>
     </section>
   );

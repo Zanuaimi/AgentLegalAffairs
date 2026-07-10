@@ -405,6 +405,53 @@ export async function createBackendRequest(newRequest, currentUser) {
   return newRequest;
 }
 
+export async function fetchLegalAffairEngineEvents() {
+  const client = requireSupabase();
+  const { data, error } = await client
+    .from("ai_engine_events")
+    .select("id, event_type, level, message, request_id, job_id, metadata, created_at, profiles:actor_id(full_name)")
+    .order("created_at", { ascending: false })
+    .limit(200);
+
+  if (error) throw error;
+
+  return data.map((event) => ({
+    id: event.id,
+    eventType: event.event_type,
+    level: event.level,
+    message: event.message,
+    requestId: event.request_id,
+    jobId: event.job_id,
+    metadata: event.metadata || {},
+    actorName: event.profiles?.full_name || "System",
+    createdAt: event.created_at,
+    displayTime: formatDateTime(event.created_at),
+  }));
+}
+
+export async function createLegalAffairEngineEvent({
+  eventType,
+  level = "info",
+  message,
+  currentUser,
+  requestId = null,
+  jobId = null,
+  metadata = {},
+}) {
+  const client = requireSupabase();
+  const { error } = await client.from("ai_engine_events").insert({
+    event_type: eventType,
+    level,
+    message,
+    request_id: requestId,
+    job_id: jobId,
+    actor_id: currentUser?.id || null,
+    metadata,
+  });
+
+  if (error) throw error;
+}
+
 export async function fetchLegalAffairEngineState() {
   const client = requireSupabase();
   const { data, error } = await client

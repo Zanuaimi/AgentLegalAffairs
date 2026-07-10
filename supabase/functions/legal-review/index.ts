@@ -239,6 +239,23 @@ function buildMockResult(filename: string) {
   };
 }
 
+async function logEngineEvent(
+  supabase: any,
+  eventType: string,
+  level: "info" | "status" | "warning" | "error",
+  message: string,
+  options: { requestId?: string | null; jobId?: string | null; metadata?: any } = {},
+) {
+  await supabase.from("ai_engine_events").insert({
+    event_type: eventType,
+    level,
+    message,
+    request_id: options.requestId || null,
+    job_id: options.jobId || null,
+    metadata: options.metadata || {},
+  });
+}
+
 async function appendOperationalTrace(
   supabase: any,
   jobId: string,
@@ -629,6 +646,12 @@ Deno.serve(async (request: Request) => {
     const job = jobs?.[0];
 
     if (!job) {
+      await logEngineEvent(
+        supabase,
+        "no_queued_jobs",
+        "warning",
+        "Legal Affair Engine was invoked, but no queued AI review jobs were available.",
+      );
       return jsonResponse({ processed: false, message: "No queued AI review jobs." });
     }
 
@@ -641,6 +664,14 @@ Deno.serve(async (request: Request) => {
         .from("legal_requests")
         .update({ status: "AI Review Processing" })
         .eq("id", job.request_id);
+
+      await logEngineEvent(
+        supabase,
+        "job_processing_started",
+        "status",
+        `Started processing AI review job for request ${job.request_id}.`,
+        { requestId: job.request_id, jobId: job.job_id },
+      );
 
       await appendOperationalTrace(
         supabase,
@@ -661,6 +692,14 @@ Deno.serve(async (request: Request) => {
         throw new Error("PDF exceeds the 10 MB AI review safety limit.");
       }
 
+      await logEngineEvent(
+        supabase,
+        "calling_gemini",
+        "status",
+        `Calling Gemini for request ${job.request_id}.`,
+        { requestId: job.request_id, jobId: job.job_id },
+      );
+
       await appendOperationalTrace(
         supabase,
         job.job_id,
@@ -671,6 +710,13 @@ Deno.serve(async (request: Request) => {
       const fileBase64 = arrayBufferToBase64(fileBuffer);
       const result = await runGeminiReview(job, fileBase64);
       await saveReviewResult(supabase, job, result);
+      await logEngineEvent(
+        supabase,
+        "job_processing_completed",
+        "status",
+        `Completed AI review for request ${job.request_id}.`,
+        { requestId: job.request_id, jobId: job.job_id, metadata: { aiMode: result.ai_mode || "gemini" } },
+      );
 
       return jsonResponse({
         processed: true,
@@ -688,6 +734,13 @@ Deno.serve(async (request: Request) => {
         message,
       );
       await updateJobFailure(supabase, job, message);
+      await logEngineEvent(
+        supabase,
+        "job_processing_failed",
+        "error",
+        message,
+        { requestId: job.request_id, jobId: job.job_id },
+      );
       return jsonResponse(
         {
           processed: false,
@@ -699,10 +752,17 @@ Deno.serve(async (request: Request) => {
       );
     }
   } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    await logEngineEvent(
+      supabase,
+      "engine_invocation_failed",
+      "error",
+      message,
+    ).catch(() => {});
     return jsonResponse(
       {
         error: "Legal review queue function failed",
-        details: error instanceof Error ? error.message : String(error),
+        details: message,
       },
       500,
     );
