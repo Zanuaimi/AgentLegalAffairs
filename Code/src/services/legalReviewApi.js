@@ -3,9 +3,9 @@ import { supabase } from "./supabaseClient";
 function describeError(value) {
   if (!value) return "Unknown error";
   if (typeof value === "string") {
-    return value === "[object Object]" ? "Unknown object error" : value;
+    return value === "[object Object]" ? "Unspecified object error" : value;
   }
-  if (value instanceof Error && value.message !== "[object Object]") {
+  if (value instanceof Error && value.message && value.message !== "[object Object]") {
     return value.message;
   }
 
@@ -24,7 +24,8 @@ function describeError(value) {
     }
 
     try {
-      return JSON.stringify(value);
+      const jsonText = JSON.stringify(value);
+      return jsonText === "{}" ? `Unspecified ${value.constructor?.name || "object"} error` : jsonText;
     } catch (_error) {
       return String(value);
     }
@@ -36,23 +37,36 @@ function describeError(value) {
 async function describeFunctionInvokeError(error) {
   const response = error?.context;
 
-  if (response && typeof response.text === "function") {
-    try {
-      const text = await response.text();
-      if (!text) return describeError(error);
+  if (response) {
+    const statusText = [response.status, response.statusText]
+      .filter(Boolean)
+      .join(" ");
 
+    if (typeof response.clone === "function" || typeof response.text === "function") {
       try {
-        const json = JSON.parse(text);
-        return describeError(json.error || json.details || json);
-      } catch (_jsonError) {
-        return text;
+        const readableResponse = typeof response.clone === "function" ? response.clone() : response;
+        const text = await readableResponse.text();
+
+        if (text) {
+          try {
+            const json = JSON.parse(text);
+            return describeError(json.error || json.details || json);
+          } catch (_jsonError) {
+            return text;
+          }
+        }
+      } catch (_readError) {
+        // Fall through to status/name based message below.
       }
-    } catch (_readError) {
-      return describeError(error);
     }
+
+    return `Edge Function returned ${statusText || "a non-success response"}. Check Supabase function logs and the Legal Affair Engine terminal.`;
   }
 
-  return describeError(error);
+  const described = describeError(error);
+  return described === "Unspecified object error"
+    ? `${error?.name || "Function invocation"} failed without a response body. Check network/auth/function logs.`
+    : described;
 }
 
 async function fallbackFetchTrigger() {

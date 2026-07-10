@@ -394,11 +394,17 @@ function App() {
             const refreshedRequests = await fetchBackendRequests();
             setRequests(refreshedRequests);
           })
-          .catch((error) => {
+          .catch(async (error) => {
+            const message = describeAppError(error);
+            await createLegalAffairEngineEvent({
+              eventType: "requester_queue_trigger_failed",
+              level: "error",
+              message: `Requester submitted ${newRequest.id}, but the browser could not start/observe AI queue processing: ${message}`,
+              currentUser,
+              requestId: newRequest.id,
+            }).catch(() => {});
             setBackendMessage(
-              `Request was saved, but AI queue processing did not start: ${describeAppError(
-                error,
-              )}`,
+              `Request was saved, but AI queue processing did not start: ${message}`,
             );
           });
       }
