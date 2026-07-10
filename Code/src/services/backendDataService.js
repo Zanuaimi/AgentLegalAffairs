@@ -292,20 +292,30 @@ export async function createBackendRequest(newRequest, currentUser) {
     if (checklistError) throw checklistError;
   }
 
-  const suggestionRows = firstDocument.aiSuggestions.map((suggestion) => ({
-    document_id: documentRow.id,
-    page: String(suggestion.page),
-    suggestion_type: suggestion.type,
-    suggestion_text: suggestion.text,
-  }));
+  if (newRequest.aiReviewResult) {
+    const suggestionRows = firstDocument.aiSuggestions.map((suggestion) => ({
+      document_id: documentRow.id,
+      page: String(suggestion.page),
+      suggestion_type: suggestion.type,
+      suggestion_text: suggestion.text,
+    }));
 
-  if (suggestionRows.length > 0) {
-    const { error: suggestionError } = await client
-      .from("document_ai_suggestions")
-      .insert(suggestionRows);
+    if (suggestionRows.length > 0) {
+      const { error: suggestionError } = await client
+        .from("document_ai_suggestions")
+        .insert(suggestionRows);
 
-    if (suggestionError) throw suggestionError;
+      if (suggestionError) throw suggestionError;
+    }
   }
+
+  const { error: queueError } = await client.from("ai_review_jobs").insert({
+    request_id: newRequest.id,
+    document_id: documentRow.id,
+    status: "queued",
+  });
+
+  if (queueError) throw queueError;
 
   return newRequest;
 }

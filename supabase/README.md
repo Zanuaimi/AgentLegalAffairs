@@ -66,7 +66,7 @@ Current function:
 supabase/functions/legal-review/index.ts
 ```
 
-It receives a document from the React app, sends it to Google Gemini, and returns structured AI legal review JSON:
+It claims the oldest queued `ai_review_jobs` row, downloads that exact request document from Supabase Storage, sends it to Google Gemini, and writes structured AI legal review results back to the matching request/document:
 
 - request category
 - extracted clauses
@@ -94,7 +94,7 @@ For mock/demo backend mode:
 supabase secrets set USE_MOCK_AI_REVIEW="true"
 ```
 
-If `GEMINI_API_KEY` is missing, the function automatically returns a mock result.
+If `GEMINI_API_KEY` is missing and `USE_MOCK_AI_REVIEW` is not set to `true`, the function marks the queued review as failed so Legal Affairs can continue manual review.
 
 ## Deploy
 
@@ -123,3 +123,9 @@ VITE_USE_MOCK_AI_REVIEW=true
 ## Why Edge Functions?
 
 The frontend must not contain the Gemini API key. Edge Functions run on the backend side of Supabase, so secrets stay protected.
+
+## AI review queue safety
+
+New PDF requests are first saved with status `AI Review Pending`. The frontend then nudges the `legal-review` Edge Function to process the queue. The function uses the database function `claim_next_ai_review_job()` to atomically claim one oldest queued or stale processing job, so two workers do not review the same request at the same time.
+
+If the Edge Function/server restarts while a job is processing, the row remains in `ai_review_jobs`. A later invocation will reclaim stale `processing` jobs and start from the first queued/stale request again.

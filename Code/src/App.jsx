@@ -35,6 +35,7 @@ import {
   isSupabaseConfigured,
   missingSupabaseEnvVars,
 } from "./services/supabaseClient";
+import { triggerAiReviewQueue } from "./services/legalReviewApi";
 import { formatDateTimeForAudit } from "./utils/dateFormat";
 import {
   canManageDepartmentApproval,
@@ -289,10 +290,25 @@ function App() {
       setRequests([requestForState, ...requests]);
       setSelectedRequestId(requestForState.id);
       await addAuditLog(
-        "Request submitted",
+        "Request submitted; AI review queued",
         newRequest.requester,
         newRequest.id,
       );
+
+      if (isSupabaseConfigured) {
+        triggerAiReviewQueue()
+          .then(async () => {
+            const refreshedRequests = await fetchBackendRequests();
+            setRequests(refreshedRequests);
+          })
+          .catch((error) => {
+            setBackendMessage(
+              `Request was saved, but AI queue processing did not start: ${
+                error instanceof Error ? error.message : String(error)
+              }`,
+            );
+          });
+      }
 
       // Requester users should return to My Requests so they can see the status.
       // Legal staff can go directly to the details screen.

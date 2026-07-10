@@ -4,7 +4,6 @@ import {
   legalCategories,
   priorityLevels,
 } from "../../data/mockData";
-import { analyzeLegalDocument } from "../../services/legalReviewApi";
 import { createFrontendPdfDocument } from "../../utils/demoPdfReview";
 
 function RequestForm({ onCreateRequest, currentUser }) {
@@ -67,20 +66,9 @@ function RequestForm({ onCreateRequest, currentUser }) {
     }
 
     setIsSubmitting(true);
-    setAiStatusMessage("Running AI legal review draft...");
-
-    let aiReviewResult = null;
-    let aiReviewError = "";
-
-    try {
-      aiReviewResult = await analyzeLegalDocument(selectedPdfFile);
-      setAiStatusMessage("AI legal review draft completed.");
-    } catch (error) {
-      aiReviewError = error instanceof Error ? error.message : String(error);
-      setAiStatusMessage(
-        "AI review could not run. The request will still be submitted for human review.",
-      );
-    }
+    setAiStatusMessage(
+      "Submitting request. AI review will run from the backend queue after upload.",
+    );
 
     const selectedCategory = legalCategories.find(
       (category) => category.code === formData.categoryCode,
@@ -104,18 +92,17 @@ function RequestForm({ onCreateRequest, currentUser }) {
       requesterUsername: currentUser?.username || "demo.requester",
       assignedReviewer: "Not Assigned",
       priority: formData.priority,
-      riskLevel: getHighestRiskLevel(aiReviewResult),
-      status: "New",
+      riskLevel: getHighestRiskLevel(null),
+      status: "AI Review Pending",
       deadline: formData.deadline || "No deadline selected",
       submittedAt,
       description:
         formData.description || "No description was provided by the requester.",
-      documents: [createFrontendPdfDocument(selectedPdfFile, aiReviewResult)],
+      documents: [createFrontendPdfDocument(selectedPdfFile, null)],
       uploadFile: selectedPdfFile,
-      aiSummary: aiReviewResult
-        ? aiReviewResult.draft_review_note
-        : `Pending AI review${aiReviewError ? `: ${aiReviewError}` : ""}`,
-      aiReviewResult,
+      aiSummary:
+        "AI legal review is pending. The backend queue will process this PDF and update the checklist when the AI draft is ready.",
+      aiReviewResult: null,
       reviewerComments: [],
     };
 
