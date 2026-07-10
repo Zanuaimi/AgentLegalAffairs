@@ -37,7 +37,7 @@ function getSupabaseErrorMessage(error, fallbackMessage) {
   }
 
   return fallbackMessage;
-}queueMicrotask(callback)
+}
 
 function mapProfileToCurrentUser(profile) {
   return {
