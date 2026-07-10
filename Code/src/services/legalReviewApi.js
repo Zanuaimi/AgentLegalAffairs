@@ -1,6 +1,14 @@
+import { supabase } from "./supabaseClient";
+
+async function getFunctionAuthToken() {
+  const { data } = supabase ? await supabase.auth.getSession() : { data: null };
+  return data?.session?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY;
+}
+
 export async function triggerAiReviewQueue() {
   const functionsUrl = import.meta.env.VITE_SUPABASE_FUNCTIONS_URL;
   const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const authToken = await getFunctionAuthToken();
 
   if (!functionsUrl) {
     throw new Error(
@@ -12,7 +20,8 @@ export async function triggerAiReviewQueue() {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...(anonKey ? { Authorization: `Bearer ${anonKey}` } : {}),
+      ...(anonKey ? { apikey: anonKey } : {}),
+      ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
     },
     body: JSON.stringify({ action: "process-next" }),
   });

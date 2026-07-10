@@ -72,6 +72,83 @@ function ReviewStatusCard({
   );
 }
 
+function AiQueueDebugCard({ request }) {
+  const job = request.aiReviewJob;
+  const statusColors = {
+    queued: "bg-amber-100 text-amber-800 border-amber-200",
+    processing: "bg-blue-100 text-blue-800 border-blue-200",
+    completed: "bg-emerald-100 text-emerald-800 border-emerald-200",
+    failed: "bg-red-100 text-red-800 border-red-200",
+  };
+
+  const statusClass = job
+    ? statusColors[job.status] || "bg-slate-100 text-slate-800 border-slate-200"
+    : "bg-slate-100 text-slate-800 border-slate-200";
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-2xl p-5">
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+        <div>
+          <h3 className="font-bold text-slate-900">AI Review Queue Debug</h3>
+          <p className="text-sm text-slate-500 mt-1">
+            Shows the backend-saved AI queue state for this request. This is for
+            local debugging and Legal Affairs transparency.
+          </p>
+        </div>
+        <span className={`rounded-full border px-3 py-1 text-xs font-bold ${statusClass}`}>
+          {job ? job.status : "No queue job"}
+        </span>
+      </div>
+
+      {!job ? (
+        <p className="mt-4 rounded-xl bg-slate-50 border border-slate-200 p-3 text-sm text-slate-600">
+          No AI queue row is attached to this request yet. If this is a new PDF
+          request, check whether the request was saved before the queue migration
+          was applied.
+        </p>
+      ) : (
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+          <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
+            <p className="text-slate-500">Queue Job ID</p>
+            <p className="mt-1 break-all font-mono text-xs text-slate-900">{job.id}</p>
+          </div>
+          <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
+            <p className="text-slate-500">Attempts</p>
+            <p className="mt-1 font-bold text-slate-900">{job.attemptCount}</p>
+          </div>
+          <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
+            <p className="text-slate-500">Queued At</p>
+            <p className="mt-1 font-semibold text-slate-900">{job.createdAt}</p>
+          </div>
+          <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
+            <p className="text-slate-500">Started At</p>
+            <p className="mt-1 font-semibold text-slate-900">{job.startedAt}</p>
+          </div>
+          <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
+            <p className="text-slate-500">Completed At</p>
+            <p className="mt-1 font-semibold text-slate-900">{job.completedAt}</p>
+          </div>
+          <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
+            <p className="text-slate-500">Last Updated</p>
+            <p className="mt-1 font-semibold text-slate-900">{job.updatedAt}</p>
+          </div>
+          {job.lastError && (
+            <div className="md:col-span-2 rounded-xl bg-red-50 border border-red-200 p-3">
+              <p className="font-semibold text-red-800">Last Error</p>
+              <p className="mt-1 whitespace-pre-wrap text-red-700">{job.lastError}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      <p className="mt-4 text-xs text-slate-500">
+        Refresh behavior: while any request is pending/processing AI review, the
+        app polls Supabase every few seconds so this panel can update.
+      </p>
+    </div>
+  );
+}
+
 function RequestDetails({
   request,
   currentUser,
@@ -210,6 +287,7 @@ function RequestDetails({
           </div>
 
           <AiSummaryBox summary={request.aiSummary} />
+          <AiQueueDebugCard request={request} />
           <AiLegalReviewPanel review={request.aiReviewResult} />
           <ReviewStatusCard
             request={{ ...request, managerDecision, departmentDecision }}

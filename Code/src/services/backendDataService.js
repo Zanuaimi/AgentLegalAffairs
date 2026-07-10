@@ -51,6 +51,22 @@ function mapSuggestionRows(rows) {
   }));
 }
 
+function mapAiReviewJob(row) {
+  if (!row) return null;
+
+  return {
+    id: row.id,
+    status: row.status,
+    attemptCount: row.attempt_count,
+    lastError: row.last_error,
+    lockedAt: formatDateTime(row.locked_at),
+    startedAt: formatDateTime(row.started_at),
+    completedAt: formatDateTime(row.completed_at),
+    createdAt: formatDateTime(row.created_at),
+    updatedAt: formatDateTime(row.updated_at),
+  };
+}
+
 function mapRequest(row, relatedData) {
   const documents = (relatedData.documentsByRequest[row.id] || []).map(
     (document) => ({
@@ -94,6 +110,7 @@ function mapRequest(row, relatedData) {
     documents,
     aiSummary: row.ai_summary,
     aiReviewResult: row.ai_review_result,
+    aiReviewJob: mapAiReviewJob(relatedData.aiJobsByRequest[row.id]?.[0]),
     managerDecision: row.manager_decision,
     departmentDecision: row.department_decision,
     reviewerComments: comments,
@@ -161,36 +178,45 @@ export async function fetchBackendRequests() {
 
   if (requestIds.length === 0) return [];
 
-  const [documentsResult, checklistResult, suggestionsResult, commentsResult] =
-    await Promise.all([
-      client
-        .from("request_documents")
-        .select("*")
-        .in("request_id", requestIds),
-      client
-        .from("request_checklist_items")
-        .select("*, legal_review_criteria(criteria, sort_order)")
-        .in("request_id", requestIds),
-      client
-        .from("document_ai_suggestions")
-        .select("*, request_documents!inner(request_id)")
-        .in("request_documents.request_id", requestIds),
-      client
-        .from("reviewer_comments")
-        .select("*, profiles(full_name, roles(name))")
-        .in("request_id", requestIds)
-        .order("created_at", { ascending: true }),
-    ]);
+  const [
+    documentsResult,
+    checklistResult,
+    suggestionsResult,
+    commentsResult,
+    aiJobsResult,
+  ] = await Promise.all([
+    client.from("request_documents").select("*").in("request_id", requestIds),
+    client
+      .from("request_checklist_items")
+      .select("*, legal_review_criteria(criteria, sort_order)")
+      .in("request_id", requestIds),
+    client
+      .from("document_ai_suggestions")
+      .select("*, request_documents!inner(request_id)")
+      .in("request_documents.request_id", requestIds),
+    client
+      .from("reviewer_comments")
+      .select("*, profiles(full_name, roles(name))")
+      .in("request_id", requestIds)
+      .order("created_at", { ascending: true }),
+    client
+      .from("ai_review_jobs")
+      .select("*")
+      .in("request_id", requestIds)
+      .order("created_at", { ascending: false }),
+  ]);
 
   if (documentsResult.error) throw documentsResult.error;
   if (checklistResult.error) throw checklistResult.error;
   if (suggestionsResult.error) throw suggestionsResult.error;
   if (commentsResult.error) throw commentsResult.error;
+  if (aiJobsResult.error) throw aiJobsResult.error;
 
   const documentsByRequest = groupBy(documentsResult.data, "request_id");
   const checklistByDocument = groupBy(checklistResult.data, "document_id");
   const suggestionsByDocument = groupBy(suggestionsResult.data, "document_id");
   const commentsByRequest = groupBy(commentsResult.data, "request_id");
+  const aiJobsByRequest = groupBy(aiJobsResult.data, "request_id");
 
   return requestRows.map((row) =>
     mapRequest(row, {
@@ -198,6 +224,7 @@ export async function fetchBackendRequests() {
       checklistByDocument,
       suggestionsByDocument,
       commentsByRequest,
+      aiJobsByRequest,
     }),
   );
 }

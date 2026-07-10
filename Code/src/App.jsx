@@ -212,6 +212,29 @@ function App() {
     setBackendMessage("Loaded data from Supabase PostgreSQL.");
   }
 
+  const hasActiveAiReview = requests.some((request) =>
+    ["AI Review Pending", "AI Review Processing"].includes(request.status),
+  );
+
+  useEffect(() => {
+    if (!isLoggedIn || !isSupabaseConfigured || !hasActiveAiReview) return undefined;
+
+    const intervalId = window.setInterval(async () => {
+      try {
+        const refreshedRequests = await fetchBackendRequests();
+        setRequests(refreshedRequests);
+      } catch (error) {
+        setBackendMessage(
+          `Could not refresh AI review queue status: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      }
+    }, 5000);
+
+    return () => window.clearInterval(intervalId);
+  }, [isLoggedIn, hasActiveAiReview]);
+
   async function applyAuthenticatedUser(user) {
     setCurrentUser(user);
     setCurrentRole(user.role);
