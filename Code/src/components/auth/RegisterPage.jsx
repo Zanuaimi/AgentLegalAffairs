@@ -1,9 +1,16 @@
 import { useState } from "react";
 import { departments, roles } from "../../data/mockData";
+import { getReadableErrorMessage } from "../../utils/errorMessage";
 
 const prefixOptions = ["None", "Mr.", "Ms.", "Mrs.", "Dr.", "Prof."];
 
-function RegisterPage({ onRegister, onShowLogin, theme, onToggleTheme }) {
+function RegisterPage({
+  onRegister,
+  onShowLogin,
+  theme,
+  onToggleTheme,
+  backendMessage,
+}) {
   // One object stores all registration form fields together.
   const [formData, setFormData] = useState({
     prefix: "None",
@@ -15,27 +22,37 @@ function RegisterPage({ onRegister, onShowLogin, theme, onToggleTheme }) {
     role: "Requester",
     department: "HR",
   });
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   function updateField(fieldName, value) {
     // The spread operator (...) copies the old object, then updates one field.
     setFormData({ ...formData, [fieldName]: value });
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
+    setErrorMessage("");
 
-    // BACKEND TODO: POST /api/auth/register
-    // In the real system, this would create a user account in the backend database.
-    // For Version 1 frontend-only work, registration is dummy and accepts any details.
+    if (formData.password !== formData.confirmPassword) {
+      setErrorMessage("Password and confirm password must match.");
+      return;
+    }
 
-    onRegister({
-      name: formData.fullName || "Registered Demo User",
-      username: formData.username || "registered.demo",
-      email: formData.email || "registered.demo@university.edu",
-      prefix: formData.prefix,
-      role: formData.role,
-      department: formData.department,
-    });
+    setIsLoading(true);
+
+    try {
+      await onRegister(formData);
+    } catch (error) {
+      setErrorMessage(
+        getReadableErrorMessage(
+          error,
+          "Registration failed. Check Supabase setup. Open the browser console for the full error object.",
+        ),
+      );
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -61,9 +78,15 @@ function RegisterPage({ onRegister, onShowLogin, theme, onToggleTheme }) {
           </p>
           <h1 className="text-3xl font-bold text-slate-900 mt-2">Register</h1>
           <p className="text-slate-500 mt-2">
-            Frontend demo registration. No real account is created yet.
+            Create a Supabase Auth account and app profile.
           </p>
         </div>
+
+        {backendMessage && (
+          <div className="mb-5 rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+            {backendMessage}
+          </div>
+        )}
 
         <form
           onSubmit={handleSubmit}
@@ -182,12 +205,19 @@ function RegisterPage({ onRegister, onShowLogin, theme, onToggleTheme }) {
             </select>
           </div>
 
+          {errorMessage && (
+            <div className="md:col-span-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">
+              {errorMessage}
+            </div>
+          )}
+
           <div className="md:col-span-2 flex flex-col sm:flex-row gap-3 mt-2">
             <button
-              className="flex-1 bg-blue-700 text-white rounded-lg py-3 font-semibold hover:bg-blue-800 transition"
+              className="flex-1 bg-blue-700 text-white rounded-lg py-3 font-semibold hover:bg-blue-800 transition disabled:cursor-not-allowed disabled:opacity-70"
               type="submit"
+              disabled={isLoading}
             >
-              Create Demo Account
+              {isLoading ? "Creating account..." : "Create Account"}
             </button>
             <button
               className="flex-1 border border-slate-300 rounded-lg py-3 font-semibold text-slate-700 hover:bg-slate-50 transition"

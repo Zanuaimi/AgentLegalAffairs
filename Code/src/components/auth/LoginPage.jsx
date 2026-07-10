@@ -1,29 +1,38 @@
 import { useState } from "react";
 import kuLogo from "../../../Assets/KULogo.png";
+import { getReadableErrorMessage } from "../../utils/errorMessage";
 
-function LoginPage({ onLogin, onShowRegister, theme, onToggleTheme }) {
+function LoginPage({
+  onLogin,
+  onShowRegister,
+  theme,
+  onToggleTheme,
+  backendMessage,
+}) {
   // State stores what the user types into the login form.
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     // preventDefault stops the browser from refreshing the page after form submit.
     event.preventDefault();
+    setErrorMessage("");
+    setIsLoading(true);
 
-    // BACKEND TODO: POST /api/auth/login
-    // In the real system, send username and password to the backend.
-    // For Version 1 frontend-only work, this is a dummy login and accepts any input.
-
-    onLogin({
-      name: username || "Demo User",
-      username: username || "demo.user",
-      email: username
-        ? `${username}@university.edu`
-        : "demo.user@university.edu",
-      prefix: "None",
-      role: "Requester",
-      department: "HR",
-    });
+    try {
+      await onLogin({ username, password });
+    } catch (error) {
+      setErrorMessage(
+        getReadableErrorMessage(
+          error,
+          "Login failed. Check Supabase setup, .env.local, and seeded users. Open the browser console for the full error object.",
+        ),
+      );
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -54,9 +63,15 @@ function LoginPage({ onLogin, onShowRegister, theme, onToggleTheme }) {
           </p>
           <h1 className="text-3xl font-bold text-slate-900 mt-2">Login</h1>
           <p className="text-slate-500 mt-2">
-            Frontend demo login. Any username/password works.
+            Login with Supabase Auth. Demo users are listed below.
           </p>
         </div>
+
+        {backendMessage && (
+          <div className="mb-5 rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+            {backendMessage}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
@@ -66,7 +81,7 @@ function LoginPage({ onLogin, onShowRegister, theme, onToggleTheme }) {
             <input
               className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
               type="text"
-              placeholder="Enter any username"
+              placeholder="Example: requester, reviewer, manager, approver, admin"
               value={username}
               onChange={(event) => setUsername(event.target.value)}
             />
@@ -79,19 +94,35 @@ function LoginPage({ onLogin, onShowRegister, theme, onToggleTheme }) {
             <input
               className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
               type="password"
-              placeholder="Enter any password"
+              placeholder="Demo password: password123"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
             />
           </div>
 
+          {errorMessage && (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">
+              {errorMessage}
+            </div>
+          )}
+
           <button
-            className="w-full bg-blue-700 text-white rounded-lg py-3 font-semibold hover:bg-blue-800 transition"
+            className="w-full bg-blue-700 text-white rounded-lg py-3 font-semibold hover:bg-blue-800 transition disabled:cursor-not-allowed disabled:opacity-70"
             type="submit"
+            disabled={isLoading}
           >
-            Login to Dashboard
+            {isLoading ? "Logging in..." : "Login to Dashboard"}
           </button>
         </form>
+
+        <div className="mt-6 rounded-xl bg-slate-50 p-3 text-xs text-slate-600">
+          <p className="font-bold text-slate-900">Easy demo accounts</p>
+          <p>requester / password123</p>
+          <p>reviewer / password123</p>
+          <p>manager / password123</p>
+          <p>approver / password123</p>
+          <p>admin / password123</p>
+        </div>
 
         <p className="text-center text-sm text-slate-600 mt-6">
           New user?{" "}
@@ -128,9 +159,12 @@ onChange runs when the user types into an input. We use it to update React state
 5. What is a prop?
 Props are values/functions passed from a parent component. onLogin, onShowRegister, theme, and onToggleTheme come from App.jsx.
 
-6. Why is the theme button on the login page?
+6. Why does onLogin use username and password now?
+App.jsx connects this form to Supabase Auth. The login page collects input, and App.jsx decides how to authenticate.
+
+7. Why is the theme button on the login page?
 It lets the user switch between light mode and dark mode before logging in.
 
-7. Why is the theme button icon-only?
+8. Why is the theme button icon-only?
 The icon keeps the UI compact. aria-label and title still explain the button for accessibility and hover help.
 */

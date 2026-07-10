@@ -4,6 +4,7 @@ import {
   legalCategories,
   priorityLevels,
 } from "../../data/mockData";
+import { analyzeLegalDocument } from "../../services/legalReviewApi";
 import { createFrontendPdfDocument } from "../../utils/demoPdfReview";
 
 function RequestForm({ onCreateRequest, currentUser }) {
@@ -19,6 +20,8 @@ function RequestForm({ onCreateRequest, currentUser }) {
   // selectedPdfFile stores the actual browser file only while the frontend demo is open.
   const [selectedPdfFile, setSelectedPdfFile] = useState(null);
   const [fileError, setFileError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [aiStatusMessage, setAiStatusMessage] = useState("");
 
   function updateField(fieldName, value) {
     setFormData({ ...formData, [fieldName]: value });
@@ -46,12 +49,37 @@ function RequestForm({ onCreateRequest, currentUser }) {
     setFileError("");
   }
 
-  function handleSubmit(event) {
+  function getHighestRiskLevel(aiReviewResult) {
+    const risks = aiReviewResult?.risk_highlights || [];
+
+    if (risks.some((risk) => risk.risk_level === "high")) return "High";
+    if (risks.some((risk) => risk.risk_level === "medium")) return "Medium";
+    if (risks.some((risk) => risk.risk_level === "low")) return "Low";
+    return "Not Classified";
+  }
+
+  async function handleSubmit(event) {
     event.preventDefault();
 
     if (!selectedPdfFile) {
       setFileError("Please attach one PDF file before submitting the request.");
       return;
+    }
+
+    setIsSubmitting(true);
+    setAiStatusMessage("Running AI legal review draft...");
+
+    let aiReviewResult = null;
+    let aiReviewError = "";
+
+    try {
+      aiReviewResult = await analyzeLegalDocument(selectedPdfFile);
+      setAiStatusMessage("AI legal review draft completed.");
+    } catch (error) {
+      aiReviewError = error instanceof Error ? error.message : String(error);
+      setAiStatusMessage(
+        "AI review could not run. The request will still be submitted for human review.",
+      );
     }
 
     const selectedCategory = legalCategories.find(
@@ -76,25 +104,22 @@ function RequestForm({ onCreateRequest, currentUser }) {
       requesterUsername: currentUser?.username || "demo.requester",
       assignedReviewer: "Not Assigned",
       priority: formData.priority,
-      riskLevel: "Not Classified",
+      riskLevel: getHighestRiskLevel(aiReviewResult),
       status: "New",
       deadline: formData.deadline || "No deadline selected",
       submittedAt,
       description:
         formData.description || "No description was provided by the requester.",
-      documents: [createFrontendPdfDocument(selectedPdfFile)],
-      aiSummary:
-        "AI draft placeholder: PDF attached successfully. Detailed AI review is not generated in this frontend-only demo.",
+      documents: [createFrontendPdfDocument(selectedPdfFile, aiReviewResult)],
+      uploadFile: selectedPdfFile,
+      aiSummary: aiReviewResult
+        ? aiReviewResult.draft_review_note
+        : `Pending AI review${aiReviewError ? `: ${aiReviewError}` : ""}`,
+      aiReviewResult,
       reviewerComments: [],
     };
 
-    // BACKEND TODO: POST /api/requests
-    // Send newRequest to the backend so it can be saved in the real database.
-
-    // BACKEND TODO: POST /api/documents/upload
-    // Upload the selected PDF file to backend document storage.
-
-    onCreateRequest(newRequest);
+    await onCreateRequest(newRequest);
 
     setFormData({
       title: "",
@@ -106,6 +131,8 @@ function RequestForm({ onCreateRequest, currentUser }) {
     });
     setSelectedPdfFile(null);
     setFileError("");
+    setIsSubmitting(false);
+    setAiStatusMessage("");
     event.target.reset();
   }
 
@@ -207,8 +234,8 @@ function RequestForm({ onCreateRequest, currentUser }) {
             onChange={handlePdfChange}
           />
           <p className="text-xs text-slate-500 mt-1">
-            Version 1 accepts PDF files only. The frontend can preview the PDF,
-            but it does not upload it to a backend.
+            Version 1 accepts PDF files only. The file is analyzed through the
+            Supabase legal-review Edge Function when configured.
           </p>
           {selectedPdfFile && (
             <p className="text-xs font-semibold text-green-700 mt-1">
@@ -218,6 +245,11 @@ function RequestForm({ onCreateRequest, currentUser }) {
           {fileError && (
             <p className="text-xs font-semibold text-red-700 mt-1">
               {fileError}
+            </p>
+          )}
+          {aiStatusMessage && (
+            <p className="text-xs font-semibold text-blue-700 mt-1">
+              {aiStatusMessage}
             </p>
           )}
         </div>
@@ -240,10 +272,13 @@ function RequestForm({ onCreateRequest, currentUser }) {
 
         <div className="md:col-span-2">
           <button
-            className="bg-blue-700 text-white rounded-lg px-6 py-3 font-semibold hover:bg-blue-800"
+            className="bg-blue-700 text-white rounded-lg px-6 py-3 font-semibold hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-70"
             type="submit"
+            disabled={isSubmitting}
           >
-            Submit Demo Request
+            {isSubmitting
+              ? "Analyzing and Submitting..."
+              : "Submit Request with AI Review"}
           </button>
         </div>
       </form>
@@ -268,8 +303,8 @@ It lets the user choose a file from their computer. In this demo, we only allow 
 4. What is accept="application/pdf,.pdf"?
 accept tells the browser that the file picker should only allow PDF files. We still check the file in JavaScript too.
 
-5. Why no real upload?
-The project is frontend-only. Real upload requires backend storage, so we leave a BACKEND TODO comment.
+5. How is the PDF uploaded?
+App.jsx sends this selected PDF to the Supabase-backed request service, which stores the file in Supabase Storage.
 
 6. What is URL.createObjectURL?
 It creates a temporary browser link for a selected file, so the PDF popup can preview it without a backend.

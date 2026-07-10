@@ -1,3 +1,9 @@
+import { useEffect, useRef, useState } from "react";
+import * as pdfjsLib from "pdfjs-dist";
+import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+
 function AiChecklistStatus({ checked }) {
   return (
     <span
@@ -12,11 +18,179 @@ function AiChecklistStatus({ checked }) {
   );
 }
 
+function PdfPageCanvas({ pdfDocument, pageNumber, pageRef }) {
+  const canvasRef = useRef(null);
+  const [renderError, setRenderError] = useState("");
+
+  useEffect(() => {
+    let isCancelled = false;
+    let renderTask = null;
+
+    async function renderPage() {
+      try {
+        setRenderError("");
+        const page = await pdfDocument.getPage(pageNumber);
+
+        if (isCancelled) return;
+
+        const containerWidth = 900;
+        const unscaledViewport = page.getViewport({ scale: 1 });
+        const scale = Math.min(containerWidth / unscaledViewport.width, 1.4);
+        const viewport = page.getViewport({ scale });
+        const canvas = canvasRef.current;
+        const context = canvas.getContext("2d");
+
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+
+        renderTask = page.render({ canvasContext: context, viewport });
+        await renderTask.promise;
+      } catch (error) {
+        if (error?.name === "RenderingCancelledException") return;
+        setRenderError(
+          error instanceof Error ? error.message : "Could not render this page.",
+        );
+      }
+    }
+
+    renderPage();
+
+    return () => {
+      isCancelled = true;
+      if (renderTask) renderTask.cancel();
+    };
+  }, [pdfDocument, pageNumber]);
+
+  return (
+    <div ref={pageRef} className="mx-auto w-fit scroll-mt-4 rounded-xl bg-white p-3 shadow-sm">
+      <div className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">
+        Page {pageNumber}
+      </div>
+      {renderError ? (
+        <div className="max-w-xl rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {renderError}
+        </div>
+      ) : (
+        <canvas ref={canvasRef} className="max-w-full rounded-lg border border-slate-200" />
+      )}
+    </div>
+  );
+}
+
+function BrowserIndependentPdfViewer({ document, pageRefs }) {
+  const [pdfDocument, setPdfDocument] = useState(null);
+  const [pageCount, setPageCount] = useState(0);
+  const [viewerStatus, setViewerStatus] = useState("Loading PDF preview...");
+  const [viewerError, setViewerError] = useState("");
+
+  useEffect(() => {
+    let isCancelled = false;
+    let loadingTask = null;
+
+    async function loadPdf() {
+      if (!document?.url) {
+        setViewerError("No PDF URL is available for this document.");
+        return;
+      }
+
+      try {
+        setPdfDocument(null);
+        setPageCount(0);
+        setViewerError("");
+        setViewerStatus("Loading PDF preview...");
+
+        // PDF.js fetches and renders the PDF into canvases. This avoids the
+        // browser's built-in PDF plugin, which can download PDFs on some setups.
+        loadingTask = pdfjsLib.getDocument({
+          url: document.url,
+          withCredentials: false,
+        });
+
+        const loadedPdf = await loadingTask.promise;
+
+        if (isCancelled) return;
+
+        setPdfDocument(loadedPdf);
+        setPageCount(loadedPdf.numPages);
+        setViewerStatus("");
+      } catch (error) {
+        if (isCancelled) return;
+
+        setViewerError(
+          error instanceof Error
+            ? error.message
+            : "Could not display the PDF inside the app.",
+        );
+        setViewerStatus("");
+      }
+    }
+
+    loadPdf();
+
+    return () => {
+      isCancelled = true;
+      if (loadingTask) loadingTask.destroy();
+    };
+  }, [document]);
+
+  if (viewerError) {
+    return (
+      <div className="flex h-full min-h-[50vh] items-center justify-center p-6">
+        <div className="max-w-xl rounded-2xl border border-red-200 bg-red-50 p-5 text-center">
+          <h3 className="font-bold text-red-800">PDF preview could not load</h3>
+          <p className="mt-2 text-sm text-red-700">{viewerError}</p>
+          <p className="mt-3 text-xs text-red-700">
+            The app now uses PDF.js to avoid forced downloads. If this message
+            appears, check that the PDF URL is reachable from localhost and that
+            Supabase Storage allows authenticated read access.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full min-h-[50vh] overflow-y-auto bg-slate-100 p-4 xl:min-h-0">
+      {viewerStatus && (
+        <div className="flex min-h-[40vh] items-center justify-center text-sm font-semibold text-slate-500">
+          {viewerStatus}
+        </div>
+      )}
+
+      {pdfDocument && (
+        <div className="space-y-5 pb-6">
+          {Array.from({ length: pageCount }, (_, index) => (
+            <PdfPageCanvas
+              key={index + 1}
+              pdfDocument={pdfDocument}
+              pageNumber={index + 1}
+              pageRef={(element) => {
+                pageRefs.current[index + 1] = element;
+              }}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PdfReviewModal({ document, onClose }) {
   if (!document) return null;
 
   const checklist = document.checklist || [];
   const aiSuggestions = document.aiSuggestions || [];
+  const pageRefs = useRef({});
+
+  function goToPdfPage(page) {
+    const pageNumber = Number.parseInt(String(page), 10);
+    if (!pageNumber || !pageRefs.current[pageNumber]) return;
+
+    pageRefs.current[pageNumber].scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/70 p-3 sm:p-4">
@@ -31,8 +205,8 @@ function PdfReviewModal({ document, onClose }) {
                 {document.name}
               </h2>
               <p className="text-sm text-slate-500">
-                PDF on the left. AI checklist and AI page suggestions on the
-                right.
+                PDF.js preview on the left. AI checklist and AI page suggestions
+                on the right.
               </p>
             </div>
 
@@ -47,13 +221,7 @@ function PdfReviewModal({ document, onClose }) {
         </div>
 
         <div className="grid min-h-0 flex-1 grid-cols-1 xl:grid-cols-[minmax(0,1fr)_390px]">
-          <div className="min-h-[50vh] bg-slate-100 xl:min-h-0">
-            <iframe
-              className="h-full min-h-[50vh] w-full border-0 xl:min-h-0"
-              src={document.url}
-              title={`PDF viewer for ${document.name}`}
-            />
-          </div>
+          <BrowserIndependentPdfViewer document={document} pageRefs={pageRefs} />
 
           <aside className="flex min-h-0 flex-col border-l border-slate-200 bg-slate-50">
             <section className="flex min-h-0 flex-1 flex-col border-b border-slate-200 p-4">
@@ -79,9 +247,14 @@ function PdfReviewModal({ document, onClose }) {
                       <AiChecklistStatus checked={item.checked} />
                     </div>
 
-                    <span className="mt-2 inline-flex rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-700">
+                    <button
+                      type="button"
+                      className="mt-2 inline-flex rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-200 disabled:cursor-not-allowed disabled:opacity-60"
+                      onClick={() => goToPdfPage(item.page)}
+                      disabled={item.page === "N/A"}
+                    >
                       Page {item.page}
-                    </span>
+                    </button>
 
                     <p className="mt-2 break-words text-sm leading-relaxed text-slate-600">
                       {item.note}
@@ -97,8 +270,7 @@ function PdfReviewModal({ document, onClose }) {
                   AI Suggestions by Page
                 </h3>
                 <p className="text-sm leading-relaxed text-slate-500">
-                  Draft support only. Legal Affairs must make the final
-                  decision.
+                  Draft support only. Legal Affairs must make the final decision.
                 </p>
               </div>
 
@@ -109,9 +281,13 @@ function PdfReviewModal({ document, onClose }) {
                     className="rounded-xl border border-blue-200 bg-blue-50 p-3"
                   >
                     <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                      <span className="rounded-full bg-white px-2 py-1 text-xs font-bold text-blue-700">
+                      <button
+                        type="button"
+                        className="rounded-full bg-white px-2 py-1 text-xs font-bold text-blue-700 hover:bg-blue-100"
+                        onClick={() => goToPdfPage(suggestion.page)}
+                      >
                         Page {suggestion.page}
-                      </span>
+                      </button>
                       <span className="break-words text-right text-[11px] font-bold uppercase tracking-wide text-blue-700">
                         {suggestion.type}
                       </span>
@@ -138,15 +314,18 @@ BEGINNER DOCUMENTATION:
 1. What is a modal?
 A modal is a popup layer that appears above the normal page. Here it lets the user review a PDF without leaving Request Details.
 
-2. What is an iframe?
-<iframe> can show another document inside the page. We use it to show the PDF with the browser's built-in PDF viewer.
+2. Why use PDF.js instead of an iframe?
+Some browsers or localhost setups download PDFs instead of displaying them inside an iframe. PDF.js reads the PDF file and draws each page on a canvas, so the app controls the preview.
 
-3. Why are checklist and AI suggestions scrollable separately?
+3. Why can the page badges be clicked?
+Each rendered PDF page has a React ref. Clicking a checklist page number scrolls the left PDF preview to that page.
+
+4. What is a canvas?
+<canvas> is an HTML element that JavaScript can draw onto. PDF.js draws each PDF page onto a canvas.
+
+5. Why are checklist and AI suggestions scrollable separately?
 Each panel has its own scrolling area so long checklist text cannot collide with the AI suggestions section.
 
-4. Why are there no checkboxes here?
-The checklist is now AI-prechecked demo data. The popup displays AI draft status instead of asking the reviewer to toggle items.
-
-5. Is this real AI?
-No. This is frontend demo data. Real AI suggestions would come from backend/AI work owned outside this frontend scope.
+6. Why are there no checkboxes here?
+The checklist is AI-prechecked draft data. The popup displays AI draft status instead of asking the reviewer to toggle items.
 */

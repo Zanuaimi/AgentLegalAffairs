@@ -7,25 +7,39 @@ function DepartmentApprovalPanel({
   onDecisionChange,
 }) {
   const [departmentComment, setDepartmentComment] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   if (!request) return null;
 
+  const actionsDisabled = !canManageDepartmentApproval || isSaving;
+
+  async function saveDepartmentDecision(nextDecision) {
+    if (!canManageDepartmentApproval || isSaving) return;
+
+    setIsSaving(true);
+    setErrorMessage("");
+
+    try {
+      await onDecisionChange(nextDecision, departmentComment);
+      setDepartmentComment("");
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Could not save department decision.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   function approveDepartmentContent() {
-    if (!canManageDepartmentApproval) return;
-
-    onDecisionChange("Department Approved");
-
-    // BACKEND TODO: POST /api/requests/:id/department-approval
-    // Save department approval decision and comment in the backend later.
+    saveDepartmentDecision("Department Approved");
   }
 
   function requestRevision() {
-    if (!canManageDepartmentApproval) return;
-
-    onDecisionChange("Department Requested Revision");
-
-    // BACKEND TODO: POST /api/requests/:id/department-approval
-    // Save department revision decision and comment in the backend later.
+    saveDepartmentDecision("Department Requested Revision");
   }
 
   return (
@@ -57,7 +71,7 @@ function DepartmentApprovalPanel({
           value={departmentComment}
           onChange={(event) => setDepartmentComment(event.target.value)}
           placeholder="Add department-specific approval notes or revision comments."
-          disabled={!canManageDepartmentApproval}
+          disabled={actionsDisabled}
         />
       </label>
 
@@ -66,7 +80,7 @@ function DepartmentApprovalPanel({
           className="flex-1 rounded-lg bg-green-700 px-4 py-3 font-semibold text-white hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-green-700"
           type="button"
           onClick={approveDepartmentContent}
-          disabled={!canManageDepartmentApproval}
+          disabled={actionsDisabled}
         >
           Approve Department Content
         </button>
@@ -74,11 +88,23 @@ function DepartmentApprovalPanel({
           className="flex-1 rounded-lg border border-orange-300 px-4 py-3 font-semibold text-orange-700 hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-white"
           type="button"
           onClick={requestRevision}
-          disabled={!canManageDepartmentApproval}
+          disabled={actionsDisabled}
         >
           Request Revision
         </button>
       </div>
+
+      {isSaving && (
+        <p className="mt-4 text-xs font-semibold text-blue-700">
+          Saving department decision to Supabase...
+        </p>
+      )}
+
+      {errorMessage && (
+        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+          {errorMessage}
+        </div>
+      )}
     </div>
   );
 }

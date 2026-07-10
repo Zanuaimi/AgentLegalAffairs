@@ -1,0 +1,468 @@
+import { requireSupabase } from "./supabaseClient";
+
+function formatDateTime(value) {
+  if (!value) return "Not recorded";
+
+  return new Date(value).toLocaleString([], {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function mapProfile(row) {
+  return {
+    id: row.id,
+    name: row.full_name,
+    username: row.username,
+    prefix: row.prefix,
+    email: row.email,
+    role: row.roles?.name || row.role_name || row.role_id,
+    department:
+      row.departments?.name || row.department_name || row.department_id,
+    status: row.status,
+  };
+}
+
+function mapChecklistRows(rows) {
+  return [...rows]
+    .sort(
+      (a, b) =>
+        (a.legal_review_criteria?.sort_order || 0) -
+        (b.legal_review_criteria?.sort_order || 0),
+    )
+    .map((row) => ({
+      id: row.id,
+      criteria:
+        row.legal_review_criteria?.criteria || row.criteria || "Checklist item",
+      page: row.page,
+      checked: row.checked,
+      note: row.note,
+    }));
+}
+
+function mapSuggestionRows(rows) {
+  return rows.map((row) => ({
+    page: row.page,
+    type: row.suggestion_type,
+    text: row.suggestion_text,
+  }));
+}
+
+function mapRequest(row, relatedData) {
+  const documents = (relatedData.documentsByRequest[row.id] || []).map(
+    (document) => ({
+      id: document.id,
+      name: document.file_name,
+      type: document.mime_type,
+      url: document.public_url || document.storage_path || "",
+      checklist: mapChecklistRows(
+        relatedData.checklistByDocument[document.id] || [],
+      ),
+      aiSuggestions: mapSuggestionRows(
+        relatedData.suggestionsByDocument[document.id] || [],
+      ),
+    }),
+  );
+
+  const comments = (relatedData.commentsByRequest[row.id] || []).map(
+    (comment) => ({
+      authorName: comment.profiles?.full_name || "User",
+      authorRole: comment.profiles?.roles?.name || "User",
+      reviewerName: comment.profiles?.full_name || "User",
+      text: comment.comment_text,
+    }),
+  );
+
+  return {
+    id: row.id,
+    title: row.title,
+    categoryCode: row.category_code,
+    categoryName: row.category_name,
+    department: row.department,
+    requester: row.requester,
+    requesterUsername: row.requester_username,
+    assignedReviewer: row.assigned_reviewer || "Not Assigned",
+    priority: row.priority,
+    riskLevel: row.risk_level,
+    status: row.status,
+    deadline: row.deadline || "No deadline selected",
+    submittedAt: formatDateTime(row.submitted_at),
+    description: row.description,
+    documents,
+    aiSummary: row.ai_summary,
+    aiReviewResult: row.ai_review_result,
+    managerDecision: row.manager_decision,
+    departmentDecision: row.department_decision,
+    reviewerComments: comments,
+  };
+}
+
+function groupBy(rows, key) {
+  return rows.reduce((groups, row) => {
+    const groupKey = row[key];
+    groups[groupKey] = groups[groupKey] || [];
+    groups[groupKey].push(row);
+    return groups;
+  }, {});
+}
+
+export async function checkBackendConnection() {
+  const client = requireSupabase();
+  const { error } = await client.from("roles").select("id").limit(1);
+
+  if (error) throw error;
+  return true;
+}
+
+export async function fetchBackendUsers() {
+  const client = requireSupabase();
+  const { data, error } = await client
+    .from("profiles")
+    .select(
+      "id, username, full_name, email, prefix, status, roles(name), departments(name)",
+    )
+    .order("full_name");
+
+  if (error) throw error;
+  return data.map(mapProfile);
+}
+
+export async function fetchBackendAuditLogs() {
+  const client = requireSupabase();
+  const { data, error } = await client
+    .from("audit_logs")
+    .select("id, request_id, action, actor_name, created_at")
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+
+  return data.map((row) => ({
+    id: row.id,
+    requestId: row.request_id || "System",
+    action: row.action,
+    user: row.actor_name,
+    time: formatDateTime(row.created_at),
+  }));
+}
+
+export async function fetchBackendRequests() {
+  const client = requireSupabase();
+  const { data: requestRows, error: requestError } = await client
+    .from("legal_requests_dashboard")
+    .select("*")
+    .order("submitted_at", { ascending: false });
+
+  if (requestError) throw requestError;
+
+  const requestIds = requestRows.map((request) => request.id);
+
+  if (requestIds.length === 0) return [];
+
+  const [documentsResult, checklistResult, suggestionsResult, commentsResult] =
+    await Promise.all([
+      client
+        .from("request_documents")
+        .select("*")
+        .in("request_id", requestIds),
+      client
+        .from("request_checklist_items")
+        .select("*, legal_review_criteria(criteria, sort_order)")
+        .in("request_id", requestIds),
+      client
+        .from("document_ai_suggestions")
+        .select("*, request_documents!inner(request_id)")
+        .in("request_documents.request_id", requestIds),
+      client
+        .from("reviewer_comments")
+        .select("*, profiles(full_name, roles(name))")
+        .in("request_id", requestIds)
+        .order("created_at", { ascending: true }),
+    ]);
+
+  if (documentsResult.error) throw documentsResult.error;
+  if (checklistResult.error) throw checklistResult.error;
+  if (suggestionsResult.error) throw suggestionsResult.error;
+  if (commentsResult.error) throw commentsResult.error;
+
+  const documentsByRequest = groupBy(documentsResult.data, "request_id");
+  const checklistByDocument = groupBy(checklistResult.data, "document_id");
+  const suggestionsByDocument = groupBy(suggestionsResult.data, "document_id");
+  const commentsByRequest = groupBy(commentsResult.data, "request_id");
+
+  return requestRows.map((row) =>
+    mapRequest(row, {
+      documentsByRequest,
+      checklistByDocument,
+      suggestionsByDocument,
+      commentsByRequest,
+    }),
+  );
+}
+
+export async function createBackendRequest(newRequest, currentUser) {
+  const client = requireSupabase();
+  const requestRow = {
+    id: newRequest.id,
+    title: newRequest.title,
+    description: newRequest.description,
+    requester_id: currentUser.id,
+    department_id: newRequest.department.toLowerCase().replaceAll(" ", "_"),
+    category_code: newRequest.categoryCode,
+    priority: newRequest.priority,
+    risk_level: newRequest.riskLevel,
+    status: newRequest.status,
+    deadline:
+      newRequest.deadline === "No deadline selected"
+        ? null
+        : newRequest.deadline,
+    ai_summary: newRequest.aiSummary,
+    ai_review_result: newRequest.aiReviewResult,
+  };
+
+  const { error: requestError } = await client
+    .from("legal_requests")
+    .insert(requestRow);
+
+  if (requestError) throw requestError;
+
+  const firstDocument = newRequest.documents[0];
+  let storagePath = null;
+  let publicUrl = firstDocument.url;
+
+  if (newRequest.uploadFile) {
+    storagePath = `${newRequest.id}/${Date.now()}-${newRequest.uploadFile.name}`;
+
+    const { error: uploadError } = await client.storage
+      .from("legal-documents")
+      .upload(storagePath, newRequest.uploadFile, {
+        contentType: newRequest.uploadFile.type || "application/pdf",
+        upsert: true,
+      });
+
+    if (uploadError) throw uploadError;
+
+    const { data: publicUrlData } = client.storage
+      .from("legal-documents")
+      .getPublicUrl(storagePath);
+
+    publicUrl = publicUrlData.publicUrl;
+  }
+
+  const { data: documentRow, error: documentError } = await client
+    .from("request_documents")
+    .insert({
+      request_id: newRequest.id,
+      file_name: firstDocument.name,
+      mime_type: firstDocument.type,
+      storage_path: storagePath,
+      public_url: publicUrl,
+    })
+    .select("id")
+    .single();
+
+  if (documentError) throw documentError;
+
+  const { data: criteriaRows, error: criteriaError } = await client
+    .from("legal_review_criteria")
+    .select("id, criteria");
+
+  if (criteriaError) throw criteriaError;
+
+  const checklistRows = firstDocument.checklist
+    .map((item) => ({
+      request_id: newRequest.id,
+      document_id: documentRow.id,
+      criteria_id: criteriaRows.find(
+        (criteria) => criteria.criteria === item.criteria,
+      )?.id,
+      page: String(item.page),
+      checked: item.checked,
+      note: item.note,
+    }))
+    .filter((row) => row.criteria_id);
+
+  if (checklistRows.length > 0) {
+    const { error: checklistError } = await client
+      .from("request_checklist_items")
+      .insert(checklistRows);
+
+    if (checklistError) throw checklistError;
+  }
+
+  const suggestionRows = firstDocument.aiSuggestions.map((suggestion) => ({
+    document_id: documentRow.id,
+    page: String(suggestion.page),
+    suggestion_type: suggestion.type,
+    suggestion_text: suggestion.text,
+  }));
+
+  if (suggestionRows.length > 0) {
+    const { error: suggestionError } = await client
+      .from("document_ai_suggestions")
+      .insert(suggestionRows);
+
+    if (suggestionError) throw suggestionError;
+  }
+
+  return newRequest;
+}
+
+export async function createBackendRequestComment({
+  requestId,
+  currentUser,
+  commentText,
+}) {
+  const client = requireSupabase();
+  const { error } = await client.from("reviewer_comments").insert({
+    request_id: requestId,
+    reviewer_id: currentUser.id,
+    comment_text: commentText,
+  });
+
+  if (error) throw error;
+}
+
+export async function createBackendAuditLog(
+  action,
+  currentUser,
+  requestId = "System",
+) {
+  const client = requireSupabase();
+  const { error } = await client.from("audit_logs").insert({
+    request_id: requestId === "System" ? null : requestId,
+    action,
+    actor_id: currentUser?.id || null,
+    actor_name: currentUser?.name || "System",
+  });
+
+  if (error) throw error;
+}
+
+function statusForManagerDecision(decision) {
+  if (decision === "Closed by Legal Manager") return "Closed";
+  if (decision === "Response Approved by Legal Manager") return "Approved";
+  if (decision === "Escalated by Legal Manager") return "Under Review";
+  if (decision === "Reviewer Assignment Started") return "Assigned to Legal Reviewer";
+  return "Under Review";
+}
+
+function statusForDepartmentDecision(decision) {
+  if (decision === "Department Approved") return "Sent for Internal Approval";
+  if (decision === "Department Requested Revision") return "Returned for Revision";
+  return "Under Review";
+}
+
+export async function createBackendManagerAction({
+  requestId,
+  currentUser,
+  decision,
+}) {
+  const client = requireSupabase();
+  const status = statusForManagerDecision(decision);
+
+  const { error: actionError } = await client.from("manager_actions").insert({
+    request_id: requestId,
+    manager_id: currentUser.id,
+    action: decision,
+  });
+
+  if (actionError) throw actionError;
+
+  const { error: requestError } = await client
+    .from("legal_requests")
+    .update({ manager_decision: decision, status })
+    .eq("id", requestId);
+
+  if (requestError) throw requestError;
+
+  return { managerDecision: decision, status };
+}
+
+export async function createBackendDepartmentApproval({
+  requestId,
+  currentUser,
+  decision,
+  commentText,
+}) {
+  const client = requireSupabase();
+  const status = statusForDepartmentDecision(decision);
+
+  const { error: approvalError } = await client
+    .from("department_approvals")
+    .insert({
+      request_id: requestId,
+      approver_id: currentUser.id,
+      decision,
+      comment_text: commentText || "",
+    });
+
+  if (approvalError) throw approvalError;
+
+  const { error: requestError } = await client
+    .from("legal_requests")
+    .update({ department_decision: decision, status })
+    .eq("id", requestId);
+
+  if (requestError) throw requestError;
+
+  return { departmentDecision: decision, status };
+}
+
+export async function updateBackendChecklistItem({ checklistItemId, checked }) {
+  const client = requireSupabase();
+  const { error } = await client
+    .from("request_checklist_items")
+    .update({ checked })
+    .eq("id", checklistItemId);
+
+  if (error) throw error;
+}
+
+async function lookupIdByName(client, tableName, name) {
+  const { data, error } = await client
+    .from(tableName)
+    .select("id")
+    .eq("name", name)
+    .single();
+
+  if (error) throw error;
+  return data.id;
+}
+
+export async function updateBackendUserRole({ userId, roleName }) {
+  const client = requireSupabase();
+  const roleId = await lookupIdByName(client, "roles", roleName);
+  const { error } = await client
+    .from("profiles")
+    .update({ role_id: roleId })
+    .eq("id", userId);
+
+  if (error) throw error;
+}
+
+export async function updateBackendUserDepartment({ userId, departmentName }) {
+  const client = requireSupabase();
+  const departmentId = await lookupIdByName(client, "departments", departmentName);
+  const { error } = await client
+    .from("profiles")
+    .update({ department_id: departmentId })
+    .eq("id", userId);
+
+  if (error) throw error;
+}
+
+/*
+BEGINNER DOCUMENTATION:
+
+1. Why map database rows?
+The old frontend used camelCase mock objects. Supabase returns database-style snake_case rows. Mapping lets us keep the UI mostly unchanged.
+
+2. Why are checklist items separate rows now?
+A checklist belongs to a request/document. Storing each item as a row makes it easier for Legal Reviewers to update one item at a time.
+
+3. Does this replace every mock interaction?
+Most core request workflow actions now persist to Supabase: requests, comments, checklist updates, manager decisions, department approvals, audit logs, and admin profile changes.
+*/

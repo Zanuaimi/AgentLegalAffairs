@@ -1,45 +1,84 @@
+import { useState } from "react";
 import { departments, roles } from "../../data/mockData";
 
-function AdminUsers({ users, setUsers, onAuditEvent, currentUser }) {
-  function updateUserRole(userId, newRole) {
+function AdminUsers({
+  users,
+  setUsers,
+  onAuditEvent,
+  currentUser,
+  onUpdateUserRole,
+  onUpdateUserDepartment,
+}) {
+  const [savingUserId, setSavingUserId] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  async function updateUserRole(userId, newRole) {
     const selectedUser = users.find((user) => user.id === userId);
+    if (!selectedUser || selectedUser.role === newRole) return;
 
-    // BACKEND TODO: PATCH /api/users/:id/role
-    // In the real system, this would save the user's new role in the backend.
-
-    setUsers(
-      users.map((user) =>
+    setSavingUserId(userId);
+    setErrorMessage("");
+    setUsers((currentUsers) =>
+      currentUsers.map((user) =>
         user.id === userId ? { ...user, role: newRole } : user,
       ),
     );
 
-    if (selectedUser) {
-      onAuditEvent(
+    try {
+      await onUpdateUserRole(userId, newRole);
+      await onAuditEvent(
         `Changed ${selectedUser.username}'s role from ${selectedUser.role} to ${newRole}`,
         currentUser.name,
         "Admin",
       );
+    } catch (error) {
+      setUsers((currentUsers) =>
+        currentUsers.map((user) =>
+          user.id === userId ? { ...user, role: selectedUser.role } : user,
+        ),
+      );
+      setErrorMessage(
+        error instanceof Error ? error.message : "Could not save user role.",
+      );
+    } finally {
+      setSavingUserId("");
     }
   }
 
-  function updateUserDepartment(userId, newDepartment) {
+  async function updateUserDepartment(userId, newDepartment) {
     const selectedUser = users.find((user) => user.id === userId);
+    if (!selectedUser || selectedUser.department === newDepartment) return;
 
-    // BACKEND TODO: PATCH /api/users/:id/department
-    // In the real system, this would save the user's new department in the backend.
-
-    setUsers(
-      users.map((user) =>
+    setSavingUserId(userId);
+    setErrorMessage("");
+    setUsers((currentUsers) =>
+      currentUsers.map((user) =>
         user.id === userId ? { ...user, department: newDepartment } : user,
       ),
     );
 
-    if (selectedUser) {
-      onAuditEvent(
+    try {
+      await onUpdateUserDepartment(userId, newDepartment);
+      await onAuditEvent(
         `Changed ${selectedUser.username}'s department from ${selectedUser.department} to ${newDepartment}`,
         currentUser.name,
         "Admin",
       );
+    } catch (error) {
+      setUsers((currentUsers) =>
+        currentUsers.map((user) =>
+          user.id === userId
+            ? { ...user, department: selectedUser.department }
+            : user,
+        ),
+      );
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Could not save user department.",
+      );
+    } finally {
+      setSavingUserId("");
     }
   }
 
@@ -50,8 +89,8 @@ function AdminUsers({ users, setUsers, onAuditEvent, currentUser }) {
           Admin: Manage Users & Roles
         </h2>
         <p className="text-slate-500 mt-1">
-          Frontend-only admin page using dummy users from the project data.
-          Changes are recorded in the admin audit log.
+          Manage Supabase profile roles and departments. Changes are recorded in
+          the audit log.
         </p>
       </div>
 
@@ -87,6 +126,7 @@ function AdminUsers({ users, setUsers, onAuditEvent, currentUser }) {
                       onChange={(event) =>
                         updateUserRole(user.id, event.target.value)
                       }
+                      disabled={savingUserId === user.id}
                     >
                       {roles.map((role) => (
                         <option key={role} value={role}>
@@ -102,6 +142,7 @@ function AdminUsers({ users, setUsers, onAuditEvent, currentUser }) {
                       onChange={(event) =>
                         updateUserDepartment(user.id, event.target.value)
                       }
+                      disabled={savingUserId === user.id}
                     >
                       {departments.map((department) => (
                         <option key={department} value={department}>
@@ -122,17 +163,19 @@ function AdminUsers({ users, setUsers, onAuditEvent, currentUser }) {
         </div>
       </div>
 
+      {errorMessage && (
+        <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-800">
+          {errorMessage}
+        </div>
+      )}
+
       <div className="mt-5 bg-blue-50 border border-blue-200 rounded-2xl p-5 text-slate-700">
-        <p className="font-semibold text-blue-950">Frontend-only note</p>
+        <p className="font-semibold text-blue-950">Security note</p>
         <p className="mt-2">
-          Changing roles here only updates browser state and writes a demo audit
-          event. A real backend must enforce permissions securely.
+          The UI saves profile changes to Supabase, but backend RLS policies must
+          still enforce who is allowed to manage users.
         </p>
       </div>
-
-      {/* BACKEND TODO: GET /api/users to fetch real users. */}
-      {/* BACKEND TODO: PATCH /api/users/:id/role to update a user's role. */}
-      {/* BACKEND TODO: PATCH /api/users/:id/department to update a user's department. */}
     </section>
   );
 }

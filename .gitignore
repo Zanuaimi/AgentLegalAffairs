@@ -1,0 +1,19 @@
+# Dependencies and build output
+Code/node_modules
+Code/dist
+
+# Frontend and backend local secrets
+Code/.env
+Code/.env.local
+supabase/.env
+supabase/.env.local
+supabase/.env.local*
+.env
+.env.local
+
+# Supabase local runtime files
+supabase/.branches
+supabase/.temp
+
+# macOS
+.DS_Store

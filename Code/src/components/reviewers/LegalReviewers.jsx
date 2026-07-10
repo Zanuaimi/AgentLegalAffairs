@@ -224,6 +224,6 @@ Counts like Assigned, Reviewing, and High Risk are calculated from the request l
 3. Why does reviewer activity use a table?
 It matches the Legal Requests page, so Legal Managers see requests in a familiar format.
 
-4. Is this real reviewer management?
-No. It is frontend-only monitoring. Real assignment and permissions must be enforced by the backend later.
+4. Is this reviewer assignment management?
+This page is workload monitoring. Assignment changes should still be handled by a dedicated backend workflow before production.
 */

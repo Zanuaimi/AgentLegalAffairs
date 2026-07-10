@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import AiLegalReviewPanel from "../review/AiLegalReviewPanel";
 import AiSummaryBox from "../review/AiSummaryBox";
 import ContractChecklist from "../review/ContractChecklist";
 import ReviewerComments from "../review/ReviewerComments";
@@ -73,15 +74,19 @@ function ReviewStatusCard({
 
 function RequestDetails({
   request,
+  currentUser,
   canManageReview,
   canManageManagerActions,
   canManageDepartmentApproval,
+  onAddComment,
+  onManagerDecisionChange,
+  onDepartmentDecisionChange,
+  onChecklistItemToggle,
 }) {
   // selectedDocument stores the PDF the user clicked, so we can show it in the popup.
   const [selectedDocument, setSelectedDocument] = useState(null);
 
-  // These two pieces of state make the status card update immediately in this frontend demo.
-  // BACKEND TODO: later, these values should come from the real request workflow API.
+  // These two pieces of state make the status card update immediately after Supabase workflow saves.
   const [managerDecision, setManagerDecision] = useState(
     "Pending Legal Manager Review",
   );
@@ -205,6 +210,7 @@ function RequestDetails({
           </div>
 
           <AiSummaryBox summary={request.aiSummary} />
+          <AiLegalReviewPanel review={request.aiReviewResult} />
           <ReviewStatusCard
             request={{ ...request, managerDecision, departmentDecision }}
             document={firstDocument}
@@ -212,27 +218,42 @@ function RequestDetails({
             canManageManagerActions={canManageManagerActions}
             canManageDepartmentApproval={canManageDepartmentApproval}
           />
-          <ManagerActions
-            request={request}
-            canManageManagerActions={canManageManagerActions}
-            onManagerDecisionChange={setManagerDecision}
-          />
-          <DepartmentApprovalPanel
-            request={request}
-            canManageDepartmentApproval={canManageDepartmentApproval}
-            decision={departmentDecision}
-            onDecisionChange={setDepartmentDecision}
-          />
+          {canManageManagerActions && (
+            <ManagerActions
+              request={request}
+              canManageManagerActions={canManageManagerActions}
+              onManagerDecisionChange={async (nextDecision) => {
+                const savedDecision = await onManagerDecisionChange(nextDecision);
+                setManagerDecision(savedDecision.managerDecision);
+              }}
+            />
+          )}
+          {canManageDepartmentApproval && (
+            <DepartmentApprovalPanel
+              request={request}
+              canManageDepartmentApproval={canManageDepartmentApproval}
+              decision={departmentDecision}
+              onDecisionChange={async (nextDecision, commentText) => {
+                const savedDecision = await onDepartmentDecisionChange(
+                  nextDecision,
+                  commentText,
+                );
+                setDepartmentDecision(savedDecision.departmentDecision);
+              }}
+            />
+          )}
           <ReviewerComments
             initialComments={request.reviewerComments}
-            canManageReview={canManageReview}
-            reviewerName={request.assignedReviewer}
+            currentUser={currentUser}
+            onAddComment={onAddComment}
           />
         </div>
 
         <ContractChecklist
+          requestId={request.id}
           document={firstDocument}
           canManageReview={canManageReview}
+          onChecklistItemToggle={onChecklistItemToggle}
         />
       </div>
 
@@ -243,9 +264,6 @@ function RequestDetails({
         />
       )}
 
-      {/* BACKEND TODO: GET /api/requests/:id to fetch real request details. */}
-      {/* BACKEND TODO: PATCH /api/requests/:id/status to update request status. */}
-      {/* BACKEND TODO: PATCH /api/requests/:id/assign to assign a legal reviewer. */}
     </section>
   );
 }
@@ -261,8 +279,8 @@ If no request is selected, we return a simple message before rendering the full 
 2. What is component composition?
 RequestDetails uses smaller components inside it: AiSummaryBox, ReviewerComments, ContractChecklist, and PdfReviewModal.
 
-3. What is optional frontend behavior?
-This page is usable with mock data now. Backend comments show where real API integration can be added later.
+3. What is role-specific rendering?
+Some panels only appear for the role that can act on them. Legal Manager actions are visible only to Legal Managers, and Department Approval is visible only to Department Approvers.
 
 4. What is responsive layout?
 Tailwind classes like grid-cols-1 and xl:grid-cols-3 change the layout depending on screen size.

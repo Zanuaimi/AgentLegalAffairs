@@ -222,7 +222,6 @@ function RequestTable({
         </div>
       </div>
 
-      {/* BACKEND TODO: GET /api/requests to fetch real legal request rows from the backend. */}
     </section>
   );
 }

@@ -18,7 +18,7 @@ function DashboardCards({ requests }) {
       label: "Total Requests",
       value: totalRequests,
       color: "bg-blue-600",
-      info: "All legal requests currently stored in this frontend demo list.",
+      info: "All legal requests loaded from the backend for the current session."
     },
     {
       label: "Pending Items",
@@ -36,7 +36,7 @@ function DashboardCards({ requests }) {
       label: "High Risk",
       value: highRisk,
       color: "bg-rose-600",
-      info: "Requests marked with High risk level in the mock data.",
+      info: "Requests marked with High risk level by the request or AI review workflow."
     },
   ];
 
@@ -73,11 +73,10 @@ function DashboardCards({ requests }) {
       <div className="mt-6 bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
         <h3 className="font-bold text-slate-900 mb-3">Version 1 Focus</h3>
         <p className="text-slate-600">
-          This dashboard uses mock frontend data. Later, the backend can provide
-          live request counts, overdue requests, turnaround time, and
-          department-based reports.
+          This dashboard summarizes the request records loaded from Supabase.
+          A future reporting API can add overdue counts, turnaround time, and
+          department-based analytics.
         </p>
-        {/* BACKEND TODO: GET /api/dashboard/summary to fetch live dashboard statistics. */}
       </div>
     </section>
   );

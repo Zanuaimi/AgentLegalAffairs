@@ -1,112 +1,122 @@
 import { useEffect, useState } from "react";
 
-function ReviewerComments({
-  initialComments,
-  canManageReview,
-  reviewerName = "Legal Reviewer",
-}) {
-  const [comments, setComments] = useState(initialComments);
+function RequestComments({ initialComments, currentUser, onAddComment }) {
+  const [comments, setComments] = useState(initialComments || []);
   const [newComment, setNewComment] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    setComments(initialComments);
+    setComments(initialComments || []);
   }, [initialComments]);
 
-  function addComment() {
-    if (!canManageReview) return;
+  async function addComment() {
     if (!newComment.trim()) return;
 
-    // BACKEND TODO: POST /api/requests/:id/comments
-    // Save the reviewer comment for the selected request in the backend.
+    const commentToAdd = {
+      authorName: currentUser?.name || "Current User",
+      authorRole: currentUser?.role || "User",
+      text: newComment.trim(),
+    };
 
-    setComments([
-      ...comments,
-      {
-        reviewerName,
-        text: newComment,
-      },
-    ]);
-    setNewComment("");
+    setIsSaving(true);
+    setErrorMessage("");
+
+    try {
+      if (onAddComment) {
+        await onAddComment(commentToAdd.text);
+      }
+
+      setComments([...comments, commentToAdd]);
+      setNewComment("");
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Could not save comment.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   return (
     <div className="bg-white border border-slate-200 rounded-2xl p-5">
-      <h3 className="font-bold text-slate-900">Reviewer Comments</h3>
+      <h3 className="font-bold text-slate-900">Request Comments</h3>
       <p className="text-sm text-slate-500 mt-1">
-        Legal Affairs reviewers can record observations and required changes.
+        Requesters, Legal Reviewers, Legal Managers, and Department Approvers can
+        add comments. Each comment shows the author name and role.
       </p>
-
-      {!canManageReview && (
-        <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
-          View-only: reviewer comments are visible for status tracking, but only
-          the Legal Reviewer can add reviewer comments.
-        </div>
-      )}
 
       <div className="mt-4 space-y-3">
         {comments.length === 0 ? (
-          <p className="text-sm text-slate-500">No reviewer comments yet.</p>
+          <p className="text-sm text-slate-500">No comments yet.</p>
         ) : (
           comments.map((comment, index) => {
-            // Older demo comments may be plain strings. Newer comments are objects
-            // with reviewerName and text, so the UI can show who wrote the comment.
             const commentText =
               typeof comment === "string" ? comment : comment.text;
-            const commentReviewer =
+            const authorName =
               typeof comment === "string"
-                ? reviewerName
-                : comment.reviewerName || reviewerName;
+                ? currentUser?.name || "User"
+                : comment.authorName || comment.reviewerName || "User";
+            const authorRole =
+              typeof comment === "string"
+                ? currentUser?.role || "User"
+                : comment.authorRole || "Legal Reviewer";
 
             return (
               <div
                 key={`${commentText}-${index}`}
                 className="bg-slate-50 rounded-xl p-3 text-slate-700"
               >
-                <p className="text-xs font-bold uppercase tracking-wide text-blue-700">
-                  {commentReviewer}
-                </p>
-                <p className="mt-1">{commentText}</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-xs font-bold uppercase tracking-wide text-blue-700">
+                    {authorName}
+                  </p>
+                  <span className="rounded-full bg-blue-100 px-2 py-1 text-[11px] font-bold text-blue-700">
+                    {authorRole}
+                  </span>
+                </div>
+                <p className="mt-2">{commentText}</p>
               </div>
             );
           })
         )}
       </div>
 
-      {canManageReview && (
-        <div className="mt-4 flex flex-col sm:flex-row gap-3">
-          <input
-            className="flex-1 rounded-lg border border-slate-300 px-4 py-3"
-            value={newComment}
-            onChange={(event) => setNewComment(event.target.value)}
-            placeholder={`Add a frontend demo comment as ${reviewerName}`}
-          />
-          <button
-            className="bg-slate-900 text-white rounded-lg px-5 py-3 font-semibold"
-            type="button"
-            onClick={addComment}
-          >
-            Add Comment
-          </button>
-        </div>
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+        <input
+          className="flex-1 rounded-lg border border-slate-300 px-4 py-3"
+          value={newComment}
+          onChange={(event) => setNewComment(event.target.value)}
+          placeholder={`Add a comment as ${currentUser?.name || "current user"}`}
+        />
+        <button
+          className="bg-slate-900 text-white rounded-lg px-5 py-3 font-semibold disabled:cursor-not-allowed disabled:opacity-70"
+          type="button"
+          onClick={addComment}
+          disabled={isSaving}
+        >
+          {isSaving ? "Saving..." : "Add Comment"}
+        </button>
+      </div>
+
+      {errorMessage && (
+        <p className="mt-3 text-sm font-semibold text-red-700">{errorMessage}</p>
       )}
     </div>
   );
 }
 
-export default ReviewerComments;
+export default RequestComments;
 
 /*
 BEGINNER DOCUMENTATION:
 
-1. Why import useEffect?
-useEffect updates the visible comments when the user opens a different request.
+1. Why did this change from reviewer-only comments?
+The workflow needs comments from multiple roles: requester, reviewer, legal manager, and department approver.
 
-2. What is trim?
-trim removes extra spaces from the beginning and end of a string.
+2. Why show role beside the name?
+A comment from a requester means something different from a comment from Legal Affairs, so the role helps readers understand context.
 
-3. What is conditional rendering?
-The component shows different JSX depending on comments.length and canManageReview.
-
-4. Why can some roles see comments but not add them?
-Requesters, Legal Managers, and Department Approvers need review status visibility, but Legal Reviewer controls official reviewer notes.
+3. Why keep local state if comments are saved to Supabase?
+Local state updates the screen immediately after saving, so the user sees their new comment without reloading the page.
 */

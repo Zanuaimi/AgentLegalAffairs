@@ -20,7 +20,6 @@ function AuditLog({ logs }) {
         </div>
       </div>
 
-      {/* BACKEND TODO: GET /api/audit-logs to fetch real audit records from the backend. */}
     </section>
   );
 }

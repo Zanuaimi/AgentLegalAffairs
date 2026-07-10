@@ -20,6 +20,6 @@ BEGINNER DOCUMENTATION:
 1. Why split permissions by role?
 The Legal Affairs PDF gives each role different responsibilities. Legal Reviewers review documents, Legal Managers assign/approve/close, and Department Approvers handle department approval.
 
-2. Is this real security?
-No. This is frontend-only display logic. Real security must still be enforced by the backend later.
+2. Is this enough security?
+No. These helpers only decide what to display. Supabase RLS policies must also enforce permissions on every table.
 */

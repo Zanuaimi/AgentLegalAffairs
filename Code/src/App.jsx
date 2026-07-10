@@ -11,11 +11,30 @@ import AdminUsers from "./components/admin/AdminUsers";
 import AuditLog from "./components/audit/AuditLog";
 import LegalReviewers from "./components/reviewers/LegalReviewers";
 import { navigationByRole } from "./config/navigation";
+
 import {
-  auditLogs as initialAuditLogs,
-  initialRequests,
-  initialUsers,
-} from "./data/mockData";
+  getExistingSupabaseSessionUser,
+  loginWithSupabase,
+  logoutFromSupabase,
+  registerWithSupabase,
+} from "./services/authService";
+import {
+  createBackendAuditLog,
+  createBackendDepartmentApproval,
+  createBackendManagerAction,
+  createBackendRequest,
+  createBackendRequestComment,
+  fetchBackendAuditLogs,
+  fetchBackendRequests,
+  fetchBackendUsers,
+  updateBackendChecklistItem,
+  updateBackendUserDepartment,
+  updateBackendUserRole,
+} from "./services/backendDataService";
+import {
+  isSupabaseConfigured,
+  missingSupabaseEnvVars,
+} from "./services/supabaseClient";
 import { formatDateTimeForAudit } from "./utils/dateFormat";
 import {
   canManageDepartmentApproval,
@@ -37,8 +56,9 @@ function App() {
   // currentPage decides which main section is visible after login.
   const [currentPage, setCurrentPage] = useState("new-request");
 
-  // currentUser is demo user information shown in the header.
+  // currentUser is loaded from Supabase Auth + public.profiles after login.
   const [currentUser, setCurrentUser] = useState({
+    id: "demo-user",
     name: "Demo User",
     username: "demo.user",
     email: "demo.user@university.edu",
@@ -47,24 +67,26 @@ function App() {
     department: "HR",
   });
 
-  // requests begins with mock data and can grow when the user submits a demo request.
-  const [requests, setRequests] = useState(initialRequests);
-
-  // users stores frontend demo users for the Admin page.
-  const [users, setUsers] = useState(initialUsers);
-
-  // auditLogs stores frontend demo audit events for admin users.
-  const [auditLogs, setAuditLogs] = useState(initialAuditLogs);
+  // These collections are loaded from Supabase PostgreSQL after login.
+  const [requests, setRequests] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [auditLogs, setAuditLogs] = useState([]);
 
   // selectedRequestId controls which request appears on the Request Details page.
   // It starts as null so users must open a request from a table before seeing details.
   const [selectedRequestId, setSelectedRequestId] = useState(null);
 
-  // demoRole is the role perspective selected from the header dropdown.
-  const [demoRole, setDemoRole] = useState("Requester");
+  // currentRole/currentDepartment come from the logged-in user's database profile.
+  const [currentRole, setCurrentRole] = useState("Requester");
+  const [currentDepartment, setCurrentDepartment] = useState("HR");
 
-  // demoDepartment is a frontend variable for future department-based visibility rules.
-  const [demoDepartment, setDemoDepartment] = useState("HR");
+  const [backendMessage, setBackendMessage] = useState(
+    isSupabaseConfigured
+      ? "Checking Supabase backend connection..."
+      : `Supabase is not configured. Missing: ${missingSupabaseEnvVars.join(
+          ", ",
+        )}.`,
+  );
 
   // theme remembers whether the user wants light mode or dark mode.
   // The function inside useState runs once when the app first loads.
@@ -74,15 +96,15 @@ function App() {
   });
 
   const accessibleNavigation =
-    navigationByRole[demoRole] || navigationByRole.Requester;
+    navigationByRole[currentRole] || navigationByRole.Requester;
   const accessiblePageIds = accessibleNavigation.map((item) => item.id);
 
   // Requesters should see only their own requests. Legal roles can see all requests.
   const visibleRequests = getVisibleRequests({
     requests,
-    role: demoRole,
+    role: currentRole,
     currentUser,
-    department: demoDepartment,
+    department: currentDepartment,
   });
   const selectedRequest = getSelectedVisibleRequest({
     requests: visibleRequests,
@@ -107,18 +129,49 @@ function App() {
     localStorage.setItem("legal-affairs-theme", theme);
   }, [theme]);
 
+  useEffect(() => {
+    async function restoreSession() {
+      if (!isSupabaseConfigured) return;
+
+      try {
+        const sessionUser = await getExistingSupabaseSessionUser();
+        if (!sessionUser) {
+          setBackendMessage("Supabase backend configured. Please sign in.");
+          return;
+        }
+
+        setCurrentUser(sessionUser);
+        setCurrentRole(sessionUser.role);
+        setCurrentDepartment(sessionUser.department);
+        setIsLoggedIn(true);
+        setCurrentPage(
+          navigationByRole[sessionUser.role]?.[0]?.id || "requests",
+        );
+        await loadBackendData();
+      } catch (error) {
+        setBackendMessage(
+          `Supabase backend is unavailable or not seeded: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      }
+    }
+
+    restoreSession();
+  }, []);
+
   // When the selected role changes, move the user to the first page allowed for that role.
   useEffect(() => {
     if (!accessiblePageIds.includes(currentPage)) {
       setCurrentPage(accessibleNavigation[0].id);
     }
-  }, [demoRole, currentPage, accessibleNavigation, accessiblePageIds]);
+  }, [currentRole, currentPage, accessibleNavigation, accessiblePageIds]);
 
   // Changing role or department changes which requests are visible.
   // We clear the selected request so each role must intentionally open a row first.
   useEffect(() => {
     setSelectedRequestId(null);
-  }, [demoRole, demoDepartment]);
+  }, [currentRole, currentDepartment]);
 
   // If someone reaches Request Details without an opened request, send them back
   // to their request list. This supports the disabled sidebar and protects the route.
@@ -137,29 +190,70 @@ function App() {
     accessibleNavigation,
   ]);
 
-  function handleLogin(user) {
+  async function loadBackendData() {
+    if (!isSupabaseConfigured) {
+      throw new Error(
+        `Supabase env vars are missing: ${missingSupabaseEnvVars.join(", ")}`,
+      );
+    }
+
+    const [backendRequests, backendUsers, backendAuditLogs] = await Promise.all(
+      [
+        fetchBackendRequests(),
+        fetchBackendUsers(),
+        fetchBackendAuditLogs().catch(() => []),
+      ],
+    );
+
+    setRequests(backendRequests);
+    setUsers(backendUsers);
+    setAuditLogs(backendAuditLogs);
+    setBackendMessage("Loaded data from Supabase PostgreSQL.");
+  }
+
+  async function applyAuthenticatedUser(user) {
     setCurrentUser(user);
-    setDemoRole(user.role);
-    setDemoDepartment(user.department);
+    setCurrentRole(user.role);
+    setCurrentDepartment(user.department);
     setSelectedRequestId(null);
     setIsLoggedIn(true);
-    setCurrentPage(navigationByRole[user.role]?.[0]?.id || "new-request");
+    setCurrentPage(navigationByRole[user.role]?.[0]?.id || "requests");
+    await loadBackendData();
+  }
+
+  async function handleLogin(credentials) {
+    const loggedInUser = await loginWithSupabase(
+      credentials.username,
+      credentials.password,
+    );
+
+    await applyAuthenticatedUser(loggedInUser);
+  }
+
+  async function handleRegister(formData) {
+    const registeredUser = await registerWithSupabase(formData);
+    await applyAuthenticatedUser(registeredUser);
   }
 
   function handleToggleTheme() {
     setTheme(theme === "dark" ? "light" : "dark");
   }
 
-  function handleLogout() {
-    // BACKEND TODO: POST /api/auth/logout
-    // In the real system, this would end the user's backend session/token.
-    // For this frontend-only demo, we simply return to the login screen.
+  async function handleLogout() {
+    if (isSupabaseConfigured) {
+      await logoutFromSupabase();
+    }
 
     setIsLoggedIn(false);
     setAuthMode("login");
+    setSelectedRequestId(null);
   }
 
-  function addAuditLog(action, user = currentUser.name, requestId = "System") {
+  async function addAuditLog(
+    action,
+    user = currentUser.name,
+    requestId = "System",
+  ) {
     const newLog = {
       id: Date.now(),
       requestId,
@@ -169,16 +263,169 @@ function App() {
     };
 
     setAuditLogs((currentLogs) => [newLog, ...currentLogs]);
+
+    if (isSupabaseConfigured) {
+      try {
+        await createBackendAuditLog(action, currentUser, requestId);
+      } catch (error) {
+        setBackendMessage(
+          `Audit log saved locally but not in Supabase: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      }
+    }
   }
 
-  function handleCreateRequest(newRequest) {
-    setRequests([newRequest, ...requests]);
-    setSelectedRequestId(newRequest.id);
-    addAuditLog("Request submitted", newRequest.requester, newRequest.id);
+  async function handleCreateRequest(newRequest) {
+    try {
+      if (isSupabaseConfigured) {
+        await createBackendRequest(newRequest, currentUser);
+      }
 
-    // Requester users should return to My Requests so they can see the status.
-    // Legal staff can go directly to the details screen.
-    setCurrentPage(demoRole === "Requester" ? "requests" : "details");
+      const requestForState = { ...newRequest };
+      delete requestForState.uploadFile;
+
+      setRequests([requestForState, ...requests]);
+      setSelectedRequestId(requestForState.id);
+      await addAuditLog(
+        "Request submitted",
+        newRequest.requester,
+        newRequest.id,
+      );
+
+      // Requester users should return to My Requests so they can see the status.
+      // Legal staff can go directly to the details screen.
+      setCurrentPage(currentRole === "Requester" ? "requests" : "details");
+    } catch (error) {
+      setBackendMessage(
+        `Could not save request to Supabase: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  async function handleAddRequestComment(requestId, commentText) {
+    if (isSupabaseConfigured) {
+      await createBackendRequestComment({
+        requestId,
+        currentUser,
+        commentText,
+      });
+    }
+
+    setRequests((currentRequests) =>
+      currentRequests.map((request) => {
+        if (request.id !== requestId) return request;
+
+        return {
+          ...request,
+          reviewerComments: [
+            ...(request.reviewerComments || []),
+            {
+              authorName: currentUser.name,
+              authorRole: currentUser.role,
+              text: commentText,
+            },
+          ],
+        };
+      }),
+    );
+  }
+
+  async function handleManagerDecision(requestId, decision) {
+    const savedDecision = await createBackendManagerAction({
+      requestId,
+      currentUser,
+      decision,
+    });
+
+    setRequests((currentRequests) =>
+      currentRequests.map((request) =>
+        request.id === requestId
+          ? {
+              ...request,
+              managerDecision: savedDecision.managerDecision,
+              status: savedDecision.status,
+            }
+          : request,
+      ),
+    );
+
+    await addAuditLog(decision, currentUser.name, requestId);
+    return savedDecision;
+  }
+
+  async function handleDepartmentApproval(requestId, decision, commentText) {
+    const savedDecision = await createBackendDepartmentApproval({
+      requestId,
+      currentUser,
+      decision,
+      commentText,
+    });
+
+    setRequests((currentRequests) =>
+      currentRequests.map((request) =>
+        request.id === requestId
+          ? {
+              ...request,
+              departmentDecision: savedDecision.departmentDecision,
+              status: savedDecision.status,
+            }
+          : request,
+      ),
+    );
+
+    await addAuditLog(decision, currentUser.name, requestId);
+    return savedDecision;
+  }
+
+  async function handleChecklistItemToggle({
+    requestId,
+    documentId,
+    checklistItemId,
+    criteria,
+    checked,
+  }) {
+    await updateBackendChecklistItem({ checklistItemId, checked });
+
+    setRequests((currentRequests) =>
+      currentRequests.map((request) => {
+        if (request.id !== requestId) return request;
+
+        return {
+          ...request,
+          documents: request.documents.map((document) => {
+            if (document.id !== documentId) return document;
+
+            return {
+              ...document,
+              checklist: document.checklist.map((item) =>
+                item.id === checklistItemId ? { ...item, checked } : item,
+              ),
+            };
+          }),
+        };
+      }),
+    );
+
+    await addAuditLog(
+      `${checked ? "Checked" : "Unchecked"} checklist item: ${criteria}`,
+      currentUser.name,
+      requestId,
+    );
+  }
+
+  async function handleUpdateUserRole(userId, newRole) {
+    await updateBackendUserRole({ userId, roleName: newRole });
+  }
+
+  async function handleUpdateUserDepartment(userId, newDepartment) {
+    await updateBackendUserDepartment({
+      userId,
+      departmentName: newDepartment,
+    });
   }
 
   function handleSelectRequest(requestId) {
@@ -194,10 +441,11 @@ function App() {
     if (authMode === "register") {
       return (
         <RegisterPage
-          onRegister={handleLogin}
+          onRegister={handleRegister}
           onShowLogin={() => setAuthMode("login")}
           theme={theme}
           onToggleTheme={handleToggleTheme}
+          backendMessage={backendMessage}
         />
       );
     }
@@ -208,6 +456,7 @@ function App() {
         onShowRegister={() => setAuthMode("register")}
         theme={theme}
         onToggleTheme={handleToggleTheme}
+        backendMessage={backendMessage}
       />
     );
   }
@@ -224,17 +473,17 @@ function App() {
           onSelectRequest={handleSelectRequest}
           canOpenDetails={accessiblePageIds.includes("details")}
           title={
-            demoRole === "Requester"
+            currentRole === "Requester"
               ? "My Requests"
-              : demoRole === "Department Approver"
-                ? `Department Legal Requests for ${demoDepartment}`
+              : currentRole === "Department Approver"
+                ? `Department Legal Requests for ${currentDepartment}`
                 : "Legal Requests"
           }
           description={
-            demoRole === "Requester"
+            currentRole === "Requester"
               ? "View submitted requests and track their current status."
-              : demoRole === "Department Approver"
-                ? `Review legal requests for your current department: ${demoDepartment}.`
+              : currentRole === "Department Approver"
+                ? `Review legal requests for your current department: ${currentDepartment}.`
                 : "Track request category, department, priority, reviewer, deadline, and status."
           }
         />
@@ -254,9 +503,20 @@ function App() {
       return (
         <RequestDetails
           request={selectedRequest}
-          canManageReview={canManageReview(demoRole)}
-          canManageManagerActions={canManageManagerActions(demoRole)}
-          canManageDepartmentApproval={canManageDepartmentApproval(demoRole)}
+          currentUser={currentUser}
+          canManageReview={canManageReview(currentRole)}
+          canManageManagerActions={canManageManagerActions(currentRole)}
+          canManageDepartmentApproval={canManageDepartmentApproval(currentRole)}
+          onAddComment={(commentText) =>
+            handleAddRequestComment(selectedRequest.id, commentText)
+          }
+          onManagerDecisionChange={(decision) =>
+            handleManagerDecision(selectedRequest.id, decision)
+          }
+          onDepartmentDecisionChange={(decision, commentText) =>
+            handleDepartmentApproval(selectedRequest.id, decision, commentText)
+          }
+          onChecklistItemToggle={handleChecklistItemToggle}
         />
       );
     }
@@ -278,6 +538,8 @@ function App() {
           setUsers={setUsers}
           onAuditEvent={addAuditLog}
           currentUser={currentUser}
+          onUpdateUserRole={handleUpdateUserRole}
+          onUpdateUserDepartment={handleUpdateUserDepartment}
         />
       );
     }
@@ -308,13 +570,16 @@ function App() {
           onLogout={handleLogout}
           theme={theme}
           onToggleTheme={handleToggleTheme}
-          viewingRole={demoRole}
-          onViewingRoleChange={setDemoRole}
-          viewingDepartment={demoDepartment}
-          onViewingDepartmentChange={setDemoDepartment}
         />
 
-        <main className="p-6 lg:p-8">{renderCurrentPage()}</main>
+        <main className="p-6 lg:p-8">
+          {backendMessage && (
+            <div className="mb-4 rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+              {backendMessage}
+            </div>
+          )}
+          {renderCurrentPage()}
+        </main>
       </div>
     </div>
   );
@@ -330,7 +595,7 @@ App.jsx is the main React component. It controls the overall application flow.
 
 2. What is state?
 State is data that React remembers. When state changes, React updates the screen.
-Examples in this file: isLoggedIn, currentPage, requests, selectedRequestId, demoRole, and theme.
+Examples in this file: isLoggedIn, currentPage, requests, selectedRequestId, currentRole, and theme.
 
 3. What is conditional rendering?
 Conditional rendering means showing different UI depending on state.
@@ -345,13 +610,13 @@ JSX looks like HTML but is written inside JavaScript. React converts JSX into br
 
 6. What are props?
 Props pass data or functions from a parent component to a child component.
-Example: <Header viewingRole={demoRole} /> passes the current viewing role to Header.
+Example: <Header currentUser={currentUser} /> passes the logged-in user profile to Header.
 
-7. Why is there no backend code?
-This task is frontend-only. Backend needs are written as BACKEND TODO comments so another developer can connect APIs later.
+7. Where is the backend now?
+The app uses Supabase Auth and PostgreSQL for login, requests, comments, checklist updates, approvals, profile changes, audit logs, PDF storage, and the Gemini Edge Function.
 
-8. What is mock data?
-Mock data is fake/demo data used so the frontend can work before the backend is ready.
+8. What happens if Supabase is stopped?
+The app shows a backend message and protected actions fail clearly instead of silently hiding the backend problem.
 
 9. What is useEffect?
 useEffect runs code after React renders. Here it updates the page theme and keeps the current page valid for the selected role.

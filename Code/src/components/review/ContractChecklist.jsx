@@ -14,13 +14,20 @@ function buildChecklistItems(document) {
   }));
 }
 
-function ContractChecklist({ document, canManageReview }) {
+function ContractChecklist({
+  requestId,
+  document,
+  canManageReview,
+  onChecklistItemToggle,
+}) {
   const checklistItems = buildChecklistItems(document);
 
   // checkedCriteria starts from the AI draft results, then legal staff can adjust it manually.
   const [checkedCriteria, setCheckedCriteria] = useState(() =>
     checklistItems.filter((item) => item.checked).map((item) => item.criteria),
   );
+  const [savingCriteria, setSavingCriteria] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     setCheckedCriteria(
@@ -30,21 +37,45 @@ function ContractChecklist({ document, canManageReview }) {
     );
   }, [document]);
 
-  function toggleCriteria(criteria) {
-    if (!canManageReview) return;
+  async function toggleCriteria(item) {
+    if (!canManageReview || savingCriteria) return;
 
-    const isAlreadyChecked = checkedCriteria.includes(criteria);
-
-    if (isAlreadyChecked) {
-      setCheckedCriteria(
-        checkedCriteria.filter((checkedItem) => checkedItem !== criteria),
+    if (!item.id) {
+      setErrorMessage(
+        "This checklist item does not have a database id yet. Reload data from Supabase and try again.",
       );
-    } else {
-      setCheckedCriteria([...checkedCriteria, criteria]);
+      return;
     }
 
-    // BACKEND TODO: PATCH /api/requests/:id/checklist
-    // Save the legal reviewer's manual checklist changes in the backend.
+    const isAlreadyChecked = checkedCriteria.includes(item.criteria);
+    const nextChecked = !isAlreadyChecked;
+    const previousCheckedCriteria = checkedCriteria;
+    const nextCheckedCriteria = nextChecked
+      ? [...checkedCriteria, item.criteria]
+      : checkedCriteria.filter((checkedItem) => checkedItem !== item.criteria);
+
+    setCheckedCriteria(nextCheckedCriteria);
+    setSavingCriteria(item.criteria);
+    setErrorMessage("");
+
+    try {
+      await onChecklistItemToggle({
+        requestId,
+        documentId: document.id,
+        checklistItemId: item.id,
+        criteria: item.criteria,
+        checked: nextChecked,
+      });
+    } catch (error) {
+      setCheckedCriteria(previousCheckedCriteria);
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Could not save checklist change.",
+      );
+    } finally {
+      setSavingCriteria("");
+    }
   }
 
   return (
@@ -52,13 +83,19 @@ function ContractChecklist({ document, canManageReview }) {
       <h3 className="font-bold text-slate-900">Contract Review Checklist</h3>
       <p className="text-sm text-slate-500 mt-1">
         AI pre-selects criteria based on the PDF. Legal reviewers can adjust the
-        checklist manually in this frontend demo.
+        checklist manually. Changes are saved to Supabase.
       </p>
 
       {!canManageReview && (
         <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
           View-only: you can see review progress, but only the Legal Reviewer
           can change checklist items.
+        </div>
+      )}
+
+      {errorMessage && (
+        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+          {errorMessage}
         </div>
       )}
 
@@ -84,8 +121,8 @@ function ContractChecklist({ document, canManageReview }) {
                   className="mt-1 accent-blue-700 disabled:opacity-80"
                   type="checkbox"
                   checked={isChecked}
-                  disabled={!canManageReview}
-                  onChange={() => toggleCriteria(item.criteria)}
+                  disabled={!canManageReview || savingCriteria === item.criteria}
+                  onChange={() => toggleCriteria(item)}
                 />
 
                 <div className="min-w-0 flex-1">
@@ -95,12 +132,12 @@ function ContractChecklist({ document, canManageReview }) {
                     </p>
                     <span
                       className={`rounded-full px-2 py-1 text-xs font-bold ${
-                        item.checked
+                        isChecked
                           ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200"
                           : "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200"
                       }`}
                     >
-                      {item.checked ? "AI selected" : "Needs Review"}
+                      {isChecked ? "Selected" : "Needs Review"}
                     </span>
                   </div>
 

@@ -14,7 +14,6 @@ function AiSummaryBox({ summary }) {
         The AI assistant supports Legal Affairs, but it must not provide final approval or make binding decisions.
       </div>
 
-      {/* BACKEND TODO: POST /api/ai/summarize to request a backend-generated AI document summary. */}
     </div>
   );
 }

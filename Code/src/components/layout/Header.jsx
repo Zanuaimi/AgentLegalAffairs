@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { departments, roles } from "../../data/mockData";
 
 function getDisplayName(user) {
   // If the prefix is "None" or empty, show only the user's name.
@@ -10,16 +9,7 @@ function getDisplayName(user) {
   return `${user.prefix} ${user.name}`;
 }
 
-function Header({
-  currentUser,
-  onLogout,
-  theme,
-  onToggleTheme,
-  viewingRole,
-  onViewingRoleChange,
-  viewingDepartment,
-  onViewingDepartmentChange,
-}) {
+function Header({ currentUser, onLogout, theme, onToggleTheme }) {
   // showProfileMenu controls the small dropdown under the Profile button.
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
@@ -41,45 +31,11 @@ function Header({
     <header className="bg-white border-b border-slate-200 px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
       <div>
         <h1 className="text-2xl font-bold text-slate-900">
-          Version 1 Frontend Prototype
+          Legal Affairs Platform
         </h1>
-        <p className="text-slate-500 text-sm mt-1">
-          Frontend only: all data is mock data and backend requests are
-          comments.
-        </p>
       </div>
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-        <label className="flex items-center gap-2 text-sm text-slate-700">
-          <span className="font-semibold">Viewing as</span>
-          <select
-            className="rounded-lg border border-slate-300 px-3 py-2"
-            value={viewingRole}
-            onChange={(event) => onViewingRoleChange(event.target.value)}
-          >
-            {roles.map((role) => (
-              <option key={role} value={role}>
-                {role}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="flex items-center gap-2 text-sm text-slate-700">
-          <span className="font-semibold">Department</span>
-          <select
-            className="rounded-lg border border-slate-300 px-3 py-2"
-            value={viewingDepartment}
-            onChange={(event) => onViewingDepartmentChange(event.target.value)}
-          >
-            {departments.map((department) => (
-              <option key={department} value={department}>
-                {department}
-              </option>
-            ))}
-          </select>
-        </label>
-
         <button
           type="button"
           className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 text-xl leading-none"
@@ -134,7 +90,7 @@ function Header({
                   {displayName}
                 </h2>
                 <p className="text-sm text-slate-500 mt-1">
-                  Frontend-only settings preview. Nothing is saved to a backend.
+                  Account information loaded from your user profile.
                 </p>
               </div>
 
@@ -218,8 +174,8 @@ The reviewer asked to remove the user name block from the header. User details n
 3. What is a settings popup?
 It is a modal window that appears above the page. Here it shows username, email visibility toggle, and prefix.
 
-4. Why add a Department dropdown?
-It creates a frontend variable for department-based visibility later, even though real permission checks must be handled by the backend.
+4. Why remove the role and department dropdowns?
+Now that Supabase Auth is connected, role and department should come from the logged-in user's database profile instead of a demo switcher.
 
 5. Why is the email hidden by default?
 Email can be personal information. Hiding it until clicked is a simple privacy-friendly UI pattern.

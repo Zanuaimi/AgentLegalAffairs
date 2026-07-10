@@ -1,5 +1,5 @@
-// This file stores demo data for the frontend prototype.
-// Because this task is frontend-only, this data replaces real backend responses for now.
+// This file keeps shared demo constants and legacy sample records.
+// The main app now loads requests, users, audit logs, PDFs, and workflow changes from Supabase.
 
 export const roles = [
   "Requester",
@@ -161,9 +161,9 @@ function createChecklist(overrides) {
 }
 
 const vendorServiceAgreementPdf = {
-  name: "Vendor_Service_Agreement.pdf",
+  name: "sample_vendor_agreement.pdf",
   type: "application/pdf",
-  url: "/demo-pdfs/vendor-service-agreement.pdf",
+  url: "/demo-pdfs/sample_vendor_agreement.pdf",
   checklist: createChecklist({
     "Document type identified": {
       page: 1,
@@ -483,7 +483,7 @@ const researchDataSharingPdf = {
 export const initialRequests = [
   {
     id: "LA-2026-001",
-    title: "Review vendor service agreement",
+    title: "Review sample vendor agreement"},{
     categoryCode: "LEG-B",
     categoryName: "Contract Review",
     department: "Procurement",
@@ -610,15 +610,15 @@ An object stores related information using key-value pairs. Example: { name: 'Ai
 3. What is export?
 export allows other files to import and use these arrays and objects.
 
-4. Why use mock data?
-Mock data is fake data used while the backend is not ready. It helps us build and test the frontend design.
+4. Why does this file still exist?
+Some shared constants and legacy teaching samples remain here, but the main workflow uses Supabase data.
 
 4.1 What are initialUsers?
-initialUsers are dummy users shown on the Admin page so admins can test role and department management.
+initialUsers are legacy teaching samples. The Admin page now receives users loaded from Supabase profiles.
 
 4.2 Why are documents objects now?
 Each PDF needs more than a file name. The object stores the PDF URL, checklist page notes, and AI page suggestions for the frontend popup.
 
-5. What are backend comments for?
-In UI files, comments like BACKEND TODO explain where real API calls should be added later by the backend/frontend integration team.
+5. Should new fullstack features depend on this file?
+Prefer Supabase tables, services, or dedicated config files for new production features.
 */
