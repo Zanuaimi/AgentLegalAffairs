@@ -1,0 +1,332 @@
+- generic [ref=f3e3]:
+  - complementary [ref=f3e4]:
+    - generic [ref=f3e5]:
+      - img "Khalifa University logo" [ref=f3e6]
+      - generic [ref=f3e7]:
+        - paragraph [ref=f3e8]: University
+        - heading "Legal Affairs" [level=2] [ref=f3e9]
+        - paragraph [ref=f3e10]: Request Management Platform
+    - navigation [ref=f3e11]:
+      - button "Dashboard" [ref=f3e12] [cursor=pointer]
+      - button "Legal Requests" [ref=f3e13] [cursor=pointer]
+      - button "Request Details" [ref=f3e138] [cursor=pointer]
+  - generic [ref=f3e16]:
+    - banner [ref=f3e17]:
+      - heading "Legal Affairs Platform" [level=1] [ref=f3e19]
+      - generic [ref=f3e20]:
+        - button "Toggle light and dark mode" [ref=f3e21] [cursor=pointer]: 🌙
+        - generic [ref=f3e22]:
+          - button "Profile ▾" [active] [ref=f3e23] [cursor=pointer]
+          - generic [ref=f3e475]:
+            - button "Settings" [ref=f3e476] [cursor=pointer]
+            - button "Log out" [ref=f3e477] [cursor=pointer]
+    - main [ref=f3e24]:
+      - generic [ref=f3e25]: Loaded data from Supabase PostgreSQL.
+      - generic [ref=f3e139]:
+        - generic [ref=f3e140]:
+          - heading "Request Details" [level=2] [ref=f3e141]
+          - paragraph [ref=f3e142]: Review request information, current status, PDF attachment, checklist, and reviewer notes.
+        - generic [ref=f3e143]:
+          - generic [ref=f3e144]:
+            - generic [ref=f3e145]:
+              - generic [ref=f3e146]:
+                - generic [ref=f3e147]:
+                  - paragraph [ref=f3e148]: LA-2026-529
+                  - heading "Playwright smoke test legal request" [level=3] [ref=f3e149]
+                  - paragraph [ref=f3e150]: Submitted by Playwright using sample_vendor_agreement.pdf.
+                - generic [ref=f3e151]: AI Review Pending
+              - generic [ref=f3e152]:
+                - paragraph [ref=f3e153]: "Category: LEG-A - Legal Advice / Opinion"
+                - paragraph [ref=f3e154]: "Department: HR"
+                - paragraph [ref=f3e155]: "Requester: Demo Requester"
+                - paragraph [ref=f3e156]: "Assigned Reviewer: Not Assigned"
+                - paragraph [ref=f3e157]: "Priority: Medium"
+                - paragraph [ref=f3e158]: "Risk Level: Not Classified"
+                - paragraph [ref=f3e159]: "Deadline: No deadline selected"
+                - paragraph [ref=f3e160]: "Sent Time: 07/11/2026, 01:27 AM"
+              - generic [ref=f3e161]:
+                - heading "PDF Attachments" [level=4] [ref=f3e162]
+                - paragraph [ref=f3e163]: Click a PDF to open the review popup with page checklist and AI suggestions.
+                - list [ref=f3e164]:
+                  - listitem [ref=f3e165]:
+                    - button "📄 sample_vendor_agreement.pdf" [ref=f3e166] [cursor=pointer]
+            - generic [ref=f3e167]:
+              - generic [ref=f3e169]:
+                - heading "AI Draft Summary" [level=3] [ref=f3e170]
+                - paragraph [ref=f3e171]: Draft only - human legal review required
+              - paragraph [ref=f3e172]: AI legal review is pending. The backend queue will process this PDF and update the checklist when the AI draft is ready.
+              - generic [ref=f3e173]: The AI assistant supports Legal Affairs, but it must not provide final approval or make binding decisions.
+            - generic [ref=f3e174]:
+              - generic [ref=f3e175]:
+                - generic [ref=f3e176]:
+                  - heading "AI Review Queue Debug" [level=3] [ref=f3e177]
+                  - paragraph [ref=f3e178]: Shows the backend-saved AI queue state for this request. This is for local debugging and Legal Affairs transparency.
+                - generic [ref=f3e179]: processing
+              - generic [ref=f3e180]:
+                - generic [ref=f3e181]:
+                  - paragraph [ref=f3e182]: Queue Job ID
+                  - paragraph [ref=f3e183]: aedf0a1a-d7f9-4bcf-8db1-96c3438fc523
+                - generic [ref=f3e184]:
+                  - paragraph [ref=f3e185]: Current Queue Position
+                  - paragraph [ref=f3e186]: "#1"
+                  - paragraph [ref=f3e187]: Position counts queued/processing jobs from oldest to newest.
+                - generic [ref=f3e188]:
+                  - paragraph [ref=f3e189]: Attempts
+                  - paragraph [ref=f3e190]: "1"
+                - generic [ref=f3e191]:
+                  - paragraph [ref=f3e192]: Queued At
+                  - paragraph [ref=f3e193]: 07/11/2026, 01:27 AM
+                - generic [ref=f3e194]:
+                  - paragraph [ref=f3e195]: Started At
+                  - paragraph [ref=f3e196]: 07/11/2026, 01:27 AM
+                - generic [ref=f3e197]:
+                  - paragraph [ref=f3e198]: Completed At
+                  - paragraph [ref=f3e199]: Not recorded
+                - generic [ref=f3e200]:
+                  - paragraph [ref=f3e201]: Last Updated
+                  - paragraph [ref=f3e202]: 07/11/2026, 01:27 AM
+              - paragraph [ref=f3e203]: "Refresh behavior: while any request is pending/processing AI review, the app polls Supabase every few seconds so this panel can update."
+            - generic [ref=f3e204]:
+              - heading "Pending AI Review" [level=3] [ref=f3e205]
+              - paragraph [ref=f3e206]: This request has not received an AI legal review response yet. The checklist remains available for human review while the AI result is pending.
+            - generic [ref=f3e207]:
+              - heading "Review Status" [level=3] [ref=f3e208]
+              - paragraph [ref=f3e209]: This card summarizes who can act on this request and what is still pending.
+              - generic [ref=f3e210]:
+                - generic [ref=f3e211]:
+                  - paragraph [ref=f3e212]: Current Request Status
+                  - paragraph [ref=f3e213]: AI Review Pending
+                - generic [ref=f3e214]:
+                  - paragraph [ref=f3e215]: Legal Reviewer
+                  - paragraph [ref=f3e216]: Not Assigned
+                - generic [ref=f3e217]:
+                  - paragraph [ref=f3e218]: AI Checklist Progress
+                  - paragraph [ref=f3e219]: 1 of 26 AI-selected
+                - generic [ref=f3e220]:
+                  - paragraph [ref=f3e221]: Department Review
+                  - paragraph [ref=f3e222]: Pending Department Review
+                - generic [ref=f3e223]:
+                  - paragraph [ref=f3e224]: Legal Manager Review
+                  - paragraph [ref=f3e225]: Pending Legal Manager Review
+                - generic [ref=f3e226]:
+                  - paragraph [ref=f3e227]: Your Access on This Page
+                  - paragraph [ref=f3e228]: Legal Reviewer actions enabled
+            - generic [ref=f3e229]:
+              - heading "Request Comments" [level=3] [ref=f3e230]
+              - paragraph [ref=f3e231]: Requesters, Legal Reviewers, Legal Managers, and Department Approvers can add comments. Each comment shows the author name and role.
+              - paragraph [ref=f3e233]: No comments yet.
+              - generic [ref=f3e234]:
+                - textbox "Add a comment as Omar Hassan" [ref=f3e235]
+                - button "Add Comment" [ref=f3e236] [cursor=pointer]
+          - generic [ref=f3e237]:
+            - heading "Contract Review Checklist" [level=3] [ref=f3e238]
+            - paragraph [ref=f3e239]: AI pre-selects criteria based on the PDF. Legal reviewers can adjust the checklist manually. Changes are saved to Supabase.
+            - generic [ref=f3e240]:
+              - generic [ref=f3e242] [cursor=pointer]:
+                - checkbox "Document type identified Selected Frontend demo identifies the uploaded file as a PDF document. Legal Affairs should complete the remaining review criteria. Page 1" [checked] [ref=f3e243]
+                - generic [ref=f3e244]:
+                  - generic [ref=f3e245]:
+                    - paragraph [ref=f3e246]: Document type identified
+                    - generic [ref=f3e247]: Selected
+                  - paragraph [ref=f3e248]: Frontend demo identifies the uploaded file as a PDF document. Legal Affairs should complete the remaining review criteria.
+                  - generic [ref=f3e249]: Page 1
+              - generic [ref=f3e251] [cursor=pointer]:
+                - checkbox "Parties correctly identified Needs Review AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually. Page N/A" [ref=f3e252]
+                - generic [ref=f3e253]:
+                  - generic [ref=f3e254]:
+                    - paragraph [ref=f3e255]: Parties correctly identified
+                    - generic [ref=f3e256]: Needs Review
+                  - paragraph [ref=f3e257]: AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually.
+                  - generic [ref=f3e258]: Page N/A
+              - generic [ref=f3e260] [cursor=pointer]:
+                - checkbox "Request category matches the document Needs Review AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually. Page N/A" [ref=f3e261]
+                - generic [ref=f3e262]:
+                  - generic [ref=f3e263]:
+                    - paragraph [ref=f3e264]: Request category matches the document
+                    - generic [ref=f3e265]: Needs Review
+                  - paragraph [ref=f3e266]: AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually.
+                  - generic [ref=f3e267]: Page N/A
+              - generic [ref=f3e269] [cursor=pointer]:
+                - checkbox "Request description matches the attached document Needs Review AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually. Page N/A" [ref=f3e270]
+                - generic [ref=f3e271]:
+                  - generic [ref=f3e272]:
+                    - paragraph [ref=f3e273]: Request description matches the attached document
+                    - generic [ref=f3e274]: Needs Review
+                  - paragraph [ref=f3e275]: AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually.
+                  - generic [ref=f3e276]: Page N/A
+              - generic [ref=f3e278] [cursor=pointer]:
+                - checkbox "Effective date identified Needs Review AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually. Page N/A" [ref=f3e279]
+                - generic [ref=f3e280]:
+                  - generic [ref=f3e281]:
+                    - paragraph [ref=f3e282]: Effective date identified
+                    - generic [ref=f3e283]: Needs Review
+                  - paragraph [ref=f3e284]: AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually.
+                  - generic [ref=f3e285]: Page N/A
+              - generic [ref=f3e287] [cursor=pointer]:
+                - checkbox "Expiry date or end date identified Needs Review AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually. Page N/A" [ref=f3e288]
+                - generic [ref=f3e289]:
+                  - generic [ref=f3e290]:
+                    - paragraph [ref=f3e291]: Expiry date or end date identified
+                    - generic [ref=f3e292]: Needs Review
+                  - paragraph [ref=f3e293]: AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually.
+                  - generic [ref=f3e294]: Page N/A
+              - generic [ref=f3e296] [cursor=pointer]:
+                - checkbox "Scope clearly defined Needs Review AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually. Page N/A" [ref=f3e297]
+                - generic [ref=f3e298]:
+                  - generic [ref=f3e299]:
+                    - paragraph [ref=f3e300]: Scope clearly defined
+                    - generic [ref=f3e301]: Needs Review
+                  - paragraph [ref=f3e302]: AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually.
+                  - generic [ref=f3e303]: Page N/A
+              - generic [ref=f3e305] [cursor=pointer]:
+                - checkbox "Key obligations summarized Needs Review AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually. Page N/A" [ref=f3e306]
+                - generic [ref=f3e307]:
+                  - generic [ref=f3e308]:
+                    - paragraph [ref=f3e309]: Key obligations summarized
+                    - generic [ref=f3e310]: Needs Review
+                  - paragraph [ref=f3e311]: AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually.
+                  - generic [ref=f3e312]: Page N/A
+              - generic [ref=f3e314] [cursor=pointer]:
+                - checkbox "Payment terms included, if relevant Needs Review AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually. Page N/A" [ref=f3e315]
+                - generic [ref=f3e316]:
+                  - generic [ref=f3e317]:
+                    - paragraph [ref=f3e318]: Payment terms included, if relevant
+                    - generic [ref=f3e319]: Needs Review
+                  - paragraph [ref=f3e320]: AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually.
+                  - generic [ref=f3e321]: Page N/A
+              - generic [ref=f3e323] [cursor=pointer]:
+                - checkbox "Funding terms included, if relevant Needs Review AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually. Page N/A" [ref=f3e324]
+                - generic [ref=f3e325]:
+                  - generic [ref=f3e326]:
+                    - paragraph [ref=f3e327]: Funding terms included, if relevant
+                    - generic [ref=f3e328]: Needs Review
+                  - paragraph [ref=f3e329]: AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually.
+                  - generic [ref=f3e330]: Page N/A
+              - generic [ref=f3e332] [cursor=pointer]:
+                - checkbox "Term and termination clauses included Needs Review AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually. Page N/A" [ref=f3e333]
+                - generic [ref=f3e334]:
+                  - generic [ref=f3e335]:
+                    - paragraph [ref=f3e336]: Term and termination clauses included
+                    - generic [ref=f3e337]: Needs Review
+                  - paragraph [ref=f3e338]: AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually.
+                  - generic [ref=f3e339]: Page N/A
+              - generic [ref=f3e341] [cursor=pointer]:
+                - checkbox "Confidentiality clause included Needs Review AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually. Page N/A" [ref=f3e342]
+                - generic [ref=f3e343]:
+                  - generic [ref=f3e344]:
+                    - paragraph [ref=f3e345]: Confidentiality clause included
+                    - generic [ref=f3e346]: Needs Review
+                  - paragraph [ref=f3e347]: AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually.
+                  - generic [ref=f3e348]: Page N/A
+              - generic [ref=f3e350] [cursor=pointer]:
+                - checkbox "Data protection clause included, if relevant Needs Review AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually. Page N/A" [ref=f3e351]
+                - generic [ref=f3e352]:
+                  - generic [ref=f3e353]:
+                    - paragraph [ref=f3e354]: Data protection clause included, if relevant
+                    - generic [ref=f3e355]: Needs Review
+                  - paragraph [ref=f3e356]: AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually.
+                  - generic [ref=f3e357]: Page N/A
+              - generic [ref=f3e359] [cursor=pointer]:
+                - checkbox "Intellectual property clause included, if relevant Needs Review AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually. Page N/A" [ref=f3e360]
+                - generic [ref=f3e361]:
+                  - generic [ref=f3e362]:
+                    - paragraph [ref=f3e363]: Intellectual property clause included, if relevant
+                    - generic [ref=f3e364]: Needs Review
+                  - paragraph [ref=f3e365]: AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually.
+                  - generic [ref=f3e366]: Page N/A
+              - generic [ref=f3e368] [cursor=pointer]:
+                - checkbox "Publication rights reviewed, if relevant Needs Review AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually. Page N/A" [ref=f3e369]
+                - generic [ref=f3e370]:
+                  - generic [ref=f3e371]:
+                    - paragraph [ref=f3e372]: Publication rights reviewed, if relevant
+                    - generic [ref=f3e373]: Needs Review
+                  - paragraph [ref=f3e374]: AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually.
+                  - generic [ref=f3e375]: Page N/A
+              - generic [ref=f3e377] [cursor=pointer]:
+                - checkbox "Liability and indemnity reviewed Needs Review AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually. Page N/A" [ref=f3e378]
+                - generic [ref=f3e379]:
+                  - generic [ref=f3e380]:
+                    - paragraph [ref=f3e381]: Liability and indemnity reviewed
+                    - generic [ref=f3e382]: Needs Review
+                  - paragraph [ref=f3e383]: AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually.
+                  - generic [ref=f3e384]: Page N/A
+              - generic [ref=f3e386] [cursor=pointer]:
+                - checkbox "Insurance requirements reviewed, if relevant Needs Review AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually. Page N/A" [ref=f3e387]
+                - generic [ref=f3e388]:
+                  - generic [ref=f3e389]:
+                    - paragraph [ref=f3e390]: Insurance requirements reviewed, if relevant
+                    - generic [ref=f3e391]: Needs Review
+                  - paragraph [ref=f3e392]: AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually.
+                  - generic [ref=f3e393]: Page N/A
+              - generic [ref=f3e395] [cursor=pointer]:
+                - checkbox "Governing law and jurisdiction reviewed Needs Review AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually. Page N/A" [ref=f3e396]
+                - generic [ref=f3e397]:
+                  - generic [ref=f3e398]:
+                    - paragraph [ref=f3e399]: Governing law and jurisdiction reviewed
+                    - generic [ref=f3e400]: Needs Review
+                  - paragraph [ref=f3e401]: AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually.
+                  - generic [ref=f3e402]: Page N/A
+              - generic [ref=f3e404] [cursor=pointer]:
+                - checkbox "Signature authority confirmed Needs Review AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually. Page N/A" [ref=f3e405]
+                - generic [ref=f3e406]:
+                  - generic [ref=f3e407]:
+                    - paragraph [ref=f3e408]: Signature authority confirmed
+                    - generic [ref=f3e409]: Needs Review
+                  - paragraph [ref=f3e410]: AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually.
+                  - generic [ref=f3e411]: Page N/A
+              - generic [ref=f3e413] [cursor=pointer]:
+                - checkbox "Internal approvals obtained or identified Needs Review AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually. Page N/A" [ref=f3e414]
+                - generic [ref=f3e415]:
+                  - generic [ref=f3e416]:
+                    - paragraph [ref=f3e417]: Internal approvals obtained or identified
+                    - generic [ref=f3e418]: Needs Review
+                  - paragraph [ref=f3e419]: AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually.
+                  - generic [ref=f3e420]: Page N/A
+              - generic [ref=f3e422] [cursor=pointer]:
+                - checkbox "Missing clauses or missing information identified Needs Review AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually. Page N/A" [ref=f3e423]
+                - generic [ref=f3e424]:
+                  - generic [ref=f3e425]:
+                    - paragraph [ref=f3e426]: Missing clauses or missing information identified
+                    - generic [ref=f3e427]: Needs Review
+                  - paragraph [ref=f3e428]: AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually.
+                  - generic [ref=f3e429]: Page N/A
+              - generic [ref=f3e431] [cursor=pointer]:
+                - checkbox "Unusual or high-risk terms highlighted Needs Review AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually. Page N/A" [ref=f3e432]
+                - generic [ref=f3e433]:
+                  - generic [ref=f3e434]:
+                    - paragraph [ref=f3e435]: Unusual or high-risk terms highlighted
+                    - generic [ref=f3e436]: Needs Review
+                  - paragraph [ref=f3e437]: AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually.
+                  - generic [ref=f3e438]: Page N/A
+              - generic [ref=f3e440] [cursor=pointer]:
+                - checkbox "Compared against university-approved template or standard position Needs Review AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually. Page N/A" [ref=f3e441]
+                - generic [ref=f3e442]:
+                  - generic [ref=f3e443]:
+                    - paragraph [ref=f3e444]: Compared against university-approved template or standard position
+                    - generic [ref=f3e445]: Needs Review
+                  - paragraph [ref=f3e446]: AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually.
+                  - generic [ref=f3e447]: Page N/A
+              - generic [ref=f3e449] [cursor=pointer]:
+                - checkbox "Similar past legal opinion or reviewed agreement considered Needs Review AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually. Page N/A" [ref=f3e450]
+                - generic [ref=f3e451]:
+                  - generic [ref=f3e452]:
+                    - paragraph [ref=f3e453]: Similar past legal opinion or reviewed agreement considered
+                    - generic [ref=f3e454]: Needs Review
+                  - paragraph [ref=f3e455]: AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually.
+                  - generic [ref=f3e456]: Page N/A
+              - generic [ref=f3e458] [cursor=pointer]:
+                - checkbox "Reviewer questions for requester identified Needs Review AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually. Page N/A" [ref=f3e459]
+                - generic [ref=f3e460]:
+                  - generic [ref=f3e461]:
+                    - paragraph [ref=f3e462]: Reviewer questions for requester identified
+                    - generic [ref=f3e463]: Needs Review
+                  - paragraph [ref=f3e464]: AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually.
+                  - generic [ref=f3e465]: Page N/A
+              - generic [ref=f3e467] [cursor=pointer]:
+                - checkbox "Final approved response/document storage needed Needs Review AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually. Page N/A" [ref=f3e468]
+                - generic [ref=f3e469]:
+                  - generic [ref=f3e470]:
+                    - paragraph [ref=f3e471]: Final approved response/document storage needed
+                    - generic [ref=f3e472]: Needs Review
+                  - paragraph [ref=f3e473]: AI has not confirmed this criterion for the newly uploaded PDF. Legal Affairs should review it manually.
+                  - generic [ref=f3e474]: Page N/A

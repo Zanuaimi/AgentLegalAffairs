@@ -1,0 +1,130 @@
+- generic [ref=f2e30]:
+  - complementary [ref=f2e31]:
+    - generic [ref=f2e32]:
+      - img "Khalifa University logo" [ref=f2e33]
+      - generic [ref=f2e34]:
+        - paragraph [ref=f2e35]: University
+        - heading "Legal Affairs" [level=2] [ref=f2e36]
+        - paragraph [ref=f2e37]: Request Management Platform
+    - navigation [ref=f2e38]:
+      - button "Admin" [ref=f2e39] [cursor=pointer]
+      - button "Legal Affair Engine" [active] [ref=f2e40] [cursor=pointer]
+      - button "Audit Log" [ref=f2e41] [cursor=pointer]
+  - generic [ref=f2e42]:
+    - banner [ref=f2e43]:
+      - heading "Legal Affairs Platform" [level=1] [ref=f2e45]
+      - generic [ref=f2e46]:
+        - button "Toggle light and dark mode" [ref=f2e47] [cursor=pointer]: 🌙
+        - button "Profile ▾" [ref=f2e49] [cursor=pointer]
+    - main [ref=f2e50]:
+      - generic [ref=f2e51]: Loaded data from Supabase PostgreSQL.
+      - generic [ref=f2e120]:
+        - generic [ref=f2e121]:
+          - heading "Legal Affair Engine" [level=2] [ref=f2e122]
+          - paragraph [ref=f2e123]: Admin dashboard for AI review queue controls, priority ordering, operational trace, and AI draft outputs.
+        - generic [ref=f2e124]:
+          - generic [ref=f2e125]:
+            - generic [ref=f2e126]:
+              - generic [ref=f2e127]:
+                - heading "Engine Controls" [level=3] [ref=f2e128]
+                - paragraph [ref=f2e129]: Start or stop the Legal Affair Engine. Queue ordering can only be edited while the engine is stopped.
+              - generic [ref=f2e130]: Running
+            - generic [ref=f2e131]:
+              - generic [ref=f2e132]:
+                - paragraph [ref=f2e133]: Last Changed By
+                - paragraph [ref=f2e134]: Admin User
+              - generic [ref=f2e135]:
+                - paragraph [ref=f2e136]: Last Changed At
+                - paragraph [ref=f2e137]: 07/10/2026, 11:43 AM
+              - generic [ref=f2e138]:
+                - paragraph [ref=f2e139]: Queue Policy
+                - paragraph [ref=f2e140]: Urgent → High → Medium → Low
+              - generic [ref=f2e141]:
+                - paragraph [ref=f2e142]: AI Processing Errors
+                - paragraph [ref=f2e143]: "0"
+            - generic [ref=f2e144]:
+              - button "Start Engine" [disabled] [ref=f2e145]
+              - button "Stop Engine" [ref=f2e146] [cursor=pointer]
+              - button "Process Next Queued Request" [ref=f2e147] [cursor=pointer]
+          - generic [ref=f2e148]:
+            - generic [ref=f2e149]:
+              - heading "Priority Queues" [level=3] [ref=f2e150]
+              - paragraph [ref=f2e151]: The engine always processes Urgent first, then High, Medium, and Low. Ordering numbers only affect requests inside the same priority queue and can only be edited while the engine is stopped.
+            - generic [ref=f2e152]:
+              - generic [ref=f2e153]:
+                - generic [ref=f2e154]:
+                  - heading "Urgent Priority Queue" [level=4] [ref=f2e155]
+                  - generic [ref=f2e156]: 0 active
+                - paragraph [ref=f2e158]: No queued or processing urgent priority requests.
+              - generic [ref=f2e159]:
+                - generic [ref=f2e160]:
+                  - heading "High Priority Queue" [level=4] [ref=f2e161]
+                  - generic [ref=f2e162]: 0 active
+                - paragraph [ref=f2e164]: No queued or processing high priority requests.
+              - generic [ref=f2e165]:
+                - generic [ref=f2e166]:
+                  - heading "Medium Priority Queue" [level=4] [ref=f2e167]
+                  - generic [ref=f2e168]: 1 active
+                - generic [ref=f2e171]:
+                  - generic [ref=f2e172]:
+                    - paragraph [ref=f2e173]: LA-2026-731 — First legal request
+                    - paragraph [ref=f2e174]: "Status: AI Review Pending · Queue: processing · Global position: #1 · Priority position: #1"
+                    - paragraph [ref=f2e175]: "Current step: Claimed by Legal Affair Engine"
+                  - generic [ref=f2e176]:
+                    - generic [ref=f2e177]:
+                      - text: Position
+                      - spinbutton "Position" [disabled] [ref=f2e178]: "1"
+                    - button "Save" [disabled] [ref=f2e179]
+              - generic [ref=f2e180]:
+                - generic [ref=f2e181]:
+                  - heading "Low Priority Queue" [level=4] [ref=f2e182]
+                  - generic [ref=f2e183]: 0 active
+                - paragraph [ref=f2e185]: No queued or processing low priority requests.
+          - generic [ref=f2e186]:
+            - generic [ref=f2e187]:
+              - generic [ref=f2e188]:
+                - heading "Live Engine Terminal" [level=3] [ref=f2e189]
+                - paragraph [ref=f2e190]: Latest backend-saved AI events, queue steps, and errors. Newest lines appear at the bottom.
+              - generic [ref=f2e191]: Live from ai_review_jobs
+            - generic [ref=f2e192]:
+              - generic [ref=f2e193]:
+                - paragraph [ref=f2e194]: Currently Processing
+                - paragraph [ref=f2e195]:
+                  - text: LA-2026-731 — First legal request
+                  - generic [ref=f2e196]: Medium · Claimed by Legal Affair Engine · Attempt 1
+              - generic [ref=f2e197]:
+                - paragraph [ref=f2e198]: AI Processing Errors
+                - paragraph [ref=f2e199]: 0 errors
+            - generic [ref=f2e200]:
+              - generic [ref=f2e201]:
+                - generic [ref=f2e202]: "[11:38:00 AM]"
+                - text: LA-2026-731 First legal request
+                - generic [ref=f2e203]: → job processing — Claimed by Legal Affair Engine
+              - generic [ref=f2e204]:
+                - generic [ref=f2e205]: "[11:38:34 AM]"
+                - text: LA-2026-731 First legal request
+                - generic [ref=f2e206]: "→ queued: Request saved and PDF uploaded. AI review is waiting in the priority queue."
+              - generic [ref=f2e207]:
+                - generic [ref=f2e208]: "[11:38:34 AM]"
+                - text: LA-2026-731 First legal request
+                - generic [ref=f2e209]: "→ claimed: Job claimed from priority queue for processing."
+              - generic [ref=f2e210]:
+                - generic [ref=f2e211]: "[11:39:06 AM]"
+                - text: LA-2026-731 requester_queue_trigger_failed
+                - generic [ref=f2e212]: "→ Requester submitted LA-2026-731, but the browser could not start/observe AI queue processing: Unspecified object error"
+              - generic [ref=f2e213]:
+                - generic [ref=f2e214]: "[11:43:08 AM]"
+                - text: ENGINE engine_stopped
+                - generic [ref=f2e215]: → Admin User stopped the Legal Affair Engine.
+              - generic [ref=f2e216]:
+                - generic [ref=f2e217]: "[11:43:15 AM]"
+                - text: ENGINE engine_started
+                - generic [ref=f2e218]: → Admin User started the Legal Affair Engine.
+              - generic [ref=f2e219]:
+                - generic [ref=f2e220]: "[11:43:16 AM]"
+                - text: ENGINE manual_process_next_requested
+                - generic [ref=f2e221]: → Admin User requested processing for the next queued AI review job.
+              - generic [ref=f2e222]:
+                - generic [ref=f2e223]: "[11:43:16 AM]"
+                - text: ENGINE manual_process_next_finished
+                - generic [ref=f2e224]: → No queued AI review jobs.

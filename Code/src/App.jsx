@@ -191,7 +191,7 @@ function App() {
         setCurrentPage(
           navigationByRole[sessionUser.role]?.[0]?.id || "requests",
         );
-        await loadBackendData();
+        await loadBackendData(sessionUser);
       } catch (error) {
         setBackendMessage(
           `Supabase backend is unavailable or not seeded: ${
@@ -234,12 +234,14 @@ function App() {
     accessibleNavigation,
   ]);
 
-  async function loadBackendData() {
+  async function loadBackendData(userForAccess = currentUser) {
     if (!isSupabaseConfigured) {
       throw new Error(
         `Supabase env vars are missing: ${missingSupabaseEnvVars.join(", ")}`,
       );
     }
+
+    const canReadEngineData = userForAccess.role === "Admin User";
 
     const [
       backendRequests,
@@ -251,8 +253,8 @@ function App() {
       fetchBackendRequests(),
       fetchBackendUsers(),
       fetchBackendAuditLogs().catch(() => []),
-      fetchLegalAffairEngineState().catch(() => null),
-      fetchLegalAffairEngineEvents().catch(() => []),
+      canReadEngineData ? fetchLegalAffairEngineState().catch(() => null) : null,
+      canReadEngineData ? fetchLegalAffairEngineEvents().catch(() => []) : [],
     ]);
 
     setRequests(backendRequests);
@@ -312,7 +314,7 @@ function App() {
     setSelectedRequestId(null);
     setIsLoggedIn(true);
     setCurrentPage(navigationByRole[user.role]?.[0]?.id || "requests");
-    await loadBackendData();
+    await loadBackendData(user);
   }
 
   async function handleLogin(credentials) {
@@ -459,10 +461,10 @@ function App() {
       await createLegalAffairEngineEvent({
         eventType: "manual_process_next_requested",
         level: "status",
-        message: `${currentUser.name} requested processing for the next queued AI review job.`,
+        message: `${currentUser.name} requested processing for the next queued or stale AI review job. Jobs stuck in processing for 1+ minute can be reclaimed.`,
         currentUser,
       });
-      const result = await triggerAiReviewQueue();
+      const result = await triggerAiReviewQueue({ staleAfterMinutes: 1 });
       await createLegalAffairEngineEvent({
         eventType: "manual_process_next_finished",
         level: result?.processed ? "status" : "warning",

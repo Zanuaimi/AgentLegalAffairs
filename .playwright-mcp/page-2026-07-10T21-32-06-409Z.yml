@@ -1,0 +1,115 @@
+- generic [ref=f3e505]:
+  - complementary [ref=f3e506]:
+    - generic [ref=f3e507]:
+      - img "Khalifa University logo" [ref=f3e508]
+      - generic [ref=f3e509]:
+        - paragraph [ref=f3e510]: University
+        - heading "Legal Affairs" [level=2] [ref=f3e511]
+        - paragraph [ref=f3e512]: Request Management Platform
+    - navigation [ref=f3e513]:
+      - button "Admin" [ref=f3e514] [cursor=pointer]
+      - button "Legal Affair Engine" [active] [ref=f3e515] [cursor=pointer]
+      - button "Audit Log" [ref=f3e516] [cursor=pointer]
+  - generic [ref=f3e517]:
+    - banner [ref=f3e518]:
+      - heading "Legal Affairs Platform" [level=1] [ref=f3e520]
+      - generic [ref=f3e521]:
+        - button "Toggle light and dark mode" [ref=f3e522] [cursor=pointer]: 🌙
+        - button "Profile ▾" [ref=f3e524] [cursor=pointer]
+    - main [ref=f3e525]:
+      - generic [ref=f3e526]: Loaded data from Supabase PostgreSQL.
+      - generic [ref=f3e595]:
+        - generic [ref=f3e596]:
+          - heading "Legal Affair Engine" [level=2] [ref=f3e597]
+          - paragraph [ref=f3e598]: Admin dashboard for AI review queue controls, priority ordering, operational trace, and AI draft outputs.
+        - generic [ref=f3e599]:
+          - generic [ref=f3e600]:
+            - generic [ref=f3e601]:
+              - generic [ref=f3e602]:
+                - heading "Engine Controls" [level=3] [ref=f3e603]
+                - paragraph [ref=f3e604]: Start or stop the Legal Affair Engine. Queue ordering can only be edited while the engine is stopped.
+              - generic [ref=f3e605]: Stopped
+            - generic [ref=f3e606]:
+              - generic [ref=f3e607]:
+                - paragraph [ref=f3e608]: Last Changed By
+                - paragraph [ref=f3e609]: Not recorded
+              - generic [ref=f3e610]:
+                - paragraph [ref=f3e611]: Last Changed At
+                - paragraph [ref=f3e612]: Not recorded
+              - generic [ref=f3e613]:
+                - paragraph [ref=f3e614]: Queue Policy
+                - paragraph [ref=f3e615]: Urgent → High → Medium → Low
+              - generic [ref=f3e616]:
+                - paragraph [ref=f3e617]: AI Processing Errors
+                - paragraph [ref=f3e618]: "1"
+            - generic [ref=f3e619]:
+              - button "Start Engine" [ref=f3e620] [cursor=pointer]
+              - button "Stop Engine" [disabled] [ref=f3e621]
+              - button "Process Next Queued Request" [disabled] [ref=f3e622]
+          - generic [ref=f3e623]:
+            - generic [ref=f3e624]:
+              - heading "Priority Queues" [level=3] [ref=f3e625]
+              - paragraph [ref=f3e626]: The engine always processes Urgent first, then High, Medium, and Low. Ordering numbers only affect requests inside the same priority queue and can only be edited while the engine is stopped.
+            - generic [ref=f3e627]:
+              - generic [ref=f3e628]:
+                - generic [ref=f3e629]:
+                  - heading "Urgent Priority Queue" [level=4] [ref=f3e630]
+                  - generic [ref=f3e631]: 0 active
+                - paragraph [ref=f3e633]: No queued or processing urgent priority requests.
+              - generic [ref=f3e634]:
+                - generic [ref=f3e635]:
+                  - heading "High Priority Queue" [level=4] [ref=f3e636]
+                  - generic [ref=f3e637]: 0 active
+                - paragraph [ref=f3e639]: No queued or processing high priority requests.
+              - generic [ref=f3e640]:
+                - generic [ref=f3e641]:
+                  - heading "Medium Priority Queue" [level=4] [ref=f3e642]
+                  - generic [ref=f3e643]: 1 active
+                - generic [ref=f3e646]:
+                  - generic [ref=f3e647]:
+                    - paragraph [ref=f3e648]: LA-2026-529 — Playwright smoke test legal request
+                    - paragraph [ref=f3e649]: "Status: AI Review Pending · Queue: processing · Global position: #1 · Priority position: #1"
+                    - paragraph [ref=f3e650]: "Current step: Claimed by Legal Affair Engine"
+                  - generic [ref=f3e651]:
+                    - generic [ref=f3e652]:
+                      - text: Position
+                      - spinbutton "Position" [disabled] [ref=f3e653]: "1"
+                    - button "Save" [disabled] [ref=f3e654]
+              - generic [ref=f3e655]:
+                - generic [ref=f3e656]:
+                  - heading "Low Priority Queue" [level=4] [ref=f3e657]
+                  - generic [ref=f3e658]: 0 active
+                - paragraph [ref=f3e660]: No queued or processing low priority requests.
+          - generic [ref=f3e661]:
+            - generic [ref=f3e662]:
+              - generic [ref=f3e663]:
+                - heading "Live Engine Terminal" [level=3] [ref=f3e664]
+                - paragraph [ref=f3e665]: Latest backend-saved AI events, queue steps, and errors. Newest lines appear at the bottom.
+              - generic [ref=f3e666]: Live from ai_review_jobs
+            - generic [ref=f3e667]:
+              - generic [ref=f3e668]:
+                - paragraph [ref=f3e669]: Currently Processing
+                - paragraph [ref=f3e670]:
+                  - text: LA-2026-529 — Playwright smoke test legal request
+                  - generic [ref=f3e671]: Medium · Claimed by Legal Affair Engine · Attempt 1
+              - generic [ref=f3e672]:
+                - paragraph [ref=f3e673]: AI Processing Errors
+                - paragraph [ref=f3e674]: 1 error
+            - paragraph [ref=f3e676]: LA-2026-529 — Job is stuck in processing for more than 2 minutes.
+            - generic [ref=f3e677]:
+              - generic [ref=f3e678]:
+                - generic [ref=f3e679]: "[1:27:00 AM]"
+                - text: LA-2026-529 Playwright smoke test legal request
+                - generic [ref=f3e680]: → job processing — Claimed by Legal Affair Engine
+              - generic [ref=f3e681]:
+                - generic [ref=f3e682]: "[1:27:49 AM]"
+                - text: LA-2026-529 Playwright smoke test legal request
+                - generic [ref=f3e683]: "→ queued: Request saved and PDF uploaded. AI review is waiting in the priority queue."
+              - generic [ref=f3e684]:
+                - generic [ref=f3e685]: "[1:27:50 AM]"
+                - text: LA-2026-529 Playwright smoke test legal request
+                - generic [ref=f3e686]: "→ claimed: Job claimed from priority queue for processing."
+              - generic [ref=f3e687]:
+                - generic [ref=f3e688]: "[1:32:05 AM]"
+                - text: LA-2026-529 Playwright smoke test legal request
+                - generic [ref=f3e689]: → Job has been stuck in processing for more than 2 minutes. Click Process Next Queued Request to reclaim/retry it, or restart the Edge Function.

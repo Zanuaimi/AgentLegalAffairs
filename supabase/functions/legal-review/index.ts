@@ -128,6 +128,37 @@ const precedentCorpus = [
   },
 ];
 
+function describeUnknownError(value: unknown): string {
+  if (!value) return "Unknown error";
+  if (typeof value === "string") return value;
+  if (value instanceof Error) return value.message;
+
+  if (typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    const candidates = [
+      record.message,
+      record.error,
+      record.details,
+      record.hint,
+      record.statusText,
+      record.name,
+    ].filter(Boolean);
+
+    if (candidates.length > 0) {
+      return candidates.map(describeUnknownError).join(" | ");
+    }
+
+    try {
+      const json = JSON.stringify(value);
+      return json === "{}" ? "Unknown object error" : json;
+    } catch (_error) {
+      return String(value);
+    }
+  }
+
+  return String(value);
+}
+
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -636,9 +667,11 @@ Deno.serve(async (request: Request) => {
       return jsonResponse({ error: "Unsupported legal-review action." }, 400);
     }
 
+    const staleAfterMinutes = Number(body.staleAfterMinutes || 2);
+
     const { data: jobs, error: claimError } = await supabase.rpc(
       "claim_next_ai_review_job",
-      { stale_after_minutes: 15 },
+      { stale_after_minutes: staleAfterMinutes },
     );
 
     if (claimError) throw claimError;
@@ -650,7 +683,7 @@ Deno.serve(async (request: Request) => {
         supabase,
         "no_queued_jobs",
         "warning",
-        "Legal Affair Engine was invoked, but no queued AI review jobs were available.",
+        `Legal Affair Engine was invoked, but no queued or stale processing jobs were available. Stale threshold: ${staleAfterMinutes} minute(s).`,
       );
       return jsonResponse({ processed: false, message: "No queued AI review jobs." });
     }
@@ -665,11 +698,17 @@ Deno.serve(async (request: Request) => {
         .update({ status: "AI Review Processing" })
         .eq("id", job.request_id);
 
+      const { data: jobState } = await supabase
+        .from("ai_review_jobs")
+        .select("current_step, attempt_count")
+        .eq("id", job.job_id)
+        .single();
+
       await logEngineEvent(
         supabase,
         "job_processing_started",
         "status",
-        `Started processing AI review job for request ${job.request_id}.`,
+        `${jobState?.current_step || "Started processing AI review job"} for request ${job.request_id}. Attempt ${jobState?.attempt_count || "unknown"}.`,
         { requestId: job.request_id, jobId: job.job_id },
       );
 
@@ -726,7 +765,7 @@ Deno.serve(async (request: Request) => {
         aiMode: result.ai_mode || "gemini",
       });
     } catch (jobError) {
-      const message = jobError instanceof Error ? jobError.message : String(jobError);
+      const message = describeUnknownError(jobError);
       await appendOperationalTrace(
         supabase,
         job.job_id,
@@ -752,7 +791,7 @@ Deno.serve(async (request: Request) => {
       );
     }
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = describeUnknownError(error);
     await logEngineEvent(
       supabase,
       "engine_invocation_failed",

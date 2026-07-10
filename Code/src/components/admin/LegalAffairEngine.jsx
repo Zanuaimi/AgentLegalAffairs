@@ -206,12 +206,21 @@ function PriorityQueueCard({
   );
 }
 
+function isStaleProcessingJob(request) {
+  const job = request.aiReviewJob;
+  if (job?.status !== "processing" || !job.startedAtRaw) return false;
+  return Date.now() - new Date(job.startedAtRaw).getTime() > 2 * 60 * 1000;
+}
+
 function EngineTerminalCard({ requestsWithJobs, engineEvents }) {
   const currentlyProcessing = requestsWithJobs.find(
     (request) => request.aiReviewJob?.status === "processing",
   );
   const failedRequests = requestsWithJobs.filter(
-    (request) => request.aiReviewJob?.status === "failed" || request.aiReviewJob?.lastError,
+    (request) =>
+      request.aiReviewJob?.status === "failed" ||
+      request.aiReviewJob?.lastError ||
+      isStaleProcessingJob(request),
   );
   const terminalRef = useRef(null);
   const jobTerminalLines = requestsWithJobs.flatMap((request) => {
@@ -239,7 +248,7 @@ function EngineTerminalCard({ requestsWithJobs, engineEvents }) {
       const errorLine = job?.lastError
         ? [
             {
-              at: job.updatedAt,
+              at: job.updatedAtRaw || job.updatedAt,
               level: "error",
               requestId: request.id,
               title: request.title,
@@ -248,7 +257,20 @@ function EngineTerminalCard({ requestsWithJobs, engineEvents }) {
           ]
         : [];
 
-      return [...traceLines, ...statusLine, ...errorLine];
+      const staleLine = isStaleProcessingJob(request)
+        ? [
+            {
+              at: new Date().toISOString(),
+              level: "error",
+              requestId: request.id,
+              title: request.title,
+              text:
+                "Job has been stuck in processing for more than 2 minutes. Click Process Next Queued Request to reclaim/retry it, or restart the Edge Function.",
+            },
+          ]
+        : [];
+
+      return [...traceLines, ...statusLine, ...errorLine, ...staleLine];
     });
 
   const engineTerminalLines = (engineEvents || []).map((event) => ({
@@ -322,7 +344,7 @@ function EngineTerminalCard({ requestsWithJobs, engineEvents }) {
         <div className="mb-4 space-y-2 rounded-xl border border-red-500/30 bg-red-950/40 p-3">
           {failedRequests.map((request) => (
             <p key={`terminal-error-${request.id}`} className="text-sm text-red-200">
-              <span className="font-bold text-red-100">{request.id}</span> — {request.aiReviewJob?.lastError || "AI review failed without a recorded error message."}
+              <span className="font-bold text-red-100">{request.id}</span> — {request.aiReviewJob?.lastError || (isStaleProcessingJob(request) ? "Job is stuck in processing for more than 2 minutes." : "AI review failed without a recorded error message.")}
             </p>
           ))}
         </div>
@@ -501,7 +523,9 @@ function LegalAffairEngine({
   const canEditOrder = !engineState?.isRunning;
   const errorCount = requestsWithJobs.filter(
     (request) =>
-      request.aiReviewJob?.status === "failed" || request.aiReviewJob?.lastError,
+      request.aiReviewJob?.status === "failed" ||
+      request.aiReviewJob?.lastError ||
+      isStaleProcessingJob(request),
   ).length;
 
   return (

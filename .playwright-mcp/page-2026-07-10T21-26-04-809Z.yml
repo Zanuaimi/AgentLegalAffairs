@@ -1,0 +1,151 @@
+- generic [ref=e30]:
+  - complementary [ref=e31]:
+    - generic [ref=e32]:
+      - img "Khalifa University logo" [ref=e33]
+      - generic [ref=e34]:
+        - paragraph [ref=e35]: University
+        - heading "Legal Affairs" [level=2] [ref=e36]
+        - paragraph [ref=e37]: Request Management Platform
+    - navigation [ref=e38]:
+      - button "Admin" [ref=e39] [cursor=pointer]
+      - button "Legal Affair Engine" [ref=e40] [cursor=pointer]
+      - button "Audit Log" [ref=e41] [cursor=pointer]
+  - generic [ref=e42]:
+    - banner [ref=e43]:
+      - heading "Legal Affairs Platform" [level=1] [ref=e45]
+      - generic [ref=e46]:
+        - button "Toggle light and dark mode" [ref=e47] [cursor=pointer]: 🌙
+        - button "Profile ▾" [ref=e49] [cursor=pointer]
+    - main [ref=e50]:
+      - generic [ref=e51]: Loaded data from Supabase PostgreSQL.
+      - generic [ref=e52]:
+        - generic [ref=e53]:
+          - 'heading "Admin: Manage Users & Roles" [level=2] [ref=e54]'
+          - paragraph [ref=e55]: Manage Supabase profile roles and departments. Changes are recorded in the audit log.
+        - table [ref=e58]:
+          - rowgroup [ref=e59]:
+            - row [ref=e60]:
+              - columnheader "User" [ref=e61]
+              - columnheader "Email" [ref=e62]
+              - columnheader "Role" [ref=e63]
+              - columnheader "Department" [ref=e64]
+              - columnheader "Status" [ref=e65]
+          - rowgroup [ref=e66]:
+            - row [ref=e67]:
+              - cell [ref=e68]:
+                - paragraph [ref=e69]: Admin User
+                - paragraph [ref=e70]: "@admin • 00000000-0000-0000-0000-000000000105"
+              - cell "admin@demo.test" [ref=e71]
+              - cell "Admin User" [ref=e72]:
+                - combobox [ref=e73]:
+                  - option "Requester"
+                  - option "Legal Reviewer"
+                  - option "Legal Manager"
+                  - option "Department Approver"
+                  - option "Admin User" [selected]
+              - cell "IT" [ref=e74]:
+                - combobox [ref=e75]:
+                  - option "HR"
+                  - option "Procurement"
+                  - option "Research Office"
+                  - option "Student Affairs"
+                  - option "Finance"
+                  - option "Legal Affairs"
+                  - option "Academic Affairs"
+                  - option "IT" [selected]
+              - cell "Active" [ref=e76]
+            - row [ref=e77]:
+              - cell [ref=e78]:
+                - paragraph [ref=e79]: Demo Requester
+                - paragraph [ref=e80]: "@requester • 00000000-0000-0000-0000-000000000101"
+              - cell "requester@demo.test" [ref=e81]
+              - cell "Requester" [ref=e82]:
+                - combobox [ref=e83]:
+                  - option "Requester" [selected]
+                  - option "Legal Reviewer"
+                  - option "Legal Manager"
+                  - option "Department Approver"
+                  - option "Admin User"
+              - cell "HR" [ref=e84]:
+                - combobox [ref=e85]:
+                  - option "HR" [selected]
+                  - option "Procurement"
+                  - option "Research Office"
+                  - option "Student Affairs"
+                  - option "Finance"
+                  - option "Legal Affairs"
+                  - option "Academic Affairs"
+                  - option "IT"
+              - cell "Active" [ref=e86]
+            - row [ref=e87]:
+              - cell [ref=e88]:
+                - paragraph [ref=e89]: Fatima Salem
+                - paragraph [ref=e90]: "@manager • 00000000-0000-0000-0000-000000000103"
+              - cell "manager@demo.test" [ref=e91]
+              - cell "Legal Manager" [ref=e92]:
+                - combobox [ref=e93]:
+                  - option "Requester"
+                  - option "Legal Reviewer"
+                  - option "Legal Manager" [selected]
+                  - option "Department Approver"
+                  - option "Admin User"
+              - cell "Legal Affairs" [ref=e94]:
+                - combobox [ref=e95]:
+                  - option "HR"
+                  - option "Procurement"
+                  - option "Research Office"
+                  - option "Student Affairs"
+                  - option "Finance"
+                  - option "Legal Affairs" [selected]
+                  - option "Academic Affairs"
+                  - option "IT"
+              - cell "Active" [ref=e96]
+            - row [ref=e97]:
+              - cell [ref=e98]:
+                - paragraph [ref=e99]: Mariam Ahmed
+                - paragraph [ref=e100]: "@approver • 00000000-0000-0000-0000-000000000104"
+              - cell "approver@demo.test" [ref=e101]
+              - cell "Department Approver" [ref=e102]:
+                - combobox [ref=e103]:
+                  - option "Requester"
+                  - option "Legal Reviewer"
+                  - option "Legal Manager"
+                  - option "Department Approver" [selected]
+                  - option "Admin User"
+              - cell "HR" [ref=e104]:
+                - combobox [ref=e105]:
+                  - option "HR" [selected]
+                  - option "Procurement"
+                  - option "Research Office"
+                  - option "Student Affairs"
+                  - option "Finance"
+                  - option "Legal Affairs"
+                  - option "Academic Affairs"
+                  - option "IT"
+              - cell "Active" [ref=e106]
+            - row [ref=e107]:
+              - cell [ref=e108]:
+                - paragraph [ref=e109]: Omar Hassan
+                - paragraph [ref=e110]: "@reviewer • 00000000-0000-0000-0000-000000000102"
+              - cell "reviewer@demo.test" [ref=e111]
+              - cell "Legal Reviewer" [ref=e112]:
+                - combobox [ref=e113]:
+                  - option "Requester"
+                  - option "Legal Reviewer" [selected]
+                  - option "Legal Manager"
+                  - option "Department Approver"
+                  - option "Admin User"
+              - cell "Legal Affairs" [ref=e114]:
+                - combobox [ref=e115]:
+                  - option "HR"
+                  - option "Procurement"
+                  - option "Research Office"
+                  - option "Student Affairs"
+                  - option "Finance"
+                  - option "Legal Affairs" [selected]
+                  - option "Academic Affairs"
+                  - option "IT"
+              - cell "Active" [ref=e116]
+        - generic [ref=e117]:
+          - paragraph [ref=e118]: Security note
+          - paragraph [ref=e119]: The UI saves profile changes to Supabase, but backend RLS policies must still enforce who is allowed to manage users.

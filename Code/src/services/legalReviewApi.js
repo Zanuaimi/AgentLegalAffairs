@@ -69,7 +69,7 @@ async function describeFunctionInvokeError(error) {
     : described;
 }
 
-async function fallbackFetchTrigger() {
+async function fallbackFetchTrigger({ staleAfterMinutes = 2 } = {}) {
   const functionsUrl = import.meta.env.VITE_SUPABASE_FUNCTIONS_URL;
   const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
@@ -82,44 +82,50 @@ async function fallbackFetchTrigger() {
   const { data } = supabase ? await supabase.auth.getSession() : { data: null };
   const authToken = data?.session?.access_token || anonKey;
 
-  const response = await fetch(`${functionsUrl}/legal-review`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(anonKey ? { apikey: anonKey } : {}),
-      ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-    },
-    body: JSON.stringify({ action: "process-next" }),
-  });
+  let response;
 
-  const result = await response.json().catch(() => ({}));
+  try {
+    response = await fetch(`${functionsUrl}/legal-review`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(anonKey ? { apikey: anonKey } : {}),
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+      },
+      body: JSON.stringify({ action: "process-next", staleAfterMinutes }),
+    });
+  } catch (error) {
+    throw new Error(
+      `Could not reach legal-review Edge Function at ${functionsUrl}/legal-review: ${describeError(error)}`,
+    );
+  }
+
+  const responseText = await response.text();
+  let result = {};
+
+  if (responseText) {
+    try {
+      result = JSON.parse(responseText);
+    } catch (_error) {
+      result = { error: responseText };
+    }
+  }
 
   if (!response.ok) {
     throw new Error(
       describeError(result.error || result.details || result) ||
-        "AI legal review queue processing failed.",
+        `AI legal review queue processing failed with HTTP ${response.status} ${response.statusText}`,
     );
   }
 
   return result;
 }
 
-export async function triggerAiReviewQueue() {
-  if (!supabase) return fallbackFetchTrigger();
-
-  const { data, error } = await supabase.functions.invoke("legal-review", {
-    body: { action: "process-next" },
-  });
-
-  if (error) {
-    throw new Error(await describeFunctionInvokeError(error));
-  }
-
-  if (data?.error || data?.details) {
-    throw new Error(describeError(data.error || data.details));
-  }
-
-  return data;
+export async function triggerAiReviewQueue({ staleAfterMinutes = 2 } = {}) {
+  // Plain fetch gives us direct access to the HTTP status and response body.
+  // That makes errors easier to show in the requester banner and admin terminal
+  // than Supabase's invoke wrapper, which can hide failures inside opaque objects.
+  return fallbackFetchTrigger({ staleAfterMinutes });
 }
 
 /*
