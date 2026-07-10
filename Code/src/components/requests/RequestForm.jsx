@@ -6,6 +6,8 @@ import {
 } from "../../data/mockData";
 import { createFrontendPdfDocument } from "../../utils/demoPdfReview";
 
+const MAX_PDF_SIZE_BYTES = 10 * 1024 * 1024;
+
 function RequestForm({ onCreateRequest, currentUser }) {
   const [formData, setFormData] = useState({
     title: "",
@@ -40,6 +42,13 @@ function RequestForm({ onCreateRequest, currentUser }) {
     if (!isPdf) {
       setSelectedPdfFile(null);
       setFileError("Please attach a PDF file only for Version 1.");
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > MAX_PDF_SIZE_BYTES) {
+      setSelectedPdfFile(null);
+      setFileError("For security, PDF attachments must be 10 MB or smaller.");
       event.target.value = "";
       return;
     }
@@ -129,7 +138,7 @@ function RequestForm({ onCreateRequest, currentUser }) {
         <h2 className="text-2xl font-bold text-slate-900">New Legal Request</h2>
         <p className="text-slate-500 mt-1">
           Submit request details, category, priority, deadline, description, and
-          one PDF attachment.
+          one PDF attachment up to 10 MB.
         </p>
       </div>
 

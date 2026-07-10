@@ -57,8 +57,13 @@ function mapAiReviewJob(row) {
   return {
     id: row.id,
     status: row.status,
+    queuePosition: row.queue_position,
+    priorityQueuePosition: row.priority_queue_position,
+    queueOrder: row.queue_order,
     attemptCount: row.attempt_count,
     lastError: row.last_error,
+    currentStep: row.current_step,
+    operationalTrace: row.operational_trace || [],
     lockedAt: formatDateTime(row.locked_at),
     startedAt: formatDateTime(row.started_at),
     completedAt: formatDateTime(row.completed_at),
@@ -184,6 +189,7 @@ export async function fetchBackendRequests() {
     suggestionsResult,
     commentsResult,
     aiJobsResult,
+    activeQueueResult,
   ] = await Promise.all([
     client.from("request_documents").select("*").in("request_id", requestIds),
     client
@@ -204,6 +210,11 @@ export async function fetchBackendRequests() {
       .select("*")
       .in("request_id", requestIds)
       .order("created_at", { ascending: false }),
+    client
+      .from("ai_review_jobs")
+      .select("id, request_id, status, queue_order, created_at")
+      .in("status", ["queued", "processing"])
+      .order("created_at", { ascending: true }),
   ]);
 
   if (documentsResult.error) throw documentsResult.error;
@@ -211,12 +222,49 @@ export async function fetchBackendRequests() {
   if (suggestionsResult.error) throw suggestionsResult.error;
   if (commentsResult.error) throw commentsResult.error;
   if (aiJobsResult.error) throw aiJobsResult.error;
+  if (activeQueueResult.error) throw activeQueueResult.error;
+
+  const requestById = Object.fromEntries(
+    requestRows.map((request) => [request.id, request]),
+  );
+  const priorityRank = { Urgent: 1, High: 2, Medium: 3, Low: 4 };
+  const activeQueueRows = [...activeQueueResult.data].sort((a, b) => {
+    const requestA = requestById[a.request_id] || {};
+    const requestB = requestById[b.request_id] || {};
+    return (
+      (priorityRank[requestA.priority] || 5) -
+        (priorityRank[requestB.priority] || 5) ||
+      (a.queue_order || 0) - (b.queue_order || 0) ||
+      new Date(a.created_at) - new Date(b.created_at)
+    );
+  });
+
+  const queuePositionByJobId = activeQueueRows.reduce((positions, job, index) => {
+    positions[job.id] = index + 1;
+    return positions;
+  }, {});
+
+  const priorityQueuePositionByJobId = activeQueueRows.reduce(
+    (positions, job) => {
+      const priority = requestById[job.request_id]?.priority || "Other";
+      positions.counts[priority] = (positions.counts[priority] || 0) + 1;
+      positions.byJobId[job.id] = positions.counts[priority];
+      return positions;
+    },
+    { counts: {}, byJobId: {} },
+  ).byJobId;
+
+  const aiJobsWithPositions = aiJobsResult.data.map((job) => ({
+    ...job,
+    queue_position: queuePositionByJobId[job.id] || null,
+    priority_queue_position: priorityQueuePositionByJobId[job.id] || null,
+  }));
 
   const documentsByRequest = groupBy(documentsResult.data, "request_id");
   const checklistByDocument = groupBy(checklistResult.data, "document_id");
   const suggestionsByDocument = groupBy(suggestionsResult.data, "document_id");
   const commentsByRequest = groupBy(commentsResult.data, "request_id");
-  const aiJobsByRequest = groupBy(aiJobsResult.data, "request_id");
+  const aiJobsByRequest = groupBy(aiJobsWithPositions, "request_id");
 
   return requestRows.map((row) =>
     mapRequest(row, {
@@ -340,11 +388,70 @@ export async function createBackendRequest(newRequest, currentUser) {
     request_id: newRequest.id,
     document_id: documentRow.id,
     status: "queued",
+    queue_order: Date.now(),
+    current_step: "Queued for AI review",
+    operational_trace: [
+      {
+        at: new Date().toISOString(),
+        step: "queued",
+        message:
+          "Request saved and PDF uploaded. AI review is waiting in the priority queue.",
+      },
+    ],
   });
 
   if (queueError) throw queueError;
 
   return newRequest;
+}
+
+export async function fetchLegalAffairEngineState() {
+  const client = requireSupabase();
+  const { data, error } = await client
+    .from("ai_engine_control")
+    .select("id, is_running, updated_at, profiles:updated_by(full_name)")
+    .eq("id", "legal_affair_engine")
+    .single();
+
+  if (error) throw error;
+
+  return {
+    isRunning: data.is_running,
+    updatedAt: formatDateTime(data.updated_at),
+    updatedBy: data.profiles?.full_name || "System",
+  };
+}
+
+export async function setLegalAffairEngineRunning(isRunning, currentUser) {
+  const client = requireSupabase();
+  const { data, error } = await client
+    .from("ai_engine_control")
+    .update({ is_running: isRunning, updated_by: currentUser.id })
+    .eq("id", "legal_affair_engine")
+    .select("id, is_running, updated_at, profiles:updated_by(full_name)")
+    .single();
+
+  if (error) throw error;
+
+  return {
+    isRunning: data.is_running,
+    updatedAt: formatDateTime(data.updated_at),
+    updatedBy: data.profiles?.full_name || currentUser.name,
+  };
+}
+
+export async function updateAiReviewJobQueueOrder(jobId, queueOrder) {
+  const client = requireSupabase();
+  const { error } = await client
+    .from("ai_review_jobs")
+    .update({
+      queue_order: Number(queueOrder),
+      current_step: "Queue order adjusted by admin",
+    })
+    .eq("id", jobId)
+    .eq("status", "queued");
+
+  if (error) throw error;
 }
 
 export async function createBackendRequestComment({

@@ -27,6 +27,8 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+const MAX_PDF_SIZE_BYTES = 10 * 1024 * 1024;
+
 const legalReviewCriteria = [
   "Document type identified",
   "Parties correctly identified",
@@ -237,6 +239,34 @@ function buildMockResult(filename: string) {
   };
 }
 
+async function appendOperationalTrace(
+  supabase: any,
+  jobId: string,
+  step: string,
+  message: string,
+) {
+  const { data: job } = await supabase
+    .from("ai_review_jobs")
+    .select("operational_trace")
+    .eq("id", jobId)
+    .single();
+
+  const currentTrace = Array.isArray(job?.operational_trace)
+    ? job.operational_trace
+    : [];
+
+  await supabase
+    .from("ai_review_jobs")
+    .update({
+      current_step: message,
+      operational_trace: [
+        ...currentTrace,
+        { at: new Date().toISOString(), step, message },
+      ],
+    })
+    .eq("id", jobId);
+}
+
 function extractJsonFromGeminiText(text: string) {
   const trimmed = text.trim();
 
@@ -309,6 +339,7 @@ async function updateJobFailure(supabase: any, job: any, errorMessage: string) {
     .update({
       status: "failed",
       last_error: errorMessage,
+      current_step: "AI review failed",
       completed_at: new Date().toISOString(),
     })
     .eq("id", job.job_id);
@@ -323,6 +354,13 @@ async function updateJobFailure(supabase: any, job: any, errorMessage: string) {
 }
 
 async function saveReviewResult(supabase: any, job: any, result: any) {
+  await appendOperationalTrace(
+    supabase,
+    job.job_id,
+    "saving_results",
+    "Saving Gemini draft output, checklist, suggestions, and request status.",
+  );
+
   const { data: criteriaRows, error: criteriaError } = await supabase
     .from("legal_review_criteria")
     .select("id, criteria");
@@ -420,11 +458,66 @@ async function saveReviewResult(supabase: any, job: any, result: any) {
     .from("ai_review_jobs")
     .update({
       status: "completed",
+      current_step: "AI review complete",
       completed_at: new Date().toISOString(),
     })
     .eq("id", job.job_id);
 
   if (jobError) throw jobError;
+}
+
+function describeGeminiFailure(status: number, bodyText: string) {
+  let parsed: any = null;
+
+  try {
+    parsed = JSON.parse(bodyText);
+  } catch (_error) {
+    parsed = null;
+  }
+
+  const apiError = parsed?.error || {};
+  const apiStatus = apiError.status || "UNKNOWN";
+  const apiMessage = apiError.message || bodyText || "Gemini returned an unknown error.";
+
+  if (status === 503 || apiStatus === "UNAVAILABLE") {
+    return `Gemini API unavailable or too busy: ${apiMessage}`;
+  }
+
+  if (status === 429 || apiStatus === "RESOURCE_EXHAUSTED") {
+    return `Gemini API rate limit or quota reached: ${apiMessage}`;
+  }
+
+  if (status === 400 && /token|context|too large|size|payload/i.test(apiMessage)) {
+    return `Gemini could not process the document because it may exceed model context or payload limits: ${apiMessage}`;
+  }
+
+  if (status === 400 || apiStatus === "INVALID_ARGUMENT") {
+    return `Gemini rejected the request format or document payload: ${apiMessage}`;
+  }
+
+  if (status === 401 || status === 403 || apiStatus === "PERMISSION_DENIED") {
+    return `Gemini authentication or permission failed. Check the API key and project access: ${apiMessage}`;
+  }
+
+  return `Gemini review failed with HTTP ${status} (${apiStatus}): ${apiMessage}`;
+}
+
+function describeGeminiBlockedResponse(geminiJson: any) {
+  const promptBlockReason = geminiJson?.promptFeedback?.blockReason;
+  const promptSafetyRatings = geminiJson?.promptFeedback?.safetyRatings;
+  const candidate = geminiJson?.candidates?.[0];
+  const finishReason = candidate?.finishReason;
+  const candidateSafetyRatings = candidate?.safetyRatings;
+
+  if (promptBlockReason) {
+    return `Gemini blocked the document before review. Block reason: ${promptBlockReason}. Safety ratings: ${JSON.stringify(promptSafetyRatings || [])}`;
+  }
+
+  if (finishReason && !["STOP", "MAX_TOKENS"].includes(finishReason)) {
+    return `Gemini could not complete the review. Finish reason: ${finishReason}. Safety ratings: ${JSON.stringify(candidateSafetyRatings || [])}`;
+  }
+
+  return "Gemini returned no review text. The model may have been unable to respond because of context limits, safety filtering, or temporary service issues.";
 }
 
 async function runGeminiReview(job: any, fileBase64: string) {
@@ -469,17 +562,29 @@ async function runGeminiReview(job: any, fileBase64: string) {
 
   if (!geminiResponse.ok) {
     const errorText = await geminiResponse.text();
-    throw new Error(`Gemini review failed: ${errorText}`);
+    throw new Error(describeGeminiFailure(geminiResponse.status, errorText));
   }
 
   const geminiJson = await geminiResponse.json();
   const responseText =
     geminiJson?.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
-  return {
-    ...extractJsonFromGeminiText(responseText),
-    ai_mode: "gemini",
-  };
+  if (!responseText.trim()) {
+    throw new Error(describeGeminiBlockedResponse(geminiJson));
+  }
+
+  try {
+    return {
+      ...extractJsonFromGeminiText(responseText),
+      ai_mode: "gemini",
+    };
+  } catch (error) {
+    throw new Error(
+      `Gemini responded, but the output was not valid JSON for the Legal Affair Engine: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
+  }
 }
 
 Deno.serve(async (request: Request) => {
@@ -537,13 +642,33 @@ Deno.serve(async (request: Request) => {
         .update({ status: "AI Review Processing" })
         .eq("id", job.request_id);
 
+      await appendOperationalTrace(
+        supabase,
+        job.job_id,
+        "downloading_pdf",
+        "Downloading the queued PDF from Supabase Storage.",
+      );
+
       const { data: fileData, error: downloadError } = await supabase.storage
         .from("legal-documents")
         .download(job.storage_path);
 
       if (downloadError) throw downloadError;
 
-      const fileBase64 = arrayBufferToBase64(await fileData.arrayBuffer());
+      const fileBuffer = await fileData.arrayBuffer();
+
+      if (fileBuffer.byteLength > MAX_PDF_SIZE_BYTES) {
+        throw new Error("PDF exceeds the 10 MB AI review safety limit.");
+      }
+
+      await appendOperationalTrace(
+        supabase,
+        job.job_id,
+        "calling_gemini",
+        "Sending the isolated PDF payload to Gemini for draft legal review.",
+      );
+
+      const fileBase64 = arrayBufferToBase64(fileBuffer);
       const result = await runGeminiReview(job, fileBase64);
       await saveReviewResult(supabase, job, result);
 
@@ -556,6 +681,12 @@ Deno.serve(async (request: Request) => {
       });
     } catch (jobError) {
       const message = jobError instanceof Error ? jobError.message : String(jobError);
+      await appendOperationalTrace(
+        supabase,
+        job.job_id,
+        "failed",
+        message,
+      );
       await updateJobFailure(supabase, job, message);
       return jsonResponse(
         {

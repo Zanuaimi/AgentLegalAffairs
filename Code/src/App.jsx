@@ -8,6 +8,7 @@ import RequestTable from "./components/requests/RequestTable";
 import RequestForm from "./components/requests/RequestForm";
 import RequestDetails from "./components/requests/RequestDetails";
 import AdminUsers from "./components/admin/AdminUsers";
+import LegalAffairEngine from "./components/admin/LegalAffairEngine";
 import AuditLog from "./components/audit/AuditLog";
 import LegalReviewers from "./components/reviewers/LegalReviewers";
 import { navigationByRole } from "./config/navigation";
@@ -27,6 +28,9 @@ import {
   fetchBackendAuditLogs,
   fetchBackendRequests,
   fetchBackendUsers,
+  fetchLegalAffairEngineState,
+  setLegalAffairEngineRunning,
+  updateAiReviewJobQueueOrder,
   updateBackendChecklistItem,
   updateBackendUserDepartment,
   updateBackendUserRole,
@@ -72,6 +76,7 @@ function App() {
   const [requests, setRequests] = useState([]);
   const [users, setUsers] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
+  const [engineState, setEngineState] = useState(null);
 
   // selectedRequestId controls which request appears on the Request Details page.
   // It starts as null so users must open a request from a table before seeing details.
@@ -198,17 +203,22 @@ function App() {
       );
     }
 
-    const [backendRequests, backendUsers, backendAuditLogs] = await Promise.all(
-      [
-        fetchBackendRequests(),
-        fetchBackendUsers(),
-        fetchBackendAuditLogs().catch(() => []),
-      ],
-    );
+    const [
+      backendRequests,
+      backendUsers,
+      backendAuditLogs,
+      backendEngineState,
+    ] = await Promise.all([
+      fetchBackendRequests(),
+      fetchBackendUsers(),
+      fetchBackendAuditLogs().catch(() => []),
+      fetchLegalAffairEngineState().catch(() => null),
+    ]);
 
     setRequests(backendRequests);
     setUsers(backendUsers);
     setAuditLogs(backendAuditLogs);
+    setEngineState(backendEngineState);
     setBackendMessage("Loaded data from Supabase PostgreSQL.");
   }
 
@@ -217,12 +227,23 @@ function App() {
   );
 
   useEffect(() => {
-    if (!isLoggedIn || !isSupabaseConfigured || !hasActiveAiReview) return undefined;
+    const shouldPollAiState =
+      isLoggedIn &&
+      isSupabaseConfigured &&
+      (hasActiveAiReview || currentPage === "legal-engine");
+
+    if (!shouldPollAiState) return undefined;
 
     const intervalId = window.setInterval(async () => {
       try {
-        const refreshedRequests = await fetchBackendRequests();
+        const [refreshedRequests, refreshedEngineState] = await Promise.all([
+          fetchBackendRequests(),
+          currentPage === "legal-engine"
+            ? fetchLegalAffairEngineState().catch(() => null)
+            : Promise.resolve(engineState),
+        ]);
         setRequests(refreshedRequests);
+        setEngineState(refreshedEngineState);
       } catch (error) {
         setBackendMessage(
           `Could not refresh AI review queue status: ${
@@ -233,7 +254,7 @@ function App() {
     }, 5000);
 
     return () => window.clearInterval(intervalId);
-  }, [isLoggedIn, hasActiveAiReview]);
+  }, [isLoggedIn, hasActiveAiReview, currentPage]);
 
   async function applyAuthenticatedUser(user) {
     setCurrentUser(user);
@@ -343,6 +364,69 @@ function App() {
         }`,
       );
     }
+  }
+
+  async function refreshRequestsAndEngineState() {
+    const [refreshedRequests, refreshedEngineState] = await Promise.all([
+      fetchBackendRequests(),
+      fetchLegalAffairEngineState().catch(() => null),
+    ]);
+
+    setRequests(refreshedRequests);
+    setEngineState(refreshedEngineState);
+  }
+
+  async function handleEngineRunningChange(isRunning) {
+    const nextEngineState = await setLegalAffairEngineRunning(
+      isRunning,
+      currentUser,
+    );
+    setEngineState(nextEngineState);
+    await addAuditLog(
+      `${isRunning ? "Started" : "Stopped"} Legal Affair Engine`,
+      currentUser.name,
+      "System",
+    );
+  }
+
+  async function handleProcessNextAiReviewJob() {
+    try {
+      await triggerAiReviewQueue();
+      await refreshRequestsAndEngineState();
+      setBackendMessage("Legal Affair Engine processed the next queued request.");
+    } catch (error) {
+      setBackendMessage(
+        `Legal Affair Engine could not process the next request: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  async function handleQueuePositionChange(request, priorityRequests, nextPosition) {
+    if (engineState?.isRunning) {
+      setBackendMessage("Stop the Legal Affair Engine before changing queue position.");
+      return;
+    }
+
+    const currentIndex = priorityRequests.findIndex((item) => item.id === request.id);
+    const clampedPosition = Math.max(
+      1,
+      Math.min(Number(nextPosition) || 1, priorityRequests.length),
+    );
+    const nextIndex = clampedPosition - 1;
+    const reorderedRequests = [...priorityRequests];
+    const [movedRequest] = reorderedRequests.splice(currentIndex, 1);
+    reorderedRequests.splice(nextIndex, 0, movedRequest);
+
+    await Promise.all(
+      reorderedRequests.map((item, index) =>
+        updateAiReviewJobQueueOrder(item.aiReviewJob.id, index + 1),
+      ),
+    );
+
+    await refreshRequestsAndEngineState();
+    await addAuditLog("Changed Legal Affair Engine queue position", currentUser.name);
   }
 
   async function handleAddRequestComment(requestId, commentText) {
@@ -579,6 +663,18 @@ function App() {
           currentUser={currentUser}
           onUpdateUserRole={handleUpdateUserRole}
           onUpdateUserDepartment={handleUpdateUserDepartment}
+        />
+      );
+    }
+
+    if (currentPage === "legal-engine") {
+      return (
+        <LegalAffairEngine
+          requests={requests}
+          engineState={engineState}
+          onToggleRunning={handleEngineRunningChange}
+          onProcessNext={handleProcessNextAiReviewJob}
+          onQueuePositionChange={handleQueuePositionChange}
         />
       );
     }

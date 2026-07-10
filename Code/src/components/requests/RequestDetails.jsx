@@ -113,6 +113,15 @@ function AiQueueDebugCard({ request }) {
             <p className="mt-1 break-all font-mono text-xs text-slate-900">{job.id}</p>
           </div>
           <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
+            <p className="text-slate-500">Current Queue Position</p>
+            <p className="mt-1 font-bold text-slate-900">
+              {job.queuePosition ? `#${job.queuePosition}` : "Not in active queue"}
+            </p>
+            <p className="mt-1 text-xs text-slate-500">
+              Position counts queued/processing jobs from oldest to newest.
+            </p>
+          </div>
+          <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
             <p className="text-slate-500">Attempts</p>
             <p className="mt-1 font-bold text-slate-900">{job.attemptCount}</p>
           </div>

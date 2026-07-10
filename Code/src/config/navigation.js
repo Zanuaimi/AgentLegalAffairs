@@ -6,6 +6,7 @@ export const navigationByRole = {
   ],
   "Admin User": [
     { id: "admin", label: "Admin" },
+    { id: "legal-engine", label: "Legal Affair Engine" },
     { id: "audit", label: "Audit Log" },
   ],
   "Legal Reviewer": [
