@@ -3,6 +3,7 @@ import AiLegalReviewPanel from "../review/AiLegalReviewPanel";
 import AiSummaryBox from "../review/AiSummaryBox";
 import ContractChecklist from "../review/ContractChecklist";
 import ReviewerComments from "../review/ReviewerComments";
+import ReviewerRoutingPanel from "./ReviewerRoutingPanel";
 import DepartmentApprovalPanel from "./DepartmentApprovalPanel";
 import ManagerActions from "./ManagerActions";
 import PdfReviewModal from "./PdfReviewModal";
@@ -87,6 +88,9 @@ function RequestDetails({
   onManagerDecisionChange,
   onDepartmentDecisionChange,
   onChecklistItemToggle,
+  users,
+  onAssignReviewer,
+  onRouteRequest,
 }) {
   // selectedDocument stores the PDF the user clicked, so we can show it in the popup.
   const [selectedDocument, setSelectedDocument] = useState(null);
@@ -123,6 +127,11 @@ function RequestDetails({
 
   const firstDocument = request.documents[0];
   const isRequester = currentUser?.role === "Requester";
+  const departmentReviewers = users.filter(
+    (user) =>
+      user.role === "Legal Reviewer" &&
+      user.department === currentUser?.department,
+  );
 
   return (
     <section>
@@ -227,10 +236,19 @@ function RequestDetails({
             <ManagerActions
               request={request}
               canManageManagerActions={canManageManagerActions}
+              reviewers={departmentReviewers}
+              onAssignReviewer={onAssignReviewer}
               onManagerDecisionChange={async (nextDecision) => {
                 const savedDecision = await onManagerDecisionChange(nextDecision);
                 setManagerDecision(savedDecision.managerDecision);
               }}
+            />
+          )}
+          {canManageReview && request.assignedReviewer === currentUser.name && (
+            <ReviewerRoutingPanel
+              request={request}
+              canRouteRequest
+              onRouteRequest={onRouteRequest}
             />
           )}
           {canManageDepartmentApproval && (

@@ -20,12 +20,14 @@ import {
   registerWithSupabase,
 } from "./services/authService";
 import {
+  assignReviewerAsManager,
   createBackendAuditLog,
   createBackendDepartmentApproval,
   createBackendManagerAction,
   createBackendRequest,
   createBackendRequestComment,
   createLegalAffairEngineEvent,
+  routeRequestAsReviewer,
   fetchBackendAuditLogs,
   fetchBackendRequests,
   fetchBackendUsers,
@@ -419,11 +421,11 @@ function App() {
 
   async function handleCreateRequest(newRequest) {
     try {
-      if (isSupabaseConfigured) {
-        await createBackendRequest(newRequest, currentUser);
-      }
+      const savedRequest = isSupabaseConfigured
+        ? await createBackendRequest(newRequest, currentUser)
+        : newRequest;
 
-      const requestForState = { ...newRequest };
+      const requestForState = { ...savedRequest };
       delete requestForState.uploadFile;
 
       setRequests([requestForState, ...requests]);
@@ -624,6 +626,65 @@ function App() {
     return savedDecision;
   }
 
+
+  async function handleManagerAssignReviewer(requestId, reviewerId) {
+    const assignment = await assignReviewerAsManager({ requestId, reviewerId });
+
+    setRequests((currentRequests) =>
+      currentRequests.map((request) =>
+        request.id === requestId
+          ? {
+              ...request,
+              assignedReviewer: assignment.reviewer_name,
+              managerDecision: "Reviewer assigned by Legal Manager",
+              status: assignment.request_status,
+            }
+          : request,
+      ),
+    );
+
+    await addAuditLog(
+      `Assigned reviewer: ${assignment.reviewer_name}`,
+      currentUser.name,
+      requestId,
+    );
+  }
+
+  async function handleReviewerRoute(requestId, destination, commentText) {
+    const routedRequest = await routeRequestAsReviewer({
+      requestId,
+      destination,
+      commentText,
+    });
+    const destinationLabel =
+      destination === "requester" ? "Requester" : "Legal Manager";
+
+    setRequests((currentRequests) =>
+      currentRequests.map((request) =>
+        request.id === requestId
+          ? {
+              ...request,
+              status: routedRequest.request_status,
+              reviewerComments: [
+                ...(request.reviewerComments || []),
+                {
+                  authorName: currentUser.name,
+                  authorRole: currentUser.role,
+                  text: commentText,
+                },
+              ],
+            }
+          : request,
+      ),
+    );
+
+    await addAuditLog(
+      `Sent request to ${destinationLabel}: ${commentText}`,
+      currentUser.name,
+      requestId,
+    );
+  }
+
   async function handleDepartmentApproval(requestId, decision, commentText) {
     const savedDecision = await createBackendDepartmentApproval({
       requestId,
@@ -784,6 +845,13 @@ function App() {
             handleDepartmentApproval(selectedRequest.id, decision, commentText)
           }
           onChecklistItemToggle={handleChecklistItemToggle}
+          users={users}
+          onAssignReviewer={(reviewerId) =>
+            handleManagerAssignReviewer(selectedRequest.id, reviewerId)
+          }
+          onRouteRequest={(destination, commentText) =>
+            handleReviewerRoute(selectedRequest.id, destination, commentText)
+          }
         />
       );
     }
@@ -793,6 +861,7 @@ function App() {
         <LegalReviewers
           users={users}
           requests={requests}
+          activeUserIds={activeUserIds}
           onSelectRequest={handleSelectRequest}
         />
       );

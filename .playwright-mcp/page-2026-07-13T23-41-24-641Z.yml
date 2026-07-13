@@ -1,0 +1,72 @@
+- generic [ref=f3e3]:
+  - complementary [ref=f3e4]:
+    - generic [ref=f3e5]:
+      - img "Khalifa University logo" [ref=f3e6]
+      - generic [ref=f3e7]:
+        - paragraph [ref=f3e8]: University
+        - heading "Legal Affairs" [level=2] [ref=f3e9]
+        - paragraph [ref=f3e10]: Request Management Platform
+    - navigation [ref=f3e11]:
+      - button "Send Request" [ref=f3e12] [cursor=pointer]
+      - button "My Requests" [ref=f3e13] [cursor=pointer]
+      - button "Request Details Open a request first" [disabled] [ref=f3e14]:
+        - text: Request Details
+        - generic [ref=f3e15]: Open a request first
+  - generic [ref=f3e16]:
+    - banner [ref=f3e17]:
+      - heading "Legal Affairs Platform" [level=1] [ref=f3e19]
+      - generic [ref=f3e20]:
+        - button "Toggle light and dark mode" [ref=f3e21] [cursor=pointer]: 🌙
+        - generic [ref=f3e22]: "Role: Requester"
+        - button "Profile ▾" [ref=f3e24] [cursor=pointer]
+    - main [ref=f3e25]:
+      - generic [ref=f3e26]: Loaded data from Supabase PostgreSQL.
+      - generic [ref=f3e27]:
+        - generic [ref=f3e28]:
+          - heading "New Legal Request" [level=2] [ref=f3e29]
+          - paragraph [ref=f3e30]: Submit request details, category, priority, deadline, description, and one PDF attachment up to 10 MB.
+        - generic [ref=f3e31]:
+          - generic [ref=f3e32]:
+            - generic [ref=f3e33]: Request Title
+            - 'textbox "Example: Review vendor agreement" [ref=f3e34]': E2E routing and reviewer assignment verification
+          - generic [ref=f3e35]:
+            - generic [ref=f3e36]: Department
+            - combobox [ref=f3e37]:
+              - option "HR" [selected]
+              - option "Procurement"
+              - option "Research Office"
+              - option "Student Affairs"
+              - option "Finance"
+              - option "Legal Affairs"
+              - option "Academic Affairs"
+              - option "IT"
+          - generic [ref=f3e38]:
+            - generic [ref=f3e39]: Legal Category
+            - combobox [ref=f3e40]:
+              - option "LEG-A - Legal Advice / Opinion"
+              - option "LEG-B - Contract Review" [selected]
+              - option "LEG-C - Research Agreements"
+              - option "LEG-D - Student Agreements"
+              - option "LEG-E - Committee / Investigation / Disciplinary Matters"
+              - option "LEG-F - Administrative Legal Work"
+              - option "LEG-G - Legal Operations / Reporting"
+          - generic [ref=f3e41]:
+            - generic [ref=f3e42]: Priority
+            - combobox [ref=f3e43]:
+              - option "Low"
+              - option "Medium"
+              - option "High" [selected]
+              - option "Urgent"
+          - generic [ref=f3e44]:
+            - generic [ref=f3e45]: Deadline
+            - textbox [ref=f3e46]: 2026-08-15
+          - generic [ref=f3e47]:
+            - generic [ref=f3e48]: PDF Attachment
+            - button "Choose File" [active] [ref=f3e49]
+            - paragraph [ref=f3e50]: Version 1 accepts PDF files only. The file is analyzed through the Supabase legal-review Edge Function when configured.
+            - paragraph [ref=f3e57]: "Selected PDF: Legal Affairs Request Management Platform.pdf"
+          - generic [ref=f3e51]:
+            - generic [ref=f3e52]: Request Description
+            - textbox "Describe what Legal Affairs should review, why it is needed, and any deadline or context the reviewer should know." [ref=f3e53]: Single end-to-end verification of automatic reviewer assignment, reviewer routing, and manager reassignment.
+            - paragraph [ref=f3e54]: This text helps Legal Affairs understand the request before opening the PDF.
+          - button "Submit Request with AI Review" [ref=f3e56] [cursor=pointer]

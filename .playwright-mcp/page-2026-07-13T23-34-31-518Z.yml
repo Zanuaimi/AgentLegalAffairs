@@ -1,0 +1,124 @@
+- generic [ref=f1e30]:
+  - complementary [ref=f1e31]:
+    - generic [ref=f1e32]:
+      - img "Khalifa University logo" [ref=f1e33]
+      - generic [ref=f1e34]:
+        - paragraph [ref=f1e35]: University
+        - heading "Legal Affairs" [level=2] [ref=f1e36]
+        - paragraph [ref=f1e37]: Request Management Platform
+    - navigation [ref=f1e38]:
+      - button "Send Request" [ref=f1e39] [cursor=pointer]
+      - button "My Requests" [ref=f1e40] [cursor=pointer]
+      - button "Request Details" [ref=f1e85] [cursor=pointer]
+  - generic [ref=f1e43]:
+    - banner [ref=f1e44]:
+      - heading "Legal Affairs Platform" [level=1] [ref=f1e46]
+      - generic [ref=f1e47]:
+        - button "Toggle light and dark mode" [ref=f1e48] [cursor=pointer]: 🌙
+        - generic [ref=f1e49]: "Role: Requester"
+        - button "Profile ▾" [ref=f1e51] [cursor=pointer]
+    - main [ref=f1e52]:
+      - generic [ref=f1e53]: Loaded data from Supabase PostgreSQL.
+      - generic [ref=f1e86]:
+        - generic [ref=f1e87]:
+          - heading "My Requests" [level=2] [ref=f1e88]
+          - paragraph [ref=f1e89]: View submitted requests and track their current status.
+          - paragraph [ref=f1e90]: Click table headers to sort. Only one sort is active at a time.
+        - table [ref=f1e93]:
+          - rowgroup [ref=f1e94]:
+            - row [ref=f1e95]:
+              - columnheader [ref=f1e96]:
+                - button "Request Sorted ascending" [ref=f1e97] [cursor=pointer]:
+                  - generic [ref=f1e98]: Request
+                  - generic "Sorted ascending" [ref=f1e99]: ↑
+              - columnheader [ref=f1e100]:
+                - button "Sent Time" [ref=f1e101] [cursor=pointer]
+              - columnheader [ref=f1e103]:
+                - button "Requester" [ref=f1e104] [cursor=pointer]
+              - columnheader [ref=f1e106]:
+                - button "Request Type" [ref=f1e107] [cursor=pointer]
+              - columnheader [ref=f1e109]:
+                - button "Department" [ref=f1e110] [cursor=pointer]
+              - columnheader [ref=f1e112]:
+                - button "Priority" [ref=f1e113] [cursor=pointer]
+              - columnheader [ref=f1e115]:
+                - button "Status" [ref=f1e116] [cursor=pointer]
+              - columnheader [ref=f1e118]:
+                - button "Reviewer" [ref=f1e119] [cursor=pointer]
+              - columnheader "Action" [ref=f1e121]
+          - rowgroup [ref=f1e122]:
+            - row [ref=f1e123]:
+              - cell [ref=f1e124]:
+                - paragraph [ref=f1e125]: AI reviewed software license agreement
+                - paragraph [ref=f1e126]: LA-2026-004 • Due 2026-07-12
+              - cell "07/01/2026, 09:30 AM" [ref=f1e127]
+              - cell "Demo Requester" [ref=f1e128]
+              - cell [ref=f1e129]:
+                - paragraph [ref=f1e130]: Contract Review
+                - paragraph [ref=f1e131]: LEG-B
+              - cell "IT" [ref=f1e132]
+              - cell "High" [ref=f1e133]
+              - cell "Under Review" [ref=f1e134]
+              - cell "Omar Hassan" [ref=f1e135]
+              - cell [ref=f1e136]:
+                - button "View Details" [ref=f1e137] [cursor=pointer]
+            - row [ref=f1e198]:
+              - cell [ref=f1e139]:
+                - paragraph [ref=f1e140]: E2E PDF AI queue verification retry
+                - paragraph [ref=f1e141]: LA-2026-252 • Due 2026-08-15
+              - cell "07/14/2026, 03:33 AM" [ref=f1e142]
+              - cell "Demo Requester" [ref=f1e143]
+              - cell [ref=f1e144]:
+                - paragraph [ref=f1e145]: Contract Review
+                - paragraph [ref=f1e146]: LEG-B
+              - cell "HR" [ref=f1e147]
+              - cell "High" [ref=f1e148]
+              - cell "AI Review Complete" [ref=f1e199]
+              - cell "Not Assigned" [ref=f1e150]
+              - cell [ref=f1e151]:
+                - button "View Details" [ref=f1e152] [cursor=pointer]
+            - row [ref=f1e153]:
+              - cell [ref=f1e154]:
+                - paragraph [ref=f1e155]: HR legal opinion on employment policy
+                - paragraph [ref=f1e156]: LA-2026-002 • Due 2026-07-08
+              - cell "06/30/2026, 11:20 AM" [ref=f1e157]
+              - cell "Demo Requester" [ref=f1e158]
+              - cell [ref=f1e159]:
+                - paragraph [ref=f1e160]: Legal Advice / Opinion
+                - paragraph [ref=f1e161]: LEG-A
+              - cell "HR" [ref=f1e162]
+              - cell "Medium" [ref=f1e163]
+              - cell "Waiting for More Information" [ref=f1e164]
+              - cell "Omar Hassan" [ref=f1e165]
+              - cell [ref=f1e166]:
+                - button "View Details" [ref=f1e167] [cursor=pointer]
+            - row [ref=f1e168]:
+              - cell [ref=f1e169]:
+                - paragraph [ref=f1e170]: Research data sharing agreement
+                - paragraph [ref=f1e171]: LA-2026-003 • Due 2026-07-02
+              - cell "06/30/2026, 12:10 PM" [ref=f1e172]
+              - cell "Demo Requester" [ref=f1e173]
+              - cell [ref=f1e174]:
+                - paragraph [ref=f1e175]: Research Agreements
+                - paragraph [ref=f1e176]: LEG-C
+              - cell "Research Office" [ref=f1e177]
+              - cell "Urgent" [ref=f1e178]
+              - cell "Assigned to Legal Reviewer" [ref=f1e179]
+              - cell "Omar Hassan" [ref=f1e180]
+              - cell [ref=f1e181]:
+                - button "View Details" [ref=f1e182] [cursor=pointer]
+            - row [ref=f1e183]:
+              - cell [ref=f1e184]:
+                - paragraph [ref=f1e185]: Review sample vendor agreement
+                - paragraph [ref=f1e186]: LA-2026-001 • Due 2026-07-05
+              - cell "06/30/2026, 09:15 AM" [ref=f1e187]
+              - cell "Demo Requester" [ref=f1e188]
+              - cell [ref=f1e189]:
+                - paragraph [ref=f1e190]: Contract Review
+                - paragraph [ref=f1e191]: LEG-B
+              - cell "Procurement" [ref=f1e192]
+              - cell "High" [ref=f1e193]
+              - cell "Under Review" [ref=f1e194]
+              - cell "Omar Hassan" [ref=f1e195]
+              - cell [ref=f1e196]:
+                - button "View Details" [ref=f1e197] [cursor=pointer]

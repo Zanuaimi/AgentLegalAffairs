@@ -1,0 +1,51 @@
+- generic [ref=f3e201]:
+  - complementary [ref=f3e202]:
+    - generic [ref=f3e203]:
+      - img "Khalifa University logo" [ref=f3e204]
+      - generic [ref=f3e205]:
+        - paragraph [ref=f3e206]: University
+        - heading "Legal Affairs" [level=2] [ref=f3e207]
+        - paragraph [ref=f3e208]: Request Management Platform
+    - navigation [ref=f3e209]:
+      - button "Dashboard" [ref=f3e210] [cursor=pointer]
+      - button "Legal Requests" [ref=f3e211] [cursor=pointer]
+      - button "Request Details Open a request first" [disabled] [ref=f3e212]:
+        - text: Request Details
+        - generic [ref=f3e213]: Open a request first
+  - generic [ref=f3e214]:
+    - banner [ref=f3e215]:
+      - heading "Legal Affairs Platform" [level=1] [ref=f3e217]
+      - generic [ref=f3e218]:
+        - button "Toggle light and dark mode" [ref=f3e219] [cursor=pointer]: 🌙
+        - generic [ref=f3e220]: "Role: Legal Reviewer"
+        - button "Profile ▾" [ref=f3e222] [cursor=pointer]
+    - main [ref=f3e223]:
+      - generic [ref=f3e224]: Loaded data from Supabase PostgreSQL.
+      - generic [ref=f3e225]:
+        - generic [ref=f3e226]:
+          - heading "Dashboard" [level=2] [ref=f3e227]
+          - paragraph [ref=f3e228]: Overview of Legal Affairs workload for Version 1.
+        - generic [ref=f3e229]:
+          - generic [ref=f3e230]:
+            - generic [ref=f3e232]:
+              - paragraph [ref=f3e233]: Total Requests
+              - button "Total Requests information" [ref=f3e235] [cursor=pointer]
+            - paragraph [ref=f3e236]: "5"
+          - generic [ref=f3e237]:
+            - generic [ref=f3e239]:
+              - paragraph [ref=f3e240]: Pending Items
+              - button "Pending Items information" [ref=f3e242] [cursor=pointer]
+            - paragraph [ref=f3e243]: "5"
+          - generic [ref=f3e244]:
+            - generic [ref=f3e246]:
+              - paragraph [ref=f3e247]: Under Review
+              - button "Under Review information" [ref=f3e249] [cursor=pointer]
+            - paragraph [ref=f3e250]: "2"
+          - generic [ref=f3e251]:
+            - generic [ref=f3e253]:
+              - paragraph [ref=f3e254]: High Risk
+              - button "High Risk information" [ref=f3e256] [cursor=pointer]
+            - paragraph [ref=f3e257]: "3"
+        - generic [ref=f3e258]:
+          - heading "Version 1 Focus" [level=3] [ref=f3e259]
+          - paragraph [ref=f3e260]: This dashboard summarizes the request records loaded from Supabase. A future reporting API can add overdue counts, turnaround time, and department-based analytics.

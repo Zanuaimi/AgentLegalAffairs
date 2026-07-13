@@ -1,0 +1,26 @@
+- generic [ref=f3e175]:
+  - button "Toggle light and dark mode" [ref=f3e177] [cursor=pointer]: 🌙
+  - generic [ref=f3e178]:
+    - img "Khalifa University logo" [ref=f3e179]
+    - paragraph [ref=f3e180]: Legal Affairs Platform
+    - heading "Login" [level=1] [ref=f3e181]
+    - paragraph [ref=f3e182]: Login with Supabase Auth. Demo users are listed below.
+  - generic [ref=f3e183]: Loaded data from Supabase PostgreSQL.
+  - generic [ref=f3e184]:
+    - generic [ref=f3e185]:
+      - generic [ref=f3e186]: Username
+      - 'textbox "Example: requester, reviewer, manager, approver, admin" [ref=f3e187]'
+    - generic [ref=f3e188]:
+      - generic [ref=f3e189]: Password
+      - 'textbox "Demo password: password123" [ref=f3e190]'
+    - button "Login to Dashboard" [ref=f3e191] [cursor=pointer]
+  - generic [ref=f3e192]:
+    - paragraph [ref=f3e193]: Easy demo accounts
+    - paragraph [ref=f3e194]: requester / password123
+    - paragraph [ref=f3e195]: reviewer / password123
+    - paragraph [ref=f3e196]: manager / password123
+    - paragraph [ref=f3e197]: approver / password123
+    - paragraph [ref=f3e198]: admin / password123
+  - paragraph [ref=f3e199]:
+    - text: New user?
+    - button "Create an account" [ref=f3e200] [cursor=pointer]

@@ -1,0 +1,83 @@
+- generic [ref=e30]:
+  - complementary [ref=e31]:
+    - generic [ref=e32]:
+      - img "Khalifa University logo" [ref=e33]
+      - generic [ref=e34]:
+        - paragraph [ref=e35]: University
+        - heading "Legal Affairs" [level=2] [ref=e36]
+        - paragraph [ref=e37]: Request Management Platform
+    - navigation [ref=e38]:
+      - button "Send Request" [ref=e39] [cursor=pointer]
+      - button "My Requests" [ref=e40] [cursor=pointer]
+      - button "Request Details" [ref=e85] [cursor=pointer]
+  - generic [ref=e43]:
+    - banner [ref=e44]:
+      - heading "Legal Affairs Platform" [level=1] [ref=e46]
+      - generic [ref=e47]:
+        - button "Toggle light and dark mode" [ref=e48] [cursor=pointer]: 🌙
+        - generic [ref=e49]: "Role: Requester"
+        - button "Profile ▾" [ref=e51] [cursor=pointer]
+    - main [ref=e52]:
+      - generic [ref=e53]: Loaded data from Supabase PostgreSQL.
+      - generic [ref=e198]:
+        - generic [ref=e199]:
+          - heading "Request Details" [level=2] [ref=e200]
+          - paragraph [ref=e201]: Review request information, current status, PDF attachment, and reviewer notes.
+        - generic [ref=e203]:
+          - generic [ref=e204]:
+            - generic [ref=e205]:
+              - generic [ref=e206]:
+                - paragraph [ref=e207]: LA-2026-405
+                - heading "E2E PDF AI queue verification" [level=3] [ref=e208]
+                - paragraph [ref=e209]: "End-to-end local verification: submit the attached PDF for automated legal review and verify the resulting AI queue state."
+              - generic [ref=e210]: AI Review Pending
+            - generic [ref=e211]:
+              - paragraph [ref=e212]: "Category: LEG-B - Contract Review"
+              - paragraph [ref=e213]: "Department: HR"
+              - paragraph [ref=e214]: "Requester: Demo Requester"
+              - paragraph [ref=e215]: "Assigned Reviewer: Not Assigned"
+              - paragraph [ref=e216]: "Priority: High"
+              - paragraph [ref=e217]: "Risk Level: Not Classified"
+              - paragraph [ref=e218]: "Deadline: 2026-08-15"
+              - paragraph [ref=e219]: "Sent Time: 07/14/2026, 03:28 AM"
+            - generic [ref=e220]:
+              - heading "PDF Attachments" [level=4] [ref=e221]
+              - paragraph [ref=e222]: Click a PDF to open the review popup with AI page suggestions.
+              - list [ref=e223]:
+                - listitem [ref=e224]:
+                  - button "📄 Legal Affairs Request Management Platform.pdf" [ref=e225] [cursor=pointer]
+          - generic [ref=e226]:
+            - generic [ref=e228]:
+              - heading "AI Draft Summary" [level=3] [ref=e229]
+              - paragraph [ref=e230]: Draft only - human legal review required
+            - paragraph [ref=e231]: AI legal review is pending. The backend queue will process this PDF and update the checklist when the AI draft is ready.
+            - generic [ref=e232]: The AI assistant supports Legal Affairs, but it must not provide final approval or make binding decisions.
+          - generic [ref=e233]:
+            - heading "Pending AI Review" [level=3] [ref=e234]
+            - paragraph [ref=e235]: This request has not received an AI legal review response yet. The checklist remains available for human review while the AI result is pending.
+          - generic [ref=e236]:
+            - heading "Review Status" [level=3] [ref=e237]
+            - paragraph [ref=e238]: This card summarizes who can act on this request and what is still pending.
+            - generic [ref=e239]:
+              - generic [ref=e240]:
+                - paragraph [ref=e241]: Current Request Status
+                - paragraph [ref=e242]: AI Review Pending
+              - generic [ref=e243]:
+                - paragraph [ref=e244]: Legal Reviewer
+                - paragraph [ref=e245]: Not Assigned
+              - generic [ref=e246]:
+                - paragraph [ref=e247]: Department Review
+                - paragraph [ref=e248]: Pending Department Review
+              - generic [ref=e249]:
+                - paragraph [ref=e250]: Legal Manager Review
+                - paragraph [ref=e251]: Pending Legal Manager Review
+              - generic [ref=e252]:
+                - paragraph [ref=e253]: Your Access on This Page
+                - paragraph [ref=e254]: View-only
+          - generic [ref=e255]:
+            - heading "Request Comments" [level=3] [ref=e256]
+            - paragraph [ref=e257]: Requesters, Legal Reviewers, Legal Managers, and Department Approvers can add comments. Each comment shows the author name and role.
+            - paragraph [ref=e259]: No comments yet.
+            - generic [ref=e260]:
+              - textbox "Add a comment as Demo Requester" [ref=e261]
+              - button "Add Comment" [ref=e262] [cursor=pointer]

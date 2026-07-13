@@ -13,7 +13,12 @@ function getReviewerRequests(reviewer, requests) {
   );
 }
 
-function LegalReviewers({ users, requests, onSelectRequest }) {
+function LegalReviewers({
+  users,
+  requests,
+  activeUserIds,
+  onSelectRequest,
+}) {
   // selectedReviewerId controls which reviewer details appear on the right side.
   const legalReviewers = users.filter((user) => user.role === "Legal Reviewer");
   const [selectedReviewerId, setSelectedReviewerId] = useState(
@@ -48,6 +53,7 @@ function LegalReviewers({ users, requests, onSelectRequest }) {
               (request) => request.riskLevel === "High",
             ).length;
             const isSelected = reviewer.id === selectedReviewerId;
+            const isActive = activeUserIds.includes(reviewer.id);
 
             return (
               <button
@@ -60,7 +66,18 @@ function LegalReviewers({ users, requests, onSelectRequest }) {
                 }`}
                 onClick={() => setSelectedReviewerId(reviewer.id)}
               >
-                <p className="font-bold text-slate-900">{reviewer.name}</p>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="font-bold text-slate-900">{reviewer.name}</p>
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                      isActive
+                        ? "bg-green-100 text-green-700"
+                        : "bg-slate-100 text-slate-600"
+                    }`}
+                  >
+                    {isActive ? "Active" : "Inactive"}
+                  </span>
+                </div>
                 <p className="text-xs text-slate-500 mt-1">
                   @{reviewer.username} • {reviewer.department}
                 </p>
@@ -96,9 +113,20 @@ function LegalReviewers({ users, requests, onSelectRequest }) {
                 <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">
                   Reviewer Activity
                 </p>
-                <h3 className="text-xl font-bold text-slate-900 mt-1">
-                  {selectedReviewer.name}
-                </h3>
+                <div className="mt-1 flex items-center gap-3">
+                  <h3 className="text-xl font-bold text-slate-900">
+                    {selectedReviewer.name}
+                  </h3>
+                  {activeUserIds.includes(selectedReviewer.id) ? (
+                    <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+                      Active
+                    </span>
+                  ) : (
+                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                      Inactive
+                    </span>
+                  )}
+                </div>
                 <p className="text-sm text-slate-500 mt-1">
                   Requests assigned to this reviewer in the frontend demo.
                 </p>

@@ -407,7 +407,49 @@ export async function createBackendRequest(newRequest, currentUser) {
 
   if (queueError) throw queueError;
 
-  return newRequest;
+  const { data: assignmentRows, error: assignmentError } = await client.rpc(
+    "auto_assign_legal_reviewer",
+    { p_request_id: newRequest.id },
+  );
+
+  if (assignmentError) throw assignmentError;
+
+  const assignment = assignmentRows?.[0];
+  return {
+    ...newRequest,
+    assignedReviewer: assignment?.reviewer_name || "Not Assigned",
+    status: assignment ? "Assigned to Legal Reviewer" : newRequest.status,
+  };
+}
+
+
+export async function assignReviewerAsManager({ requestId, reviewerId }) {
+  const client = requireSupabase();
+  const { data, error } = await client.rpc("assign_reviewer_as_manager", {
+    p_request_id: requestId,
+    p_reviewer_id: reviewerId,
+  });
+
+  if (error) throw error;
+
+  return data?.[0];
+}
+
+export async function routeRequestAsReviewer({
+  requestId,
+  destination,
+  commentText,
+}) {
+  const client = requireSupabase();
+  const { data, error } = await client.rpc("route_request_as_reviewer", {
+    p_request_id: requestId,
+    p_destination: destination,
+    p_comment_text: commentText,
+  });
+
+  if (error) throw error;
+
+  return data?.[0];
 }
 
 export async function fetchLegalAffairEngineEvents() {
