@@ -13,6 +13,7 @@ function ReviewStatusCard({
   canManageReview,
   canManageManagerActions,
   canManageDepartmentApproval,
+  showChecklistProgress,
 }) {
   const checklistItems = document?.checklist || [];
   const completedItems = checklistItems.filter((item) => item.checked).length;
@@ -39,14 +40,16 @@ function ReviewStatusCard({
             {request.assignedReviewer || "Not assigned"}
           </p>
         </div>
-        <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
-          <p className="text-slate-500">AI Checklist Progress</p>
-          <p className="mt-1 font-bold text-slate-900">
-            {totalItems === 0
-              ? "No PDF checklist yet"
-              : `${completedItems} of ${totalItems} AI-selected`}
-          </p>
-        </div>
+        {showChecklistProgress && (
+          <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
+            <p className="text-slate-500">AI Checklist Progress</p>
+            <p className="mt-1 font-bold text-slate-900">
+              {totalItems === 0
+                ? "No PDF checklist yet"
+                : `${completedItems} of ${totalItems} AI-selected`}
+            </p>
+          </div>
+        )}
         <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
           <p className="text-slate-500">Department Review</p>
           <p className="mt-1 font-bold text-slate-900">{departmentDecision}</p>
@@ -203,14 +206,14 @@ function RequestDetails({
   }
 
   const firstDocument = request.documents[0];
+  const isRequester = currentUser?.role === "Requester";
 
   return (
     <section>
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-slate-900">Request Details</h2>
         <p className="text-slate-500 mt-1">
-          Review request information, current status, PDF attachment, checklist,
-          and reviewer notes.
+          Review request information, current status, PDF attachment, and reviewer notes.
         </p>
       </div>
 
@@ -268,8 +271,7 @@ function RequestDetails({
             <div className="mt-6">
               <h4 className="font-semibold text-slate-900">PDF Attachments</h4>
               <p className="text-sm text-slate-500 mt-1">
-                Click a PDF to open the review popup with page checklist and AI
-                suggestions.
+                Click a PDF to open the review popup with AI page suggestions.
               </p>
               <ul className="mt-3 space-y-2">
                 {request.documents.length === 0 ? (
@@ -304,6 +306,7 @@ function RequestDetails({
             canManageReview={canManageReview}
             canManageManagerActions={canManageManagerActions}
             canManageDepartmentApproval={canManageDepartmentApproval}
+            showChecklistProgress={!isRequester}
           />
           {canManageManagerActions && (
             <ManagerActions
@@ -336,12 +339,14 @@ function RequestDetails({
           />
         </div>
 
-        <ContractChecklist
-          requestId={request.id}
-          document={firstDocument}
-          canManageReview={canManageReview}
-          onChecklistItemToggle={onChecklistItemToggle}
-        />
+        {!isRequester && (
+          <ContractChecklist
+            requestId={request.id}
+            document={firstDocument}
+            canManageReview={canManageReview}
+            onChecklistItemToggle={onChecklistItemToggle}
+          />
+        )}
       </div>
 
       {selectedDocument && (
