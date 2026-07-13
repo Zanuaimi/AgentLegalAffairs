@@ -40,6 +40,7 @@ import {
 import {
   isSupabaseConfigured,
   missingSupabaseEnvVars,
+  supabase,
 } from "./services/supabaseClient";
 import { triggerAiReviewQueue } from "./services/legalReviewApi";
 import { formatDateTimeForAudit } from "./utils/dateFormat";
@@ -115,6 +116,7 @@ function App() {
   const [auditLogs, setAuditLogs] = useState([]);
   const [engineState, setEngineState] = useState(null);
   const [engineEvents, setEngineEvents] = useState([]);
+  const [activeUserIds, setActiveUserIds] = useState([]);
 
   // selectedRequestId controls which request appears on the Request Details page.
   // It starts as null so users must open a request from a table before seeing details.
@@ -233,6 +235,48 @@ function App() {
     accessiblePageIds,
     accessibleNavigation,
   ]);
+
+  // Every signed-in browser joins this presence channel. Unlike a database status,
+  // Presence automatically clears when a browser disconnects or signs out.
+  useEffect(() => {
+    if (!isLoggedIn || !isSupabaseConfigured || !supabase || !currentUser?.id) {
+      setActiveUserIds([]);
+      return undefined;
+    }
+
+    setActiveUserIds([currentUser.id]);
+
+    const presenceChannel = supabase.channel("legal-affairs-user-presence", {
+      config: { presence: { key: currentUser.id } },
+    });
+
+    const syncActiveUsers = () => {
+      const ids = [
+        ...new Set(
+          Object.values(presenceChannel.presenceState())
+            .flat()
+            .map((presence) => presence.userId)
+            .filter(Boolean),
+        ),
+      ];
+      setActiveUserIds(ids);
+    };
+
+    presenceChannel
+      .on("presence", { event: "sync" }, syncActiveUsers)
+      .on("presence", { event: "join" }, syncActiveUsers)
+      .on("presence", { event: "leave" }, syncActiveUsers)
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          await presenceChannel.track({ userId: currentUser.id });
+        }
+      });
+
+    return () => {
+      presenceChannel.untrack();
+      supabase.removeChannel(presenceChannel);
+    };
+  }, [isLoggedIn, currentUser?.id]);
 
   async function loadBackendData(userForAccess = currentUser) {
     if (!isSupabaseConfigured) {
@@ -761,6 +805,7 @@ function App() {
           setUsers={setUsers}
           onAuditEvent={addAuditLog}
           currentUser={currentUser}
+          activeUserIds={activeUserIds}
           onUpdateUserRole={handleUpdateUserRole}
           onUpdateUserDepartment={handleUpdateUserDepartment}
         />

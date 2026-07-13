@@ -6,6 +6,7 @@ function AdminUsers({
   setUsers,
   onAuditEvent,
   currentUser,
+  activeUserIds,
   onUpdateUserRole,
   onUpdateUserDepartment,
 }) {
@@ -89,8 +90,8 @@ function AdminUsers({
           Admin: Manage Users & Roles
         </h2>
         <p className="text-slate-500 mt-1">
-          Manage Supabase profile roles and departments. Changes are recorded in
-          the audit log.
+          Manage Supabase profile roles and departments. Active status updates from
+          the users currently connected to the website.
         </p>
       </div>
 
@@ -152,9 +153,15 @@ function AdminUsers({
                     </select>
                   </td>
                   <td className="p-4">
-                    <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">
-                      {user.status}
-                    </span>
+                    {activeUserIds.includes(user.id) ? (
+                      <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">
+                        Active
+                      </span>
+                    ) : (
+                      <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-xs font-semibold">
+                        Inactive
+                      </span>
+                    )}
                   </td>
                 </tr>
               ))}
