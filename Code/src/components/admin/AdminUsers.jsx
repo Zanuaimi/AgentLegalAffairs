@@ -164,8 +164,8 @@ function AdminUsers({
                   </td>
                   <td className="p-4 text-slate-700">{user.email}</td>
                   <td className="p-4">
-                    {user.role === OWNER_ROLE ? (
-                      <span className="font-medium text-slate-700">Owner</span>
+                    {user.role === OWNER_ROLE || user.id === currentUser.id ? (
+                      <span className="font-medium text-slate-700">{user.role}</span>
                     ) : (
                       <select
                         className="rounded-lg border border-slate-300 px-3 py-2"
