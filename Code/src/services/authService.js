@@ -142,6 +142,23 @@ export async function loginWithSupabase(usernameOrEmail, password) {
   return fetchCurrentProfile(data.user.id);
 }
 
+export async function checkRegistrationAvailability({ email, username }) {
+  const client = requireSupabase();
+  const { data, error } = await client.rpc("check_registration_availability", {
+    p_email: email.trim().toLowerCase(),
+    p_username: username.trim(),
+  });
+
+  if (error) {
+    throw new Error(getSupabaseErrorMessage(error, "Could not check registration availability."));
+  }
+
+  return {
+    emailAvailable: Boolean(data?.emailAvailable),
+    usernameAvailable: Boolean(data?.usernameAvailable),
+  };
+}
+
 export async function registerWithSupabase(formData) {
   const email = formData.email?.trim().toLowerCase();
   const emailError = getEmailValidationError(email || "");
@@ -151,6 +168,18 @@ export async function registerWithSupabase(formData) {
   if (emailError) throw new Error(emailError);
   if (usernameError) throw new Error(usernameError);
   if (passwordError) throw new Error(passwordError);
+  const availability = await checkRegistrationAvailability({
+    email,
+    username: formData.username,
+  });
+
+  if (!availability.emailAvailable) {
+    throw new Error("EMAIL_ALREADY_REGISTERED");
+  }
+  if (!availability.usernameAvailable) {
+    throw new Error("USERNAME_ALREADY_TAKEN");
+  }
+
   const client = requireSupabase();
   const { data, error } = await client.auth.signUp({
     email,

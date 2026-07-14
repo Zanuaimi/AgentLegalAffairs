@@ -229,6 +229,7 @@ function Header({
                     <input
                       className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900"
                       type="password"
+                      data-bwignore="true"
                       autoComplete="current-password"
                       placeholder="Current password"
                       value={passwordForm.currentPassword}
@@ -240,6 +241,7 @@ function Header({
                     <input
                       className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900"
                       type="password"
+                      data-bwignore="true"
                       autoComplete="new-password"
                       placeholder="New password"
                       value={passwordForm.newPassword}
@@ -251,6 +253,7 @@ function Header({
                     <input
                       className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900"
                       type="password"
+                      data-bwignore="true"
                       autoComplete="new-password"
                       placeholder="Confirm new password"
                       value={passwordForm.confirmPassword}

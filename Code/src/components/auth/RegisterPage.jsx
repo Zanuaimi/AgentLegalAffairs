@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { getReadableErrorMessage } from "../../utils/errorMessage";
+import { checkRegistrationAvailability } from "../../services/authService";
 import InfoButton from "../common/InfoButton";
 
 const prefixOptions = ["None", "Mr.", "Ms.", "Mrs.", "Dr.", "Prof."];
@@ -27,6 +28,7 @@ function RegisterPage({
   const [errorMessage, setErrorMessage] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [availability, setAvailability] = useState({ username: "", email: "" });
 
   function inputClass(fieldName) {
     return `w-full rounded-lg border px-4 py-3 ${
@@ -38,6 +40,36 @@ function RegisterPage({
     // The spread operator (...) copies the old object, then updates one field.
     setFormData({ ...formData, [fieldName]: value });
     setFieldErrors((current) => ({ ...current, [fieldName]: "" }));
+    if (fieldName === "username" || fieldName === "email") {
+      setAvailability((current) => ({ ...current, [fieldName]: "" }));
+    }
+  }
+
+  async function checkAvailability(fieldName) {
+    const username = formData.username.trim();
+    const email = formData.email.trim().toLowerCase();
+
+    if (fieldName === "username" && !USERNAME_PATTERN.test(username)) return;
+    if (fieldName === "email" && !EMAIL_PATTERN.test(email)) return;
+
+    try {
+      const result = await checkRegistrationAvailability({ email, username });
+      const available = fieldName === "username"
+        ? result.usernameAvailable
+        : result.emailAvailable;
+      const message = available
+        ? `${fieldName === "username" ? "Username" : "Email address"} is available.`
+        : fieldName === "username"
+          ? "This username is already taken."
+          : "This email address is already registered.";
+
+      setAvailability((current) => ({ ...current, [fieldName]: message }));
+      if (!available) {
+        setFieldErrors((current) => ({ ...current, [fieldName]: message }));
+      }
+    } catch (_error) {
+      // Registration still performs the same server-side check when submitted.
+    }
   }
 
   async function handleSubmit(event) {
@@ -78,6 +110,18 @@ function RegisterPage({
     try {
       await onRegister(formData);
     } catch (error) {
+      const errorCode = error instanceof Error ? error.message : "";
+      if (errorCode === "EMAIL_ALREADY_REGISTERED") {
+        setFieldErrors({ email: "This email address is already registered." });
+        setErrorMessage("Use a different email address.");
+        return;
+      }
+      if (errorCode === "USERNAME_ALREADY_TAKEN") {
+        setFieldErrors({ username: "This username is already taken." });
+        setErrorMessage("Choose a different username.");
+        return;
+      }
+
       const readableError = getReadableErrorMessage(
         error,
         "Could not create the account. Please try again.",
@@ -187,6 +231,7 @@ function RegisterPage({
               className={inputClass("username")}
               value={formData.username}
               onChange={(event) => updateField("username", event.target.value)}
+              onBlur={() => checkAvailability("username")}
               minLength={3}
               maxLength={32}
               pattern="[A-Za-z0-9_]{3,32}"
@@ -195,6 +240,11 @@ function RegisterPage({
             {fieldErrors.username && (
               <p className="mt-1 text-xs font-semibold text-red-700">
                 {fieldErrors.username}
+              </p>
+            )}
+            {!fieldErrors.username && availability.username && (
+              <p className="mt-1 text-xs font-semibold text-green-700">
+                {availability.username}
               </p>
             )}
           </div>
@@ -217,11 +267,17 @@ function RegisterPage({
               required
               value={formData.email}
               onChange={(event) => updateField("email", event.target.value)}
+              onBlur={() => checkAvailability("email")}
               aria-invalid={Boolean(fieldErrors.email)}
             />
             {fieldErrors.email && (
               <p className="mt-1 text-xs font-semibold text-red-700">
                 {fieldErrors.email}
+              </p>
+            )}
+            {!fieldErrors.email && availability.email && (
+              <p className="mt-1 text-xs font-semibold text-green-700">
+                {availability.email}
               </p>
             )}
           </div>
