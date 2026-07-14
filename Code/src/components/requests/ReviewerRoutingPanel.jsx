@@ -32,8 +32,8 @@ function ReviewerRoutingPanel({ request, canRouteRequest, onRouteRequest }) {
     <section className="rounded-2xl border border-slate-200 bg-white p-5">
       <h3 className="font-bold text-slate-900">Reviewer Routing</h3>
       <p className="mt-1 text-sm text-slate-500">
-        Ask the requester for missing information or send the completed review to
-        the Legal Manager.
+        Ask the requester for missing information, move the completed review to a
+        Legal Manager, or route it to the matching Department Approver.
       </p>
 
       <label className="mt-4 block text-sm font-semibold text-slate-700">
@@ -47,7 +47,7 @@ function ReviewerRoutingPanel({ request, canRouteRequest, onRouteRequest }) {
         />
       </label>
 
-      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <button
           type="button"
           className="rounded-lg border border-orange-300 px-4 py-3 font-semibold text-orange-700 hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-60"
@@ -63,6 +63,14 @@ function ReviewerRoutingPanel({ request, canRouteRequest, onRouteRequest }) {
           onClick={() => routeRequest("legal_manager")}
         >
           Move to Legal Manager Review Queue
+        </button>
+        <button
+          type="button"
+          className="rounded-lg bg-emerald-700 px-4 py-3 font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
+          disabled={isSaving}
+          onClick={() => routeRequest("department_approver")}
+        >
+          Move to Department Approver Queue
         </button>
       </div>
 

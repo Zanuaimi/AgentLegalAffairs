@@ -173,6 +173,14 @@ function App() {
             request.status === "Sent for Internal Approval",
         )
       : [];
+  const departmentReviewRequests =
+    currentRole === "Department Approver"
+      ? requests.filter(
+          (request) =>
+            request.assignedDepartmentApproverId === currentUser.id &&
+            request.departmentDecision === "Pending Department Review",
+        )
+      : [];
 
   const navigationItemsForSidebar = accessibleNavigation.map((item) => {
     if (item.id !== "details") return item;
@@ -916,6 +924,18 @@ function App() {
           canOpenDetails={true}
           title="My Manager Review Queue"
           description="Requests routed to you by Legal Reviewers and awaiting your Legal Manager decision."
+        />
+      );
+    }
+
+    if (currentPage === "department-review-queue") {
+      return (
+        <RequestTable
+          requests={departmentReviewRequests}
+          onSelectRequest={handleSelectRequest}
+          canOpenDetails={true}
+          title="My Department Review Queue"
+          description="Requests routed to you for a Department Approver decision."
         />
       );
     }

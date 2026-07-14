@@ -34,6 +34,7 @@ export const navigationByRole = {
   "Department Approver": [
     { id: "dashboard", label: "Dashboard" },
     { id: "requests", label: "Department Legal Requests" },
+    { id: "department-review-queue", label: "My Review Queue" }, 
     { id: "details", label: "Request Details" },
   ],
 };

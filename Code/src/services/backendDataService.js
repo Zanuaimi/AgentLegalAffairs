@@ -113,6 +113,9 @@ function mapRequest(row, relatedData) {
     assignedReviewer: row.assigned_reviewer || "Not Assigned",
     assignedManagerId: row.assigned_manager_id || null,
     assignedManager: row.assigned_manager || "Not Assigned",
+    assignedDepartmentApproverId: row.assigned_department_approver_id || null,
+    assignedDepartmentApprover:
+      row.assigned_department_approver || "Not Assigned",
     priority: row.priority,
     riskLevel: row.risk_level,
     status: row.status,

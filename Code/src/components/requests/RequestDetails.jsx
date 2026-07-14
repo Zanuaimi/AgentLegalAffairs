@@ -62,6 +62,12 @@ function ReviewStatusCard({
           </div>
         )}
         <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
+          <p className="text-slate-500">Assigned Department Approver</p>
+          <p className="mt-1 font-bold text-slate-900">
+            {request.assignedDepartmentApprover || "Not assigned"}
+          </p>
+        </div>
+        <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
           <p className="text-slate-500">Department Review</p>
           <p className="mt-1 font-bold text-slate-900">{departmentDecision}</p>
         </div>
