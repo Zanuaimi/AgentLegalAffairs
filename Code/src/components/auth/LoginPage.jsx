@@ -14,6 +14,9 @@ function LoginPage({
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  // Demo credentials are local-development only. Hosted Supabase projects use
+  // real accounts created through the registration flow or by an administrator.
+  const showDemoAccounts = import.meta.env.DEV;
 
   async function handleSubmit(event) {
     // preventDefault stops the browser from refreshing the page after form submit.
@@ -63,7 +66,9 @@ function LoginPage({
           </p>
           <h1 className="text-3xl font-bold text-slate-900 mt-2">Login</h1>
           <p className="text-slate-500 mt-2">
-            Login with Supabase Auth. Demo users are listed below.
+            {showDemoAccounts
+              ? "Login with Supabase Auth. Demo users are listed below."
+              : "Login with your Legal Affairs account."}
           </p>
         </div>
 
@@ -81,7 +86,11 @@ function LoginPage({
             <input
               className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
               type="text"
-              placeholder="Example: requester, reviewer, manager, approver, admin"
+              placeholder={
+                showDemoAccounts
+                  ? "Example: requester or reviewer"
+                  : "Enter your username"
+              }
               value={username}
               onChange={(event) => setUsername(event.target.value)}
             />
@@ -94,7 +103,9 @@ function LoginPage({
             <input
               className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
               type="password"
-              placeholder="Demo password: password123"
+              placeholder={
+                showDemoAccounts ? "Demo password: password123" : "Enter your password"
+              }
               value={password}
               onChange={(event) => setPassword(event.target.value)}
             />
@@ -115,14 +126,16 @@ function LoginPage({
           </button>
         </form>
 
-        <div className="mt-6 rounded-xl bg-slate-50 p-3 text-xs text-slate-600">
-          <p className="font-bold text-slate-900">Easy demo accounts</p>
-          <p>requester / password123</p>
-          <p>reviewer / password123</p>
-          <p>manager / password123</p>
-          <p>approver / password123</p>
-          <p>admin / password123</p>
-        </div>
+        {showDemoAccounts && (
+          <div className="mt-6 rounded-xl bg-slate-50 p-3 text-xs text-slate-600">
+            <p className="font-bold text-slate-900">Easy local demo accounts</p>
+            <p>requester / password123</p>
+            <p>reviewer / password123</p>
+            <p>manager / password123</p>
+            <p>approver / password123</p>
+            <p>admin / password123</p>
+          </div>
+        )}
 
         <p className="text-center text-sm text-slate-600 mt-6">
           New user?{" "}
