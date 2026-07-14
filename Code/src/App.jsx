@@ -33,6 +33,7 @@ import {
   createBackendRequestComment,
   createLegalAffairEngineEvent,
   routeRequestAsReviewer,
+  recordCurrentUserActivity,
   fetchBackendAuditLogs,
   fetchBackendRequests,
   fetchBackendUsers,
@@ -164,6 +165,14 @@ function App() {
     selectedRequestId,
   });
   const hasSelectedVisibleRequest = Boolean(selectedRequest);
+  const managerReviewRequests =
+    currentRole === "Legal Manager"
+      ? requests.filter(
+          (request) =>
+            request.assignedManagerId === currentUser.id &&
+            request.status === "Sent for Internal Approval",
+        )
+      : [];
 
   const navigationItemsForSidebar = accessibleNavigation.map((item) => {
     if (item.id !== "details") return item;
@@ -206,6 +215,7 @@ function App() {
         setCurrentPage(
           navigationByRole[sessionUser.role]?.[0]?.id || "requests",
         );
+        await recordCurrentUserActivity().catch(() => {});
         await loadBackendData(sessionUser);
       } catch (error) {
         setBackendMessage(
@@ -390,6 +400,7 @@ function App() {
     setSelectedRequestId(null);
     setIsLoggedIn(true);
     setCurrentPage(navigationByRole[user.role]?.[0]?.id || "requests");
+    await recordCurrentUserActivity().catch(() => {});
     await loadBackendData(user);
   }
 
@@ -893,6 +904,18 @@ function App() {
                 ? `Review legal requests for your current department: ${currentDepartment}.`
                 : "Track request category, department, priority, reviewer, deadline, and status."
           }
+        />
+      );
+    }
+
+    if (currentPage === "manager-review-queue") {
+      return (
+        <RequestTable
+          requests={managerReviewRequests}
+          onSelectRequest={handleSelectRequest}
+          canOpenDetails={true}
+          title="My Manager Review Queue"
+          description="Requests routed to you by Legal Reviewers and awaiting your Legal Manager decision."
         />
       );
     }

@@ -27,6 +27,7 @@ export const navigationByRole = {
   "Legal Manager": [
     { id: "dashboard", label: "Dashboard" },
     { id: "requests", label: "Legal Requests" },
+    { id: "manager-review-queue", label: "My Review Queue" },
     { id: "reviewers", label: "Legal Reviewers" },
     { id: "details", label: "Request Details" },
   ],

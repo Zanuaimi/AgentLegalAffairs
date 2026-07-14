@@ -62,7 +62,7 @@ function ReviewerRoutingPanel({ request, canRouteRequest, onRouteRequest }) {
           disabled={isSaving}
           onClick={() => routeRequest("legal_manager")}
         >
-          Send to Legal Manager
+          Move to Legal Manager Review Queue
         </button>
       </div>
 

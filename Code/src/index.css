@@ -73,6 +73,9 @@ li {
 .dark .bg-white\/70 {
     background-color: rgba(15, 23, 42, 0.7);
 }
+.dark .bg-white\/80 {
+    background-color: rgba(15, 23, 42, 0.8);
+}
 .dark .border-slate-100 {
     border-color: #334155;
 }
@@ -125,6 +128,9 @@ li {
     color: #fca5a5;
 }
 .dark .text-red-800 {
+    color: #fecaca;
+}
+.dark .text-red-900 {
     color: #fecaca;
 }
 .dark td,

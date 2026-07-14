@@ -111,6 +111,8 @@ function mapRequest(row, relatedData) {
     requester: row.requester,
     requesterUsername: row.requester_username,
     assignedReviewer: row.assigned_reviewer || "Not Assigned",
+    assignedManagerId: row.assigned_manager_id || null,
+    assignedManager: row.assigned_manager || "Not Assigned",
     priority: row.priority,
     riskLevel: row.risk_level,
     status: row.status,
@@ -134,6 +136,13 @@ function groupBy(rows, key) {
     groups[groupKey].push(row);
     return groups;
   }, {});
+}
+
+export async function recordCurrentUserActivity() {
+  const client = requireSupabase();
+  const { error } = await client.rpc("record_current_user_activity");
+
+  if (error) throw error;
 }
 
 export async function checkBackendConnection() {
@@ -429,7 +438,7 @@ export async function createBackendRequest(newRequest, currentUser) {
   return {
     ...newRequest,
     assignedReviewer: assignment?.reviewer_name || "Not Assigned",
-    status: assignment ? "Assigned to Legal Reviewer" : newRequest.status,
+    status: newRequest.status,
   };
 }
 

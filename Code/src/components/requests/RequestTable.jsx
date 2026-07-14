@@ -200,7 +200,14 @@ function RequestTable({
                       {request.priority}
                     </span>
                   </td>
-                  <td className="p-4 text-slate-700">{request.status}</td>
+                  <td className="p-4 text-slate-700">
+                    <p>{request.status}</p>
+                    {request.aiReviewJob?.status === "processing" && (
+                      <p className="mt-1 text-xs font-semibold text-blue-700">
+                        AI processing{request.aiReviewJob.currentStep ? `: ${request.aiReviewJob.currentStep}` : ""}
+                      </p>
+                    )}
+                  </td>
                   <td className="p-4 text-slate-700">
                     {request.assignedReviewer}
                   </td>

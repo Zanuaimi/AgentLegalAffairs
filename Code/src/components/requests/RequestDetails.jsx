@@ -36,6 +36,16 @@ function ReviewStatusCard({
           <p className="mt-1 font-bold text-slate-900">{request.status}</p>
         </div>
         <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
+          <p className="text-slate-500">AI Review</p>
+          <p className="mt-1 font-bold text-slate-900">
+            {request.aiReviewJob?.status === "processing"
+              ? `Processing${request.aiReviewJob.currentStep ? ` — ${request.aiReviewJob.currentStep}` : ""}`
+              : request.aiReviewJob?.status === "queued"
+                ? `Queued${request.aiReviewJob.priorityQueuePosition ? ` — position #${request.aiReviewJob.priorityQueuePosition}` : ""}`
+                : request.aiReviewJob?.status || "Not queued"}
+          </p>
+        </div>
+        <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
           <p className="text-slate-500">Legal Reviewer</p>
           <p className="mt-1 font-bold text-slate-900">
             {request.assignedReviewer || "Not assigned"}

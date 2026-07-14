@@ -47,6 +47,8 @@ For a short-lived internship demonstration only, run
 - It stops without changing data if any demo email already exists.
 - Delete the accounts after the demonstration.
 
+To add the three matching cloud demo requests after the accounts exist, run `supabase/snippets/create-cloud-demo-requests.sql` manually in **Supabase Dashboard → SQL Editor**. The script is safe to rerun and links each request to a different PDF already deployed in `Code/public/demo-pdfs`.
+
 Set these secrets in the **Supabase** project, not in Vercel:
 
 ```sh
