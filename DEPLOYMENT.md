@@ -38,6 +38,15 @@ supabase db push
 supabase functions deploy legal-review
 ```
 
+### Optional: one-time cloud demo accounts
+
+For a short-lived internship demonstration only, run
+`supabase/snippets/create-cloud-demo-accounts.sql` manually in **Supabase Dashboard → SQL Editor** after the migrations are deployed. It creates seven predictable, non-privileged accounts and **never** runs as part of `supabase db push`.
+
+- It creates no Admin or Owner account.
+- It stops without changing data if any demo email already exists.
+- Delete the accounts after the demonstration.
+
 Set these secrets in the **Supabase** project, not in Vercel:
 
 ```sh
