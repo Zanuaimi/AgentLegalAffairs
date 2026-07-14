@@ -107,6 +107,7 @@ function RequestDetails({
   users,
   onAssignReviewer,
   onRouteRequest,
+  onDeleteRequest,
 }) {
   // selectedDocument stores the PDF the user clicked, so we can show it in the popup.
   const [selectedDocument, setSelectedDocument] = useState(null);
@@ -169,9 +170,22 @@ function RequestDetails({
                 </h3>
                 <p className="text-slate-600 mt-3">{request.description}</p>
               </div>
-              <span className="bg-blue-100 text-blue-700 text-sm font-semibold px-3 py-1 rounded-full">
-                {request.status}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="bg-blue-100 text-blue-700 text-sm font-semibold px-3 py-1 rounded-full">
+                  {request.status}
+                </span>
+                {onDeleteRequest && (
+                  <button
+                    type="button"
+                    className="rounded-lg bg-red-700 px-3 py-1 text-sm font-semibold text-white hover:bg-red-800"
+                    onClick={() => {
+                      if (window.confirm(`Delete ${request.id}? This cannot be undone.`)) onDeleteRequest();
+                    }}
+                  >
+                    Delete Request
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 text-sm text-slate-700">
@@ -260,7 +274,8 @@ function RequestDetails({
               }}
             />
           )}
-          {canManageReview && request.assignedReviewer === currentUser.name && (
+          {canManageReview &&
+            (request.assignedReviewer === currentUser.name || currentUser?.role === "Owner") && (
             <ReviewerRoutingPanel
               request={request}
               canRouteRequest

@@ -13,6 +13,7 @@ function EngineControlCard({
   errorCount,
   onToggleRunning,
   onProcessNext,
+  onRebuildQueue,
 }) {
   const [isSaving, setIsSaving] = useState(false);
   const isRunning = engineState?.isRunning;
@@ -107,6 +108,14 @@ function EngineControlCard({
           onClick={onProcessNext}
         >
           Process Next Queued Request
+        </button>
+        <button
+          type="button"
+          disabled={isSaving}
+          className="rounded-lg border border-violet-300 px-4 py-2 text-sm font-bold text-violet-700 hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-50"
+          onClick={onRebuildQueue}
+        >
+          Rebuild Pending AI Queue
         </button>
       </div>
     </div>
@@ -504,6 +513,7 @@ function LegalAffairEngine({
   onToggleRunning,
   onProcessNext,
   onQueuePositionChange,
+  onRebuildQueue,
 }) {
   const requestsWithJobs = useMemo(
     () => requests.filter((request) => request.aiReviewJob),
@@ -544,6 +554,7 @@ function LegalAffairEngine({
           errorCount={errorCount}
           onToggleRunning={onToggleRunning}
           onProcessNext={onProcessNext}
+          onRebuildQueue={onRebuildQueue}
         />
 
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">

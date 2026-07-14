@@ -169,10 +169,14 @@ function RequestTable({
                 </tr>
               )}
 
-              {sortedRequests.map((request) => (
+              {sortedRequests.map((request) => {
+                const isClosed = request.status === "Closed";
+                const isApproved = request.status === "Approved";
+
+                return (
                 <tr
                   key={request.id}
-                  className="border-t border-slate-100 hover:bg-slate-50"
+                  className={`border-t border-slate-100 hover:bg-slate-50 ${isClosed ? "opacity-50 grayscale" : ""} ${isApproved ? "bg-green-50/60" : ""}`}
                 >
                   <td className="p-4 text-slate-700">
                     <p className="font-semibold text-slate-900">
@@ -201,7 +205,7 @@ function RequestTable({
                     </span>
                   </td>
                   <td className="p-4 text-slate-700">
-                    <p>{request.status}</p>
+                    <p className={isApproved ? "font-semibold text-green-700" : ""}>{request.status}</p>
                     {request.aiReviewJob?.status === "processing" && (
                       <p className="mt-1 text-xs font-semibold text-blue-700">
                         AI processing{request.aiReviewJob.currentStep ? `: ${request.aiReviewJob.currentStep}` : ""}
@@ -223,7 +227,8 @@ function RequestTable({
                     </td>
                   )}
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

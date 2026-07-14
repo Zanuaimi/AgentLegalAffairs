@@ -1,13 +1,13 @@
 export function canManageReview(role) {
-  return role === "Legal Reviewer";
+  return role === "Legal Reviewer" || role === "Owner";
 }
 
 export function canManageManagerActions(role) {
-  return role === "Legal Manager";
+  return role === "Legal Manager" || role === "Owner";
 }
 
 export function canManageDepartmentApproval(role) {
-  return role === "Department Approver";
+  return role === "Department Approver" || role === "Owner";
 }
 
 export function canViewAuditLog(role) {

@@ -33,6 +33,8 @@ import {
   createBackendRequestComment,
   createLegalAffairEngineEvent,
   routeRequestAsReviewer,
+  rebuildAiReviewQueue,
+  deleteRequestAsOwner,
   recordCurrentUserActivity,
   fetchBackendAuditLogs,
   fetchBackendRequests,
@@ -165,12 +167,28 @@ function App() {
     selectedRequestId,
   });
   const hasSelectedVisibleRequest = Boolean(selectedRequest);
+  const requesterCurrentRequests =
+    currentRole === "Requester"
+      ? visibleRequests.filter((request) => request.status !== "Closed")
+      : [];
+  const requesterClosedRequests =
+    currentRole === "Requester"
+      ? visibleRequests.filter((request) => request.status === "Closed")
+      : [];
   const managerReviewRequests =
     currentRole === "Legal Manager"
       ? requests.filter(
           (request) =>
             request.assignedManagerId === currentUser.id &&
             request.status === "Sent for Internal Approval",
+        )
+      : [];
+  const reviewerReviewRequests =
+    currentRole === "Legal Reviewer"
+      ? requests.filter(
+          (request) =>
+            request.assignedReviewerId === currentUser.id &&
+            request.status !== "Closed",
         )
       : [];
   const departmentReviewRequests =
@@ -614,6 +632,24 @@ function App() {
     }
   }
 
+  async function handleRebuildAiQueue() {
+    try {
+      const queuedCount = await rebuildAiReviewQueue();
+      setBackendMessage(`Rebuilt the AI queue with ${queuedCount} request${queuedCount === 1 ? "" : "s"}.`);
+      await refreshRequestsAndEngineState();
+      if (queuedCount > 0) await handleProcessNextAiReviewJob();
+    } catch (error) {
+      setBackendMessage(`Could not rebuild the AI queue: ${describeAppError(error)}`);
+    }
+  }
+
+  async function handleDeleteRequest(requestId) {
+    await deleteRequestAsOwner(requestId);
+    setRequests((currentRequests) => currentRequests.filter((request) => request.id !== requestId));
+    setSelectedRequestId(null);
+    setCurrentPage("requests");
+  }
+
   async function handleQueuePositionChange(request, priorityRequests, nextPosition) {
     if (engineState?.isRunning) {
       setBackendMessage("Stop the Legal Affair Engine before changing queue position.");
@@ -895,23 +931,49 @@ function App() {
     if (currentPage === "requests") {
       return (
         <RequestTable
-          requests={visibleRequests}
+          requests={
+            currentRole === "Requester" ? requesterCurrentRequests : visibleRequests
+          }
           onSelectRequest={handleSelectRequest}
           canOpenDetails={accessiblePageIds.includes("details")}
           title={
             currentRole === "Requester"
-              ? "My Requests"
+              ? "My Current Requests"
               : currentRole === "Department Approver"
                 ? `Department Legal Requests for ${currentDepartment}`
                 : "Legal Requests"
           }
           description={
             currentRole === "Requester"
-              ? "View submitted requests and track their current status."
+              ? "View your active submitted requests. Closed requests are kept in My Closed Requests."
               : currentRole === "Department Approver"
                 ? `Review legal requests for your current department: ${currentDepartment}.`
                 : "Track request category, department, priority, reviewer, deadline, and status."
           }
+        />
+      );
+    }
+
+    if (currentPage === "closed-requests") {
+      return (
+        <RequestTable
+          requests={requesterClosedRequests}
+          onSelectRequest={handleSelectRequest}
+          canOpenDetails={true}
+          title="My Closed Requests"
+          description="Closed requests you submitted are retained here for reference."
+        />
+      );
+    }
+
+    if (currentPage === "reviewer-review-queue") {
+      return (
+        <RequestTable
+          requests={reviewerReviewRequests}
+          onSelectRequest={handleSelectRequest}
+          canOpenDetails={true}
+          title="Requests Assigned to You"
+          description="Requests assigned to you for Legal Reviewer action. Closed requests are excluded."
         />
       );
     }
@@ -974,6 +1036,7 @@ function App() {
           onRouteRequest={(destination, commentText) =>
             handleReviewerRoute(selectedRequest.id, destination, commentText)
           }
+          onDeleteRequest={currentRole === "Owner" ? () => handleDeleteRequest(selectedRequest.id) : null}
         />
       );
     }
@@ -1012,6 +1075,7 @@ function App() {
           onToggleRunning={handleEngineRunningChange}
           onProcessNext={handleProcessNextAiReviewJob}
           onQueuePositionChange={handleQueuePositionChange}
+          onRebuildQueue={handleRebuildAiQueue}
         />
       );
     }

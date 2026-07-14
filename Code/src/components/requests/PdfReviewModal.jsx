@@ -220,6 +220,11 @@ function PdfReviewModal({ document, onClose }) {
             </div>
 
             <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-2">
+              {aiSuggestions.length === 0 && (
+                <p className="rounded-xl border border-dashed border-slate-300 p-3 text-sm text-slate-500">
+                  No page-specific AI suggestions are available yet. The AI review may still be queued, may have failed, or this request was created before AI review was available.
+                </p>
+              )}
               {aiSuggestions.map((suggestion) => (
                 <article
                   key={`${suggestion.page}-${suggestion.text}`}

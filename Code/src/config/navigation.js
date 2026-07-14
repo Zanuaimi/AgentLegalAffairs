@@ -1,7 +1,8 @@
 export const navigationByRole = {
   Requester: [
     { id: "new-request", label: "Send Request" },
-    { id: "requests", label: "My Requests" },
+    { id: "requests", label: "My Current Requests" },
+    { id: "closed-requests", label: "My Closed Requests" },
     { id: "details", label: "Request Details" },
   ],
   "Admin User": [
@@ -21,20 +22,21 @@ export const navigationByRole = {
   ],
   "Legal Reviewer": [
     { id: "dashboard", label: "Dashboard" },
-    { id: "requests", label: "Legal Requests" },
+    { id: "requests", label: "Global Requests" },
+    { id: "reviewer-review-queue", label: "Requests Assigned to You" },
     { id: "details", label: "Request Details" },
   ],
   "Legal Manager": [
     { id: "dashboard", label: "Dashboard" },
-    { id: "requests", label: "Legal Requests" },
-    { id: "manager-review-queue", label: "My Review Queue" },
+    { id: "requests", label: "Global Requests" },
+    { id: "manager-review-queue", label: "Requests Assigned to You" },
     { id: "reviewers", label: "Legal Reviewers" },
     { id: "details", label: "Request Details" },
   ],
   "Department Approver": [
     { id: "dashboard", label: "Dashboard" },
-    { id: "requests", label: "Department Legal Requests" },
-    { id: "department-review-queue", label: "My Review Queue" }, 
+    { id: "requests", label: "Global Requests" },
+    { id: "department-review-queue", label: "Requests Assigned to You" }, 
     { id: "details", label: "Request Details" },
   ],
 };

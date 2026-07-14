@@ -83,6 +83,12 @@ insert into public.reviewer_comments (request_id, reviewer_id, comment_text, cre
   ('LA-2026-003', '00000000-0000-0000-0000-000000000107', 'The agreement can proceed for Legal Manager approval.', '2026-06-30 13:05:00+04')
 on conflict do nothing;
 
+insert into public.document_ai_suggestions (document_id, page, suggestion_type, suggestion_text) values
+  ('10000000-0000-0000-0000-000000000001', '1', 'Risk', 'AI draft: Review payment, liability, and termination wording before approval.'),
+  ('10000000-0000-0000-0000-000000000002', '1', 'Clarification', 'AI draft: Ask for the current approved policy before giving final advice.'),
+  ('10000000-0000-0000-0000-000000000003', '1', 'Missing Clause', 'AI draft: Confirm data protection, publication rights, and intellectual-property clauses.')
+on conflict do nothing;
+
 insert into public.manager_actions (request_id, manager_id, action, note, created_at) values
   ('LA-2026-003', '00000000-0000-0000-0000-000000000103', 'Response Approved by Legal Manager', 'Approved after Reviewer2 completed the review.', '2026-06-30 13:25:00+04')
 on conflict do nothing;

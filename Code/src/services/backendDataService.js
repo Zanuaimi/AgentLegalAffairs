@@ -111,6 +111,7 @@ function mapRequest(row, relatedData) {
     requester: row.requester,
     requesterUsername: row.requester_username,
     assignedReviewer: row.assigned_reviewer || "Not Assigned",
+    assignedReviewerId: row.assigned_reviewer_id || null,
     assignedManagerId: row.assigned_manager_id || null,
     assignedManager: row.assigned_manager || "Not Assigned",
     assignedDepartmentApproverId: row.assigned_department_approver_id || null,
@@ -555,6 +556,21 @@ export async function setLegalAffairEngineRunning(isRunning, currentUser) {
     updatedAt: formatDateTime(data.updated_at),
     updatedBy: data.profiles?.full_name || currentUser.name,
   };
+}
+
+export async function rebuildAiReviewQueue() {
+  const client = requireSupabase();
+  const { data, error } = await client.rpc("rebuild_ai_review_queue");
+  if (error) throw error;
+  return data || 0;
+}
+
+export async function deleteRequestAsOwner(requestId) {
+  const client = requireSupabase();
+  const { error } = await client.rpc("delete_request_as_owner", {
+    p_request_id: requestId,
+  });
+  if (error) throw error;
 }
 
 export async function updateAiReviewJobQueueOrder(jobId, queueOrder) {
