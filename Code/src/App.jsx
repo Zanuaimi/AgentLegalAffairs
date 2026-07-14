@@ -461,11 +461,12 @@ function App() {
       // Legal staff can go directly to the details screen.
       setCurrentPage(currentRole === "Requester" ? "requests" : "details");
     } catch (error) {
-      setBackendMessage(
-        `Could not save request to Supabase: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-      );
+      const message = `Could not save request to Supabase: ${
+        error instanceof Error ? error.message : String(error)
+      }`;
+      setBackendMessage(message);
+      // Let RequestForm keep the user's entered data and selected PDF on failure.
+      throw new Error(message);
     }
   }
 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { departments, roles } from "../../data/mockData";
+import { departments } from "../../data/mockData";
 import { getReadableErrorMessage } from "../../utils/errorMessage";
 
 const prefixOptions = ["None", "Mr.", "Ms.", "Mrs.", "Dr.", "Prof."];
@@ -169,21 +169,12 @@ function RegisterPage({
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Role
-            </label>
-            <select
-              className="w-full rounded-lg border border-slate-300 px-4 py-3"
-              value={formData.role}
-              onChange={(event) => updateField("role", event.target.value)}
-            >
-              {roles.map((role) => (
-                <option key={role} value={role}>
-                  {role}
-                </option>
-              ))}
-            </select>
+          <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
+            <p className="text-sm font-medium text-slate-700">Role</p>
+            <p className="mt-1 font-semibold text-blue-800">Requester</p>
+            <p className="mt-1 text-xs text-slate-600">
+              Legal Affairs staff roles are assigned later by an administrator.
+            </p>
           </div>
 
           <div>
@@ -250,9 +241,12 @@ map loops through an array and returns new JSX for every item. We use it to crea
 4. What is a select tag?
 <select> creates a dropdown list. <option> creates each choice inside the dropdown.
 
-5. Why is the theme button on the registration page?
-It lets the user switch between light mode and dark mode before creating a demo account.
+5. Why is the role shown as Requester instead of a dropdown?
+A public visitor should only be able to create a Requester account. Legal staff roles have more access to confidential records, so an Admin User assigns those roles after account verification.
 
-6. Why is the theme button icon-only?
+6. Why is the theme button on the registration page?
+It lets the user switch between light mode and dark mode before creating an account.
+
+7. Why is the theme button icon-only?
 The icon keeps the UI compact. aria-label and title still explain the button for accessibility and hover help.
 */

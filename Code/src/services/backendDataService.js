@@ -265,7 +265,23 @@ export async function fetchBackendRequests() {
     priority_queue_position: priorityQueuePositionByJobId[job.id] || null,
   }));
 
-  const documentsByRequest = groupBy(documentsResult.data, "request_id");
+  // PDFs are stored in a private bucket. A signed URL expires after 15 minutes,
+  // so a copied browser URL cannot provide long-term access to a legal document.
+  const documentsWithSignedUrls = await Promise.all(
+    documentsResult.data.map(async (document) => {
+      if (!document.storage_path) return document;
+
+      const { data, error } = await client.storage
+        .from("legal-documents")
+        .createSignedUrl(document.storage_path, 15 * 60);
+
+      if (error) throw error;
+
+      return { ...document, public_url: data.signedUrl };
+    }),
+  );
+
+  const documentsByRequest = groupBy(documentsWithSignedUrls, "request_id");
   const checklistByDocument = groupBy(checklistResult.data, "document_id");
   const suggestionsByDocument = groupBy(suggestionsResult.data, "document_id");
   const commentsByRequest = groupBy(commentsResult.data, "request_id");
@@ -310,7 +326,7 @@ export async function createBackendRequest(newRequest, currentUser) {
 
   const firstDocument = newRequest.documents[0];
   let storagePath = null;
-  let publicUrl = firstDocument.url;
+  let publicUrl = null;
 
   if (newRequest.uploadFile) {
     storagePath = `${newRequest.id}/${Date.now()}-${newRequest.uploadFile.name}`;
@@ -324,11 +340,6 @@ export async function createBackendRequest(newRequest, currentUser) {
 
     if (uploadError) throw uploadError;
 
-    const { data: publicUrlData } = client.storage
-      .from("legal-documents")
-      .getPublicUrl(storagePath);
-
-    publicUrl = publicUrlData.publicUrl;
   }
 
   const { data: documentRow, error: documentError } = await client

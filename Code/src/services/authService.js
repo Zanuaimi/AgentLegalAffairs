@@ -122,9 +122,9 @@ export async function registerWithSupabase(formData) {
     throw new Error("Supabase registration returned no user. Check Auth configuration.");
   }
 
-  const roleId = formData.role
-    .toLowerCase()
-    .replaceAll(" ", "_");
+  // Public registration can create Requester profiles only. Privileged roles
+  // are assigned by an administrator after the account is verified.
+  const roleId = "requester";
   const departmentId = formData.department
     .toLowerCase()
     .replaceAll(" ", "_");

@@ -131,8 +131,8 @@ export async function triggerAiReviewQueue({ staleAfterMinutes = 2 } = {}) {
 /*
 BEGINNER DOCUMENTATION:
 
-1. Why use supabase.functions.invoke?
-The Supabase client automatically sends the right local/hosted function URL and authenticated headers. This avoids local Edge Function errors like "Auth header is not Bearer token".
+1. Why use fetch instead of supabase.functions.invoke?
+This file uses fetch so it can read the Edge Function's HTTP status and response body directly. It still sends the Supabase anon key and the signed-in user's Bearer token in the request headers.
 
 2. Why does this file format errors carefully?
 Supabase and Edge Functions sometimes return error objects. If React prints an object directly, users see unhelpful text like [object Object]. This helper turns those objects into readable messages.

@@ -23,6 +23,7 @@ function RequestForm({ onCreateRequest, currentUser }) {
   const [fileError, setFileError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [aiStatusMessage, setAiStatusMessage] = useState("");
+  const [submissionError, setSubmissionError] = useState("");
 
   function updateField(fieldName, value) {
     setFormData({ ...formData, [fieldName]: value });
@@ -75,6 +76,7 @@ function RequestForm({ onCreateRequest, currentUser }) {
     }
 
     setIsSubmitting(true);
+    setSubmissionError("");
     setAiStatusMessage(
       "Submitting request. AI review will run from the backend queue after upload.",
     );
@@ -115,21 +117,31 @@ function RequestForm({ onCreateRequest, currentUser }) {
       reviewerComments: [],
     };
 
-    await onCreateRequest(newRequest);
+    try {
+      await onCreateRequest(newRequest);
 
-    setFormData({
-      title: "",
-      department: currentUser?.department || "HR",
-      categoryCode: "LEG-A",
-      priority: "Medium",
-      deadline: "",
-      description: "",
-    });
-    setSelectedPdfFile(null);
-    setFileError("");
-    setIsSubmitting(false);
-    setAiStatusMessage("");
-    event.target.reset();
+      setFormData({
+        title: "",
+        department: currentUser?.department || "HR",
+        categoryCode: "LEG-A",
+        priority: "Medium",
+        deadline: "",
+        description: "",
+      });
+      setSelectedPdfFile(null);
+      setFileError("");
+      setAiStatusMessage("");
+      event.target.reset();
+    } catch (error) {
+      setSubmissionError(
+        error instanceof Error
+          ? error.message
+          : "Could not submit the request. Your form data has been kept.",
+      );
+      setAiStatusMessage("");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -248,6 +260,11 @@ function RequestForm({ onCreateRequest, currentUser }) {
               {aiStatusMessage}
             </p>
           )}
+          {submissionError && (
+            <p className="text-xs font-semibold text-red-700 mt-1">
+              {submissionError}
+            </p>
+          )}
         </div>
 
         <div className="md:col-span-2">
@@ -303,5 +320,8 @@ accept tells the browser that the file picker should only allow PDF files. We st
 App.jsx sends this selected PDF to the Supabase-backed request service, which stores the file in Supabase Storage.
 
 6. What is URL.createObjectURL?
-It creates a temporary browser link for a selected file, so the PDF popup can preview it without a backend.
+It creates a temporary browser link for a selected file, so the PDF popup can preview it before the uploaded file is loaded again from Supabase Storage.
+
+7. Why keep the form data after an error?
+Uploads and database saves can fail because of a network or permission problem. The form only clears after App.jsx confirms the request was saved, so the requester does not need to select the PDF and type the details again.
 */

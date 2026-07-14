@@ -20,12 +20,33 @@ declare const Deno: {
   };
 };
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+const configuredAllowedOrigins = new Set(
+  (Deno.env.get("ALLOWED_ORIGINS") || "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean),
+);
+
+const localAllowedOrigins = new Set([
+  "http://127.0.0.1:5173",
+  "http://localhost:5173",
+]);
+
+function isAllowedOrigin(origin: string | null) {
+  return !origin || localAllowedOrigins.has(origin) || configuredAllowedOrigins.has(origin);
+}
+
+function corsHeadersFor(origin: string | null) {
+  return {
+    "Access-Control-Allow-Origin": origin && isAllowedOrigin(origin) ? origin : "null",
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    Vary: "Origin",
+  };
+}
+
+const corsHeaders = corsHeadersFor(null);
 
 const MAX_PDF_SIZE_BYTES = 10 * 1024 * 1024;
 
@@ -159,11 +180,11 @@ function describeUnknownError(value: unknown): string {
   return String(value);
 }
 
-function jsonResponse(body: unknown, status = 200) {
+function jsonResponse(body: unknown, status = 200, responseCorsHeaders = corsHeaders) {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
-      ...corsHeaders,
+      ...responseCorsHeaders,
       "Content-Type": "application/json",
     },
   });
@@ -636,19 +657,28 @@ async function runGeminiReview(job: any, fileBase64: string) {
 }
 
 Deno.serve(async (request: Request) => {
+  const origin = request.headers.get("origin");
+  const responseCorsHeaders = corsHeadersFor(origin);
+  const respond = (body: unknown, status = 200) =>
+    jsonResponse(body, status, responseCorsHeaders);
+
+  if (!isAllowedOrigin(origin)) {
+    return respond({ error: "Origin is not allowed to invoke legal-review." }, 403);
+  }
+
   if (request.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: responseCorsHeaders });
   }
 
   if (request.method !== "POST") {
-    return jsonResponse({ error: "Method not allowed" }, 405);
+    return respond({ error: "Method not allowed" }, 405);
   }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
   if (!supabaseUrl || !serviceRoleKey) {
-    return jsonResponse(
+    return respond(
       {
         error:
           "SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required for queue processing.",
@@ -664,10 +694,21 @@ Deno.serve(async (request: Request) => {
     const action = body.action || "process-next";
 
     if (action !== "process-next") {
-      return jsonResponse({ error: "Unsupported legal-review action." }, 400);
+      return respond({ error: "Unsupported legal-review action." }, 400);
     }
 
     const staleAfterMinutes = Number(body.staleAfterMinutes || 2);
+
+    if (
+      !Number.isFinite(staleAfterMinutes) ||
+      staleAfterMinutes < 1 ||
+      staleAfterMinutes > 30
+    ) {
+      return respond(
+        { error: "staleAfterMinutes must be a number between 1 and 30." },
+        400,
+      );
+    }
 
     const { data: jobs, error: claimError } = await supabase.rpc(
       "claim_next_ai_review_job",
@@ -685,7 +726,7 @@ Deno.serve(async (request: Request) => {
         "warning",
         `Legal Affair Engine was invoked, but no queued or stale processing jobs were available. Stale threshold: ${staleAfterMinutes} minute(s).`,
       );
-      return jsonResponse({ processed: false, message: "No queued AI review jobs." });
+      return respond({ processed: false, message: "No queued AI review jobs." });
     }
 
     try {
@@ -757,7 +798,7 @@ Deno.serve(async (request: Request) => {
         { requestId: job.request_id, jobId: job.job_id, metadata: { aiMode: result.ai_mode || "gemini" } },
       );
 
-      return jsonResponse({
+      return respond({
         processed: true,
         jobId: job.job_id,
         requestId: job.request_id,
@@ -780,7 +821,7 @@ Deno.serve(async (request: Request) => {
         message,
         { requestId: job.request_id, jobId: job.job_id },
       );
-      return jsonResponse(
+      return respond(
         {
           processed: false,
           jobId: job.job_id,
@@ -798,7 +839,7 @@ Deno.serve(async (request: Request) => {
       "error",
       message,
     ).catch(() => {});
-    return jsonResponse(
+    return respond(
       {
         error: "Legal review queue function failed",
         details: message,
