@@ -77,7 +77,7 @@ function Header({
   }
 
   return (
-    <header className="bg-white border-b border-slate-200 px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <header className="bg-white border-b border-slate-200 px-4 py-4 sm:px-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
       <div>
         <h1 className="text-2xl font-bold text-slate-900">
           Legal Affairs Platform
@@ -139,7 +139,7 @@ function Header({
 
       {showSettings && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-950/60 px-4">
-          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
+          <div className="max-h-[calc(100vh-2rem)] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-4 shadow-2xl sm:p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
@@ -182,12 +182,12 @@ function Header({
               </div>
 
               <div className="rounded-xl bg-slate-50 p-4">
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                       Email
                     </p>
-                    <p className="mt-1 font-semibold text-slate-900">
+                    <p className="mt-1 break-all font-semibold text-slate-900">
                       {showEmail
                         ? currentUser.email || "No email saved"
                         : hiddenEmail}
