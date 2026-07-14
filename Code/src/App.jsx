@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import LoginPage from "./components/auth/LoginPage";
 import RegisterPage from "./components/auth/RegisterPage";
+import ForgotPasswordPage from "./components/auth/ForgotPasswordPage";
+import ResetPasswordPage from "./components/auth/ResetPasswordPage";
 import Header from "./components/layout/Header";
 import Sidebar from "./components/layout/Sidebar";
 import DashboardCards from "./components/dashboard/DashboardCards";
@@ -14,10 +16,13 @@ import LegalReviewers from "./components/reviewers/LegalReviewers";
 import { navigationByRole } from "./config/navigation";
 
 import {
+  changePasswordWithSupabase,
   getExistingSupabaseSessionUser,
   loginWithSupabase,
   logoutFromSupabase,
   registerWithSupabase,
+  requestPasswordReset,
+  resetPasswordWithSupabase,
 } from "./services/authService";
 import {
   assignReviewerAsManager,
@@ -181,6 +186,12 @@ function App() {
     async function restoreSession() {
       if (!isSupabaseConfigured) return;
 
+      if (new URLSearchParams(window.location.search).get("password-reset") === "true") {
+        setAuthMode("reset-password");
+        setBackendMessage("Choose a new password to finish the recovery process.");
+        return;
+      }
+
       try {
         const sessionUser = await getExistingSupabaseSessionUser();
         if (!sessionUser) {
@@ -206,6 +217,22 @@ function App() {
     }
 
     restoreSession();
+  }, []);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) return undefined;
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setIsLoggedIn(false);
+        setAuthMode("reset-password");
+        setBackendMessage("Choose a new password to finish the recovery process.");
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   // When the selected role changes, move the user to the first page allowed for that role.
@@ -375,6 +402,31 @@ function App() {
   async function handleRegister(formData) {
     const registeredUser = await registerWithSupabase(formData);
     await applyAuthenticatedUser(registeredUser);
+  }
+
+
+  async function handleRequestPasswordReset(email) {
+    await requestPasswordReset(email);
+  }
+
+  async function handleResetPassword(newPassword) {
+    await resetPasswordWithSupabase(newPassword);
+    window.history.replaceState({}, document.title, window.location.pathname);
+    setIsLoggedIn(false);
+    setAuthMode("login");
+    setBackendMessage("Password updated. Sign in again with your new password.");
+  }
+
+  async function handleChangePassword({ currentPassword, newPassword }) {
+    await changePasswordWithSupabase({
+      email: currentUser.email,
+      currentPassword,
+      newPassword,
+    });
+    setIsLoggedIn(false);
+    setAuthMode("login");
+    setSelectedRequestId(null);
+    setBackendMessage("Password changed. All sessions were signed out; sign in again.");
   }
 
   function handleToggleTheme() {
@@ -767,6 +819,28 @@ function App() {
 
   // If the user is not logged in, show Login or Register before showing the dashboard.
   if (!isLoggedIn) {
+    if (authMode === "reset-password") {
+      return (
+        <ResetPasswordPage
+          onResetPassword={handleResetPassword}
+          onShowLogin={() => setAuthMode("login")}
+          theme={theme}
+          onToggleTheme={handleToggleTheme}
+        />
+      );
+    }
+
+    if (authMode === "forgot-password") {
+      return (
+        <ForgotPasswordPage
+          onRequestReset={handleRequestPasswordReset}
+          onShowLogin={() => setAuthMode("login")}
+          theme={theme}
+          onToggleTheme={handleToggleTheme}
+        />
+      );
+    }
+
     if (authMode === "register") {
       return (
         <RegisterPage
@@ -783,6 +857,7 @@ function App() {
       <LoginPage
         onLogin={handleLogin}
         onShowRegister={() => setAuthMode("register")}
+        onShowForgotPassword={() => setAuthMode("forgot-password")}
         theme={theme}
         onToggleTheme={handleToggleTheme}
         backendMessage={backendMessage}
@@ -919,6 +994,7 @@ function App() {
         <Header
           currentUser={currentUser}
           onLogout={handleLogout}
+          onChangePassword={handleChangePassword}
           theme={theme}
           onToggleTheme={handleToggleTheme}
         />

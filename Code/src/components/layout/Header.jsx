@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { getPasswordValidationError } from "../../services/authService";
 
 function getDisplayName(user) {
   // If the prefix is "None" or empty, show only the user's name.
@@ -9,7 +10,13 @@ function getDisplayName(user) {
   return `${user.prefix} ${user.name}`;
 }
 
-function Header({ currentUser, onLogout, theme, onToggleTheme }) {
+function Header({
+  currentUser,
+  onLogout,
+  onChangePassword,
+  theme,
+  onToggleTheme,
+}) {
   // showProfileMenu controls the small dropdown under the Profile button.
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
@@ -18,6 +25,14 @@ function Header({ currentUser, onLogout, theme, onToggleTheme }) {
 
   // showEmail controls whether email text is visible or hidden in Settings.
   const [showEmail, setShowEmail] = useState(false);
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [passwordError, setPasswordError] = useState("");
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   const displayName = getDisplayName(currentUser);
   const hiddenEmail = currentUser.email ? "••••••••••••••••" : "No email saved";
@@ -25,6 +40,40 @@ function Header({ currentUser, onLogout, theme, onToggleTheme }) {
   function openSettings() {
     setShowSettings(true);
     setShowProfileMenu(false);
+  }
+
+  function updatePasswordField(fieldName, value) {
+    setPasswordForm({ ...passwordForm, [fieldName]: value });
+  }
+
+  async function submitPasswordChange(event) {
+    event.preventDefault();
+    const validationError = getPasswordValidationError(passwordForm.newPassword);
+
+    if (validationError) {
+      setPasswordError(validationError);
+      return;
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordError("New password and confirmation password must match.");
+      return;
+    }
+
+    setPasswordError("");
+    setIsChangingPassword(true);
+
+    try {
+      await onChangePassword({
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+      });
+    } catch (error) {
+      setPasswordError(
+        error instanceof Error ? error.message : "Could not change the password.",
+      );
+      setIsChangingPassword(false);
+    }
   }
 
   return (
@@ -155,6 +204,84 @@ function Header({ currentUser, onLogout, theme, onToggleTheme }) {
                 <p className="mt-1 font-semibold text-slate-900">
                   {currentUser.prefix || "None"}
                 </p>
+              </div>
+
+              <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-blue-800">
+                  Account security
+                </p>
+                {!showPasswordForm ? (
+                  <button
+                    type="button"
+                    className="mt-3 rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800"
+                    onClick={() => setShowPasswordForm(true)}
+                  >
+                    Change password
+                  </button>
+                ) : (
+                  <form className="mt-3 space-y-3" onSubmit={submitPasswordChange}>
+                    <input
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900"
+                      type="password"
+                      autoComplete="current-password"
+                      placeholder="Current password"
+                      value={passwordForm.currentPassword}
+                      onChange={(event) =>
+                        updatePasswordField("currentPassword", event.target.value)
+                      }
+                      required
+                    />
+                    <input
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900"
+                      type="password"
+                      autoComplete="new-password"
+                      placeholder="New password"
+                      value={passwordForm.newPassword}
+                      onChange={(event) =>
+                        updatePasswordField("newPassword", event.target.value)
+                      }
+                      required
+                    />
+                    <input
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900"
+                      type="password"
+                      autoComplete="new-password"
+                      placeholder="Confirm new password"
+                      value={passwordForm.confirmPassword}
+                      onChange={(event) =>
+                        updatePasswordField("confirmPassword", event.target.value)
+                      }
+                      required
+                    />
+                    <p className="text-xs text-slate-600">
+                      At least 12 characters with uppercase, lowercase, and a number.
+                    </p>
+                    {passwordError && (
+                      <p className="text-sm font-semibold text-red-700">{passwordError}</p>
+                    )}
+                    <div className="flex flex-wrap gap-3">
+                      <button
+                        type="submit"
+                        className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
+                        disabled={isChangingPassword}
+                      >
+                        {isChangingPassword ? "Changing password..." : "Confirm password change"}
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-white"
+                        disabled={isChangingPassword}
+                        onClick={() => {
+                          setShowPasswordForm(false);
+                          setPasswordError("");
+                          setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                )}
               </div>
             </div>
           </div>

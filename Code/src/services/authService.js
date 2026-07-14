@@ -1,12 +1,34 @@
 import { requireSupabase } from "./supabaseClient";
 
-function usernameToDemoEmail(usernameOrEmail) {
-  const trimmed = usernameOrEmail.trim();
+async function resolveLoginEmail(client, usernameOrEmail) {
+  const identifier = usernameOrEmail.trim();
 
-  if (trimmed.includes("@")) return trimmed;
+  if (identifier.includes("@")) return identifier;
 
-  // Demo convenience: users can type "reviewer" instead of reviewer@demo.test.
-  return `${trimmed}@demo.test`;
+  // Local seeded demo accounts use predictable demo.test email addresses.
+  if (import.meta.env.DEV) return `${identifier}@demo.test`;
+
+  const { data, error } = await client.rpc("resolve_login_email", {
+    p_username: identifier,
+  });
+
+  if (error || !data) {
+    throw new Error("Invalid login credentials");
+  }
+
+  return data;
+}
+
+export function getPasswordValidationError(password) {
+  if (password.length < 12) {
+    return "Use at least 12 characters for your password.";
+  }
+
+  if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/\d/.test(password)) {
+    return "Use at least one uppercase letter, lowercase letter, and number.";
+  }
+
+  return "";
 }
 
 function isUsefulErrorText(value) {
@@ -72,8 +94,8 @@ export async function fetchCurrentProfile(userId) {
 }
 
 export async function loginWithSupabase(usernameOrEmail, password) {
-  const email = usernameToDemoEmail(usernameOrEmail);
   const client = requireSupabase();
+  const email = await resolveLoginEmail(client, usernameOrEmail);
   const { data, error } = await client.auth.signInWithPassword({
     email,
     password,
@@ -83,7 +105,7 @@ export async function loginWithSupabase(usernameOrEmail, password) {
     throw new Error(
       getSupabaseErrorMessage(
         error,
-        `Login failed for ${email}. Check that this demo user exists and the password is correct.`,
+        "Invalid login credentials",
       ),
     );
   }
@@ -96,7 +118,11 @@ export async function loginWithSupabase(usernameOrEmail, password) {
 }
 
 export async function registerWithSupabase(formData) {
-  const email = formData.email || usernameToDemoEmail(formData.username);
+  const email = formData.email?.trim();
+
+  if (!email) {
+    throw new Error("Email is required to create an account.");
+  }
   const client = requireSupabase();
   const { data, error } = await client.auth.signUp({
     email,
@@ -163,6 +189,58 @@ export async function logoutFromSupabase() {
   }
 }
 
+
+export async function requestPasswordReset(email) {
+  const client = requireSupabase();
+  const { error } = await client.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}?password-reset=true`,
+  });
+
+  if (error) {
+    throw new Error(getSupabaseErrorMessage(error, "Could not send a password-reset email."));
+  }
+}
+
+export async function resetPasswordWithSupabase(newPassword) {
+  const passwordError = getPasswordValidationError(newPassword);
+  if (passwordError) throw new Error(passwordError);
+
+  const client = requireSupabase();
+  const { error: updateError } = await client.auth.updateUser({
+    password: newPassword,
+  });
+
+  if (updateError) {
+    throw new Error(getSupabaseErrorMessage(updateError, "Could not update the password."));
+  }
+
+  const { error: signOutError } = await client.auth.signOut({ scope: "global" });
+  if (signOutError) {
+    throw new Error("Password was changed, but sessions could not be signed out. Contact an administrator.");
+  }
+}
+
+export async function changePasswordWithSupabase({
+  email,
+  currentPassword,
+  newPassword,
+}) {
+  const passwordError = getPasswordValidationError(newPassword);
+  if (passwordError) throw new Error(passwordError);
+
+  const client = requireSupabase();
+  const { error: verificationError } = await client.auth.signInWithPassword({
+    email,
+    password: currentPassword,
+  });
+
+  if (verificationError) {
+    throw new Error("Current password is incorrect.");
+  }
+
+  await resetPasswordWithSupabase(newPassword);
+}
+
 export async function getExistingSupabaseSessionUser() {
   const client = requireSupabase();
   const { data, error } = await client.auth.getSession();
@@ -181,8 +259,8 @@ export async function getExistingSupabaseSessionUser() {
 /*
 BEGINNER DOCUMENTATION:
 
-1. Why convert username to email?
-Supabase Auth signs in with email/password. For easy demo typing, "reviewer" becomes "reviewer@demo.test".
+1. Why resolve a username to an email?
+Supabase Auth signs in with email/password, while this app also stores a unique username in the profile. The login flow looks up an exact username, then sends its email to Supabase Auth. Typing an email skips that lookup.
 
 2. Where is the password checked?
 Supabase Auth checks the password securely. React never stores the real password after submitting the form.

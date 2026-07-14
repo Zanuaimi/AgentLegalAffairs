@@ -3,6 +3,7 @@ import { departments } from "../../data/mockData";
 import { getReadableErrorMessage } from "../../utils/errorMessage";
 
 const prefixOptions = ["None", "Mr.", "Ms.", "Mrs.", "Dr.", "Prof."];
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function RegisterPage({
   onRegister,
@@ -33,6 +34,13 @@ function RegisterPage({
   async function handleSubmit(event) {
     event.preventDefault();
     setErrorMessage("");
+
+    if (!EMAIL_PATTERN.test(formData.email.trim())) {
+      setErrorMessage(
+        "Enter a valid email address with text before and after @, plus a domain extension such as .edu.",
+      );
+      return;
+    }
 
     if (formData.password !== formData.confirmPassword) {
       setErrorMessage("Password and confirm password must match.");
@@ -138,6 +146,8 @@ function RegisterPage({
             <input
               className="w-full rounded-lg border border-slate-300 px-4 py-3"
               type="email"
+              autoComplete="email"
+              required
               value={formData.email}
               onChange={(event) => updateField("email", event.target.value)}
             />

@@ -5,6 +5,7 @@ import { getReadableErrorMessage } from "../../utils/errorMessage";
 function LoginPage({
   onLogin,
   onShowRegister,
+  onShowForgotPassword,
   theme,
   onToggleTheme,
   backendMessage,
@@ -81,19 +82,22 @@ function LoginPage({
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Username
+              Username or Email
             </label>
             <input
               className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
               type="text"
               placeholder={
                 showDemoAccounts
-                  ? "Example: requester or reviewer"
-                  : "Enter your username"
+                  ? "Example: requester, reviewer, or an email"
+                  : "Enter your username or email"
               }
               value={username}
               onChange={(event) => setUsername(event.target.value)}
             />
+            <p className="mt-1 text-xs text-slate-500">
+              Enter either your application username or your account email address.
+            </p>
           </div>
 
           <div>
@@ -125,6 +129,14 @@ function LoginPage({
             {isLoading ? "Logging in..." : "Login to Dashboard"}
           </button>
         </form>
+
+        <button
+          className="mt-4 w-full text-sm font-semibold text-blue-700 hover:underline"
+          type="button"
+          onClick={onShowForgotPassword}
+        >
+          Forgot password?
+        </button>
 
         {showDemoAccounts && (
           <div className="mt-6 rounded-xl bg-slate-50 p-3 text-xs text-slate-600">
