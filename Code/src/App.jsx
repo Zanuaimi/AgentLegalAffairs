@@ -114,7 +114,7 @@ function App() {
     email: "demo.user@university.edu",
     prefix: "None",
     role: "Requester",
-    department: "HR",
+    department: "Legal Affairs",
   });
 
   // These collections are loaded from Supabase PostgreSQL after login.
@@ -131,7 +131,7 @@ function App() {
 
   // currentRole/currentDepartment come from the logged-in user's database profile.
   const [currentRole, setCurrentRole] = useState("Requester");
-  const [currentDepartment, setCurrentDepartment] = useState("HR");
+  const [currentDepartment, setCurrentDepartment] = useState("Legal Affairs");
 
   const [backendMessage, setBackendMessage] = useState(
     isSupabaseConfigured
@@ -314,7 +314,9 @@ function App() {
       );
     }
 
-    const canReadEngineData = userForAccess.role === "Admin User";
+    const canReadEngineData = ["Admin User", "Owner"].includes(
+      userForAccess.role,
+    );
 
     const [
       backendRequests,

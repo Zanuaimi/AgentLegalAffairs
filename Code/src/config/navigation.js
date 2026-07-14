@@ -9,6 +9,16 @@ export const navigationByRole = {
     { id: "legal-engine", label: "Legal Affair Engine" },
     { id: "audit", label: "Audit Log" },
   ],
+  Owner: [
+    { id: "dashboard", label: "Dashboard" },
+    { id: "new-request", label: "Send Request" },
+    { id: "requests", label: "Legal Requests" },
+    { id: "reviewers", label: "Legal Reviewers" },
+    { id: "details", label: "Request Details" },
+    { id: "admin", label: "Admin" },
+    { id: "legal-engine", label: "Legal Affair Engine" },
+    { id: "audit", label: "Audit Log" },
+  ],
   "Legal Reviewer": [
     { id: "dashboard", label: "Dashboard" },
     { id: "requests", label: "Legal Requests" },

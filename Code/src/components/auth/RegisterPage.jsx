@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { departments } from "../../data/mockData";
 import { getReadableErrorMessage } from "../../utils/errorMessage";
 
 const prefixOptions = ["None", "Mr.", "Ms.", "Mrs.", "Dr.", "Prof."];
@@ -21,7 +20,7 @@ function RegisterPage({
     password: "",
     confirmPassword: "",
     role: "Requester",
-    department: "HR",
+    department: "Legal Affairs",
   });
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -136,6 +135,10 @@ function RegisterPage({
               className="w-full rounded-lg border border-slate-300 px-4 py-3"
               value={formData.username}
               onChange={(event) => updateField("username", event.target.value)}
+              minLength={3}
+              maxLength={32}
+              pattern="[A-Za-z0-9._-]{3,32}"
+              required
             />
           </div>
 
@@ -147,6 +150,7 @@ function RegisterPage({
               className="w-full rounded-lg border border-slate-300 px-4 py-3"
               type="email"
               autoComplete="email"
+              maxLength={254}
               required
               value={formData.email}
               onChange={(event) => updateField("email", event.target.value)}
@@ -187,23 +191,12 @@ function RegisterPage({
             </p>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Department
-            </label>
-            <select
-              className="w-full rounded-lg border border-slate-300 px-4 py-3"
-              value={formData.department}
-              onChange={(event) =>
-                updateField("department", event.target.value)
-              }
-            >
-              {departments.map((department) => (
-                <option key={department} value={department}>
-                  {department}
-                </option>
-              ))}
-            </select>
+          <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+            <p className="text-sm font-medium text-slate-700">Department</p>
+            <p className="mt-1 font-semibold text-slate-900">Legal Affairs</p>
+            <p className="mt-1 text-xs text-slate-600">
+              Public requester accounts are created in Legal Affairs by default.
+            </p>
           </div>
 
           {errorMessage && (

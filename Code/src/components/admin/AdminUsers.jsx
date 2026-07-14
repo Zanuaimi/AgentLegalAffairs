@@ -1,6 +1,24 @@
 import { useState } from "react";
 import { departments, roles } from "../../data/mockData";
 
+const DEPARTMENT_APPROVER_ROLE = "Department Approver";
+const ADMIN_ROLE = "Admin User";
+const OWNER_ROLE = "Owner";
+
+function canManageRole(currentRole, targetRole, targetId, currentUserId) {
+  if (targetId === currentUserId || targetRole === OWNER_ROLE) return false;
+  if (currentRole === OWNER_ROLE) return true;
+  return currentRole === ADMIN_ROLE && targetRole !== ADMIN_ROLE;
+}
+
+function availableRoles(currentRole) {
+  if (currentRole === OWNER_ROLE) {
+    return roles.filter((role) => role !== OWNER_ROLE);
+  }
+
+  return roles.filter((role) => ![ADMIN_ROLE, OWNER_ROLE].includes(role));
+}
+
 function AdminUsers({
   users,
   setUsers,
@@ -17,11 +35,30 @@ function AdminUsers({
     const selectedUser = users.find((user) => user.id === userId);
     if (!selectedUser || selectedUser.role === newRole) return;
 
+    if (!canManageRole(currentUser.role, selectedUser.role, userId, currentUser.id)) {
+      setErrorMessage("You do not have permission to change this user's role.");
+      return;
+    }
+
+    if (!availableRoles(currentUser.role).includes(newRole)) {
+      setErrorMessage("You cannot assign that role.");
+      return;
+    }
+
     setSavingUserId(userId);
     setErrorMessage("");
     setUsers((currentUsers) =>
       currentUsers.map((user) =>
-        user.id === userId ? { ...user, role: newRole } : user,
+        user.id === userId
+          ? {
+              ...user,
+              role: newRole,
+              department:
+                newRole === DEPARTMENT_APPROVER_ROLE
+                  ? user.department
+                  : "Legal Affairs",
+            }
+          : user,
       ),
     );
 
@@ -35,7 +72,13 @@ function AdminUsers({
     } catch (error) {
       setUsers((currentUsers) =>
         currentUsers.map((user) =>
-          user.id === userId ? { ...user, role: selectedUser.role } : user,
+          user.id === userId
+            ? {
+                ...user,
+                role: selectedUser.role,
+                department: selectedUser.department,
+              }
+            : user,
         ),
       );
       setErrorMessage(
@@ -121,36 +164,61 @@ function AdminUsers({
                   </td>
                   <td className="p-4 text-slate-700">{user.email}</td>
                   <td className="p-4">
-                    <select
-                      className="rounded-lg border border-slate-300 px-3 py-2"
-                      value={user.role}
-                      onChange={(event) =>
-                        updateUserRole(user.id, event.target.value)
-                      }
-                      disabled={savingUserId === user.id}
-                    >
-                      {roles.map((role) => (
-                        <option key={role} value={role}>
-                          {role}
-                        </option>
-                      ))}
-                    </select>
+                    {user.role === OWNER_ROLE ? (
+                      <span className="font-medium text-slate-700">Owner</span>
+                    ) : (
+                      <select
+                        className="rounded-lg border border-slate-300 px-3 py-2"
+                        value={user.role}
+                        onChange={(event) =>
+                          updateUserRole(user.id, event.target.value)
+                        }
+                        disabled={
+                          savingUserId === user.id ||
+                          !canManageRole(
+                            currentUser.role,
+                            user.role,
+                            user.id,
+                            currentUser.id,
+                          )
+                        }
+                        title={
+                          user.id === currentUser.id
+                            ? "You cannot change your own role."
+                            : currentUser.role === ADMIN_ROLE && user.role === ADMIN_ROLE
+                              ? "Only an Owner can change another Admin User's role."
+                              : undefined
+                        }
+                      >
+                        {availableRoles(currentUser.role).map((role) => (
+                          <option key={role} value={role}>
+                            {role}
+                          </option>
+                        ))}
+                      </select>
+                    )}
                   </td>
                   <td className="p-4">
-                    <select
-                      className="rounded-lg border border-slate-300 px-3 py-2"
-                      value={user.department}
-                      onChange={(event) =>
-                        updateUserDepartment(user.id, event.target.value)
-                      }
-                      disabled={savingUserId === user.id}
-                    >
-                      {departments.map((department) => (
-                        <option key={department} value={department}>
-                          {department}
-                        </option>
-                      ))}
-                    </select>
+                    {user.role === DEPARTMENT_APPROVER_ROLE ? (
+                      <select
+                        className="rounded-lg border border-slate-300 px-3 py-2"
+                        value={user.department}
+                        onChange={(event) =>
+                          updateUserDepartment(user.id, event.target.value)
+                        }
+                        disabled={savingUserId === user.id}
+                      >
+                        {departments.map((department) => (
+                          <option key={department} value={department}>
+                            {department}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className="font-medium text-slate-700">
+                        {user.department}
+                      </span>
+                    )}
                   </td>
                   <td className="p-4">
                     {activeUserIds.includes(user.id) ? (

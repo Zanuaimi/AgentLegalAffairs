@@ -11,7 +11,7 @@ const MAX_PDF_SIZE_BYTES = 10 * 1024 * 1024;
 function RequestForm({ onCreateRequest, currentUser }) {
   const [formData, setFormData] = useState({
     title: "",
-    department: currentUser?.department || "HR",
+    department: currentUser?.department || "Legal Affairs",
     categoryCode: "LEG-A",
     priority: "Medium",
     deadline: "",
@@ -122,7 +122,7 @@ function RequestForm({ onCreateRequest, currentUser }) {
 
       setFormData({
         title: "",
-        department: currentUser?.department || "HR",
+        department: currentUser?.department || "Legal Affairs",
         categoryCode: "LEG-A",
         priority: "Medium",
         deadline: "",

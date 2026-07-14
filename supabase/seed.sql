@@ -15,7 +15,8 @@ insert into public.roles (id, name) values
   ('legal_reviewer', 'Legal Reviewer'),
   ('legal_manager', 'Legal Manager'),
   ('department_approver', 'Department Approver'),
-  ('admin_user', 'Admin User')
+  ('admin_user', 'Admin User'),
+  ('owner', 'Owner')
 on conflict (id) do update set name = excluded.name;
 
 insert into public.departments (id, name) values
@@ -108,7 +109,8 @@ insert into auth.users (
   ('00000000-0000-0000-0000-000000000102', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'reviewer@demo.test', crypt('password123', gen_salt('bf')), now(), now(), now(), '{"provider":"email","providers":["email"]}', '{"username":"reviewer"}', '', '', '', '', '', '', ''),
   ('00000000-0000-0000-0000-000000000103', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'manager@demo.test', crypt('password123', gen_salt('bf')), now(), now(), now(), '{"provider":"email","providers":["email"]}', '{"username":"manager"}', '', '', '', '', '', '', ''),
   ('00000000-0000-0000-0000-000000000104', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'approver@demo.test', crypt('password123', gen_salt('bf')), now(), now(), now(), '{"provider":"email","providers":["email"]}', '{"username":"approver"}', '', '', '', '', '', '', ''),
-  ('00000000-0000-0000-0000-000000000105', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'admin@demo.test', crypt('password123', gen_salt('bf')), now(), now(), now(), '{"provider":"email","providers":["email"]}', '{"username":"admin"}', '', '', '', '', '', '', '')
+  ('00000000-0000-0000-0000-000000000105', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'admin@demo.test', crypt('password123', gen_salt('bf')), now(), now(), now(), '{"provider":"email","providers":["email"]}', '{"username":"admin"}', '', '', '', '', '', '', ''),
+  ('00000000-0000-0000-0000-000000000106', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'owner@demo.test', crypt('password123', gen_salt('bf')), now(), now(), now(), '{"provider":"email","providers":["email"]}', '{"username":"owner"}', '', '', '', '', '', '', '')
 on conflict (id) do update set
   email = excluded.email,
   encrypted_password = excluded.encrypted_password,
@@ -135,7 +137,8 @@ insert into auth.identities (
   ('20000000-0000-0000-0000-000000000102', '00000000-0000-0000-0000-000000000102', '{"sub":"00000000-0000-0000-0000-000000000102","email":"reviewer@demo.test"}', 'email', 'reviewer@demo.test', now(), now(), now()),
   ('20000000-0000-0000-0000-000000000103', '00000000-0000-0000-0000-000000000103', '{"sub":"00000000-0000-0000-0000-000000000103","email":"manager@demo.test"}', 'email', 'manager@demo.test', now(), now(), now()),
   ('20000000-0000-0000-0000-000000000104', '00000000-0000-0000-0000-000000000104', '{"sub":"00000000-0000-0000-0000-000000000104","email":"approver@demo.test"}', 'email', 'approver@demo.test', now(), now(), now()),
-  ('20000000-0000-0000-0000-000000000105', '00000000-0000-0000-0000-000000000105', '{"sub":"00000000-0000-0000-0000-000000000105","email":"admin@demo.test"}', 'email', 'admin@demo.test', now(), now(), now())
+  ('20000000-0000-0000-0000-000000000105', '00000000-0000-0000-0000-000000000105', '{"sub":"00000000-0000-0000-0000-000000000105","email":"admin@demo.test"}', 'email', 'admin@demo.test', now(), now(), now()),
+  ('20000000-0000-0000-0000-000000000106', '00000000-0000-0000-0000-000000000106', '{"sub":"00000000-0000-0000-0000-000000000106","email":"owner@demo.test"}', 'email', 'owner@demo.test', now(), now(), now())
 on conflict (provider, provider_id) do update set
   identity_data = excluded.identity_data,
   updated_at = now();
@@ -145,7 +148,8 @@ insert into public.profiles (id, username, full_name, email, prefix, role_id, de
   ('00000000-0000-0000-0000-000000000102', 'reviewer', 'Omar Hassan', 'reviewer@demo.test', 'Mr.', 'legal_reviewer', 'legal_affairs', 'Active'),
   ('00000000-0000-0000-0000-000000000103', 'manager', 'Fatima Salem', 'manager@demo.test', 'Ms.', 'legal_manager', 'legal_affairs', 'Active'),
   ('00000000-0000-0000-0000-000000000104', 'approver', 'Mariam Ahmed', 'approver@demo.test', 'Ms.', 'department_approver', 'hr', 'Active'),
-  ('00000000-0000-0000-0000-000000000105', 'admin', 'Admin User', 'admin@demo.test', 'None', 'admin_user', 'it', 'Active')
+  ('00000000-0000-0000-0000-000000000105', 'admin', 'Admin User', 'admin@demo.test', 'None', 'admin_user', 'legal_affairs', 'Active'),
+  ('00000000-0000-0000-0000-000000000106', 'owner', 'Platform Owner', 'owner@demo.test', 'None', 'owner', 'legal_affairs', 'Active')
 on conflict (id) do update set
   username = excluded.username,
   full_name = excluded.full_name,

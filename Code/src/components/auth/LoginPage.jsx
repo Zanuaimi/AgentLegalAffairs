@@ -94,6 +94,8 @@ function LoginPage({
               }
               value={username}
               onChange={(event) => setUsername(event.target.value)}
+              maxLength={254}
+              required
             />
             <p className="mt-1 text-xs text-slate-500">
               Enter either your application username or your account email address.
@@ -112,6 +114,8 @@ function LoginPage({
               }
               value={password}
               onChange={(event) => setPassword(event.target.value)}
+              maxLength={128}
+              required
             />
           </div>
 
@@ -146,6 +150,7 @@ function LoginPage({
             <p>manager / password123</p>
             <p>approver / password123</p>
             <p>admin / password123</p>
+            <p>owner / password123</p>
           </div>
         )}
 

@@ -1,9 +1,36 @@
 import { requireSupabase } from "./supabaseClient";
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const USERNAME_PATTERN = /^[A-Za-z0-9._-]{3,32}$/;
+
+export function getEmailValidationError(email) {
+  if (!EMAIL_PATTERN.test(email) || email.length > 254) {
+    return "Enter a valid email address, such as name@example.edu.";
+  }
+
+  return "";
+}
+
+export function getUsernameValidationError(username) {
+  if (!USERNAME_PATTERN.test(username)) {
+    return "Username must be 3–32 characters and use only letters, numbers, dots, hyphens, or underscores.";
+  }
+
+  return "";
+}
+
 async function resolveLoginEmail(client, usernameOrEmail) {
   const identifier = usernameOrEmail.trim();
 
-  if (identifier.includes("@")) return identifier;
+  if (identifier.includes("@")) {
+    const emailError = getEmailValidationError(identifier);
+    if (emailError) throw new Error("Invalid login credentials");
+    return identifier.toLowerCase();
+  }
+
+  if (getUsernameValidationError(identifier)) {
+    throw new Error("Invalid login credentials");
+  }
 
   // Local seeded demo accounts use predictable demo.test email addresses.
   if (import.meta.env.DEV) return `${identifier}@demo.test`;
@@ -118,11 +145,14 @@ export async function loginWithSupabase(usernameOrEmail, password) {
 }
 
 export async function registerWithSupabase(formData) {
-  const email = formData.email?.trim();
+  const email = formData.email?.trim().toLowerCase();
+  const emailError = getEmailValidationError(email || "");
+  const usernameError = getUsernameValidationError(formData.username?.trim() || "");
+  const passwordError = getPasswordValidationError(formData.password || "");
 
-  if (!email) {
-    throw new Error("Email is required to create an account.");
-  }
+  if (emailError) throw new Error(emailError);
+  if (usernameError) throw new Error(usernameError);
+  if (passwordError) throw new Error(passwordError);
   const client = requireSupabase();
   const { data, error } = await client.auth.signUp({
     email,
@@ -191,8 +221,12 @@ export async function logoutFromSupabase() {
 
 
 export async function requestPasswordReset(email) {
+  const normalizedEmail = email.trim().toLowerCase();
+  const emailError = getEmailValidationError(normalizedEmail);
+  if (emailError) throw new Error(emailError);
+
   const client = requireSupabase();
-  const { error } = await client.auth.resetPasswordForEmail(email, {
+  const { error } = await client.auth.resetPasswordForEmail(normalizedEmail, {
     redirectTo: `${window.location.origin}?password-reset=true`,
   });
 

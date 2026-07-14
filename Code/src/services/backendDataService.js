@@ -684,9 +684,17 @@ async function lookupIdByName(client, tableName, name) {
 export async function updateBackendUserRole({ userId, roleName }) {
   const client = requireSupabase();
   const roleId = await lookupIdByName(client, "roles", roleName);
+  const update = { role_id: roleId };
+
+  // Department Approvers represent a selectable department. Every other role
+  // belongs to Legal Affairs by default.
+  if (roleId !== "department_approver") {
+    update.department_id = "legal_affairs";
+  }
+
   const { error } = await client
     .from("profiles")
-    .update({ role_id: roleId })
+    .update(update)
     .eq("id", userId);
 
   if (error) throw error;

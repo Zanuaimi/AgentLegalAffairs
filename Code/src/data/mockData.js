@@ -7,6 +7,7 @@ export const roles = [
   "Legal Manager",
   "Department Approver",
   "Admin User",
+  "Owner",
 ];
 
 export const departments = [
