@@ -14,6 +14,7 @@ function LoginPage({
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   // Demo credentials are local-development only. Hosted Supabase projects use
   // real accounts created through the registration flow or by an administrator.
@@ -23,17 +24,25 @@ function LoginPage({
     // preventDefault stops the browser from refreshing the page after form submit.
     event.preventDefault();
     setErrorMessage("");
+    setFieldErrors({});
     setIsLoading(true);
 
     try {
       await onLogin({ username, password });
     } catch (error) {
-      setErrorMessage(
-        getReadableErrorMessage(
-          error,
-          "Login failed. Check Supabase setup, .env.local, and seeded users. Open the browser console for the full error object.",
-        ),
-      );
+      const errorCode = error instanceof Error ? error.message : "";
+
+      if (errorCode === "USERNAME_NOT_FOUND") {
+        setFieldErrors({ identifier: "No account was found for this username." });
+        setErrorMessage("Check the highlighted username, or sign in with your email address.");
+      } else {
+        // Supabase intentionally returns a generic credential error for email
+        // sign-in, so the form does not reveal whether an email is registered.
+        setFieldErrors({ password: "Check your password and try again." });
+        setErrorMessage(
+          getReadableErrorMessage(error, "Could not sign in. Check your password and try again."),
+        );
+      }
     } finally {
       setIsLoading(false);
     }
@@ -83,7 +92,11 @@ function LoginPage({
               Username or Email
             </label>
             <input
-              className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full rounded-lg border px-4 py-3 focus:outline-none focus:ring-2 ${
+                fieldErrors.identifier
+                  ? "border-red-500 focus:ring-red-500"
+                  : "border-slate-300 focus:ring-blue-500"
+              }`}
               type="text"
               placeholder={
                 showDemoAccounts
@@ -91,13 +104,22 @@ function LoginPage({
                   : "Enter your username or email"
               }
               value={username}
-              onChange={(event) => setUsername(event.target.value)}
+              onChange={(event) => {
+                setUsername(event.target.value);
+                setFieldErrors((current) => ({ ...current, identifier: "" }));
+              }}
+              aria-invalid={Boolean(fieldErrors.identifier)}
               maxLength={254}
               required
             />
             <p className="mt-1 text-xs text-slate-500">
               Enter either your application username or your account email address.
             </p>
+            {fieldErrors.identifier && (
+              <p className="mt-1 text-xs font-semibold text-red-700">
+                {fieldErrors.identifier}
+              </p>
+            )}
           </div>
 
           <div>
@@ -105,16 +127,29 @@ function LoginPage({
               Password
             </label>
             <input
-              className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full rounded-lg border px-4 py-3 focus:outline-none focus:ring-2 ${
+                fieldErrors.password
+                  ? "border-red-500 focus:ring-red-500"
+                  : "border-slate-300 focus:ring-blue-500"
+              }`}
               type="password"
               placeholder={
                 showDemoAccounts ? "Demo password: password123" : "Enter your password"
               }
               value={password}
-              onChange={(event) => setPassword(event.target.value)}
+              onChange={(event) => {
+                setPassword(event.target.value);
+                setFieldErrors((current) => ({ ...current, password: "" }));
+              }}
+              aria-invalid={Boolean(fieldErrors.password)}
               maxLength={128}
               required
             />
+            {fieldErrors.password && (
+              <p className="mt-1 text-xs font-semibold text-red-700">
+                {fieldErrors.password}
+              </p>
+            )}
           </div>
 
           {errorMessage && (

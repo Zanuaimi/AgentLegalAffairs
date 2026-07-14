@@ -1,7 +1,7 @@
 import { requireSupabase } from "./supabaseClient";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const USERNAME_PATTERN = /^[A-Za-z0-9._-]{3,32}$/;
+const USERNAME_PATTERN = /^[A-Za-z0-9_]{3,32}$/;
 
 export function getEmailValidationError(email) {
   if (!EMAIL_PATTERN.test(email) || email.length > 254) {
@@ -13,7 +13,7 @@ export function getEmailValidationError(email) {
 
 export function getUsernameValidationError(username) {
   if (!USERNAME_PATTERN.test(username)) {
-    return "Username must be 3–32 characters and use only letters, numbers, dots, hyphens, or underscores.";
+    return "Username must be 3–32 characters and use only letters, numbers, or underscores. Spaces, dots, and hyphens are not allowed.";
   }
 
   return "";
@@ -40,19 +40,17 @@ async function resolveLoginEmail(client, usernameOrEmail) {
   });
 
   if (error || !data) {
-    throw new Error("Invalid login credentials");
+    // LoginPage uses this code only to highlight the username field. It does not
+    // display whether an account exists, which would enable account enumeration.
+    throw new Error("USERNAME_NOT_FOUND");
   }
 
   return data;
 }
 
 export function getPasswordValidationError(password) {
-  if (password.length < 12) {
-    return "Use at least 12 characters for your password.";
-  }
-
-  if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/\d/.test(password)) {
-    return "Use at least one uppercase letter, lowercase letter, and number.";
+  if (password.length < 6) {
+    return "Use at least 6 characters for your password.";
   }
 
   return "";

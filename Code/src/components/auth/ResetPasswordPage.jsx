@@ -51,7 +51,7 @@ function ResetPasswordPage({ onResetPassword, onShowLogin, theme, onToggleTheme 
 
         <h1 className="mt-5 text-3xl font-bold text-slate-900">Choose a new password</h1>
         <p className="mt-2 text-slate-500">
-          Use at least 12 characters, including an uppercase letter, lowercase letter, and number.
+          Use at least 6 characters. Letters, numbers, spaces, and special characters are accepted.
         </p>
 
         <form className="mt-6 space-y-5" onSubmit={handleSubmit}>

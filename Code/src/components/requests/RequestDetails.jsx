@@ -158,7 +158,7 @@ function RequestDetails({
               </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 text-sm">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 text-sm text-slate-700">
               <p>
                 <span className="font-semibold">Category:</span>{" "}
                 {request.categoryCode} - {request.categoryName}

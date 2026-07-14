@@ -72,7 +72,7 @@ function EngineControlCard({
             ? "border-red-200 bg-red-50"
             : "border-slate-200 bg-slate-50"
         }`}>
-          <p className={errorCount > 0 ? "text-red-600" : "text-slate-500"}>
+          <p className={errorCount > 0 ? "text-red-700" : "text-slate-500"}>
             AI Processing Errors
           </p>
           <p className={`mt-1 font-bold ${

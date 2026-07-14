@@ -1,14 +1,17 @@
 -- Demo seed data for Legal Affairs Platform
 --
--- Easy demo logins after running this seed locally:
---   requester@demo.test   / password123
---   reviewer@demo.test    / password123
---   manager@demo.test     / password123
---   approver@demo.test    / password123
---   admin@demo.test       / password123
+-- Local-only demo logins after running `supabase db reset`:
+--   requester1 / password123
+--   requester2 / password123
+--   requester3 / password123
+--   reviewer1 / password123
+--   reviewer2 / password123
+--   legalmanager1 / password123
+--   departmentapproverla / password123
 --
--- The profile usernames are easy to type too:
---   requester, reviewer, manager, approver, admin
+-- These credentials are never deployed to cloud Supabase. No Admin or Owner
+-- demo account is seeded, so the hosted project does not expose privileged
+-- predictable credentials.
 
 insert into public.roles (id, name) values
   ('requester', 'Requester'),
@@ -105,12 +108,13 @@ insert into auth.users (
   phone_change_token,
   reauthentication_token
 ) values
-  ('00000000-0000-0000-0000-000000000101', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'requester@demo.test', crypt('password123', gen_salt('bf')), now(), now(), now(), '{"provider":"email","providers":["email"]}', '{"username":"requester"}', '', '', '', '', '', '', ''),
-  ('00000000-0000-0000-0000-000000000102', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'reviewer@demo.test', crypt('password123', gen_salt('bf')), now(), now(), now(), '{"provider":"email","providers":["email"]}', '{"username":"reviewer"}', '', '', '', '', '', '', ''),
-  ('00000000-0000-0000-0000-000000000103', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'manager@demo.test', crypt('password123', gen_salt('bf')), now(), now(), now(), '{"provider":"email","providers":["email"]}', '{"username":"manager"}', '', '', '', '', '', '', ''),
-  ('00000000-0000-0000-0000-000000000104', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'approver@demo.test', crypt('password123', gen_salt('bf')), now(), now(), now(), '{"provider":"email","providers":["email"]}', '{"username":"approver"}', '', '', '', '', '', '', ''),
-  ('00000000-0000-0000-0000-000000000105', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'admin@demo.test', crypt('password123', gen_salt('bf')), now(), now(), now(), '{"provider":"email","providers":["email"]}', '{"username":"admin"}', '', '', '', '', '', '', ''),
-  ('00000000-0000-0000-0000-000000000106', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'owner@demo.test', crypt('password123', gen_salt('bf')), now(), now(), now(), '{"provider":"email","providers":["email"]}', '{"username":"owner"}', '', '', '', '', '', '', '')
+  ('00000000-0000-0000-0000-000000000101', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'requester1@demo.test', crypt('password123', gen_salt('bf')), now(), now(), now(), '{"provider":"email","providers":["email"]}', '{"username":"requester1"}', '', '', '', '', '', '', ''),
+  ('00000000-0000-0000-0000-000000000102', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'reviewer1@demo.test', crypt('password123', gen_salt('bf')), now(), now(), now(), '{"provider":"email","providers":["email"]}', '{"username":"reviewer1"}', '', '', '', '', '', '', ''),
+  ('00000000-0000-0000-0000-000000000103', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'legalmanager1@demo.test', crypt('password123', gen_salt('bf')), now(), now(), now(), '{"provider":"email","providers":["email"]}', '{"username":"legalmanager1"}', '', '', '', '', '', '', ''),
+  ('00000000-0000-0000-0000-000000000104', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'departmentapproverla@demo.test', crypt('password123', gen_salt('bf')), now(), now(), now(), '{"provider":"email","providers":["email"]}', '{"username":"departmentapproverla"}', '', '', '', '', '', '', ''),
+  ('00000000-0000-0000-0000-000000000105', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'requester2@demo.test', crypt('password123', gen_salt('bf')), now(), now(), now(), '{"provider":"email","providers":["email"]}', '{"username":"requester2"}', '', '', '', '', '', '', ''),
+  ('00000000-0000-0000-0000-000000000106', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'requester3@demo.test', crypt('password123', gen_salt('bf')), now(), now(), now(), '{"provider":"email","providers":["email"]}', '{"username":"requester3"}', '', '', '', '', '', '', ''),
+  ('00000000-0000-0000-0000-000000000107', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'reviewer2@demo.test', crypt('password123', gen_salt('bf')), now(), now(), now(), '{"provider":"email","providers":["email"]}', '{"username":"reviewer2"}', '', '', '', '', '', '', '')
 on conflict (id) do update set
   email = excluded.email,
   encrypted_password = excluded.encrypted_password,
@@ -133,23 +137,25 @@ insert into auth.identities (
   created_at,
   updated_at
 ) values
-  ('20000000-0000-0000-0000-000000000101', '00000000-0000-0000-0000-000000000101', '{"sub":"00000000-0000-0000-0000-000000000101","email":"requester@demo.test"}', 'email', 'requester@demo.test', now(), now(), now()),
-  ('20000000-0000-0000-0000-000000000102', '00000000-0000-0000-0000-000000000102', '{"sub":"00000000-0000-0000-0000-000000000102","email":"reviewer@demo.test"}', 'email', 'reviewer@demo.test', now(), now(), now()),
-  ('20000000-0000-0000-0000-000000000103', '00000000-0000-0000-0000-000000000103', '{"sub":"00000000-0000-0000-0000-000000000103","email":"manager@demo.test"}', 'email', 'manager@demo.test', now(), now(), now()),
-  ('20000000-0000-0000-0000-000000000104', '00000000-0000-0000-0000-000000000104', '{"sub":"00000000-0000-0000-0000-000000000104","email":"approver@demo.test"}', 'email', 'approver@demo.test', now(), now(), now()),
-  ('20000000-0000-0000-0000-000000000105', '00000000-0000-0000-0000-000000000105', '{"sub":"00000000-0000-0000-0000-000000000105","email":"admin@demo.test"}', 'email', 'admin@demo.test', now(), now(), now()),
-  ('20000000-0000-0000-0000-000000000106', '00000000-0000-0000-0000-000000000106', '{"sub":"00000000-0000-0000-0000-000000000106","email":"owner@demo.test"}', 'email', 'owner@demo.test', now(), now(), now())
+  ('20000000-0000-0000-0000-000000000101', '00000000-0000-0000-0000-000000000101', '{"sub":"00000000-0000-0000-0000-000000000101","email":"requester1@demo.test"}', 'email', 'requester1@demo.test', now(), now(), now()),
+  ('20000000-0000-0000-0000-000000000102', '00000000-0000-0000-0000-000000000102', '{"sub":"00000000-0000-0000-0000-000000000102","email":"reviewer1@demo.test"}', 'email', 'reviewer1@demo.test', now(), now(), now()),
+  ('20000000-0000-0000-0000-000000000103', '00000000-0000-0000-0000-000000000103', '{"sub":"00000000-0000-0000-0000-000000000103","email":"legalmanager1@demo.test"}', 'email', 'legalmanager1@demo.test', now(), now(), now()),
+  ('20000000-0000-0000-0000-000000000104', '00000000-0000-0000-0000-000000000104', '{"sub":"00000000-0000-0000-0000-000000000104","email":"departmentapproverla@demo.test"}', 'email', 'departmentapproverla@demo.test', now(), now(), now()),
+  ('20000000-0000-0000-0000-000000000105', '00000000-0000-0000-0000-000000000105', '{"sub":"00000000-0000-0000-0000-000000000105","email":"requester2@demo.test"}', 'email', 'requester2@demo.test', now(), now(), now()),
+  ('20000000-0000-0000-0000-000000000106', '00000000-0000-0000-0000-000000000106', '{"sub":"00000000-0000-0000-0000-000000000106","email":"requester3@demo.test"}', 'email', 'requester3@demo.test', now(), now(), now()),
+  ('20000000-0000-0000-0000-000000000107', '00000000-0000-0000-0000-000000000107', '{"sub":"00000000-0000-0000-0000-000000000107","email":"reviewer2@demo.test"}', 'email', 'reviewer2@demo.test', now(), now(), now())
 on conflict (provider, provider_id) do update set
   identity_data = excluded.identity_data,
   updated_at = now();
 
 insert into public.profiles (id, username, full_name, email, prefix, role_id, department_id, status) values
-  ('00000000-0000-0000-0000-000000000101', 'requester', 'Demo Requester', 'requester@demo.test', 'None', 'requester', 'hr', 'Active'),
-  ('00000000-0000-0000-0000-000000000102', 'reviewer', 'Omar Hassan', 'reviewer@demo.test', 'Mr.', 'legal_reviewer', 'legal_affairs', 'Active'),
-  ('00000000-0000-0000-0000-000000000103', 'manager', 'Fatima Salem', 'manager@demo.test', 'Ms.', 'legal_manager', 'legal_affairs', 'Active'),
-  ('00000000-0000-0000-0000-000000000104', 'approver', 'Mariam Ahmed', 'approver@demo.test', 'Ms.', 'department_approver', 'hr', 'Active'),
-  ('00000000-0000-0000-0000-000000000105', 'admin', 'Admin User', 'admin@demo.test', 'None', 'admin_user', 'legal_affairs', 'Active'),
-  ('00000000-0000-0000-0000-000000000106', 'owner', 'Platform Owner', 'owner@demo.test', 'None', 'owner', 'legal_affairs', 'Active')
+  ('00000000-0000-0000-0000-000000000101', 'requester1', 'Requester 1', 'requester1@demo.test', 'None', 'requester', 'legal_affairs', 'Active'),
+  ('00000000-0000-0000-0000-000000000102', 'reviewer1', 'Reviewer 1', 'reviewer1@demo.test', 'None', 'legal_reviewer', 'legal_affairs', 'Active'),
+  ('00000000-0000-0000-0000-000000000103', 'legalmanager1', 'Legal Manager 1', 'legalmanager1@demo.test', 'None', 'legal_manager', 'legal_affairs', 'Active'),
+  ('00000000-0000-0000-0000-000000000104', 'departmentapproverla', 'Department Approver LA', 'departmentapproverla@demo.test', 'None', 'department_approver', 'legal_affairs', 'Active'),
+  ('00000000-0000-0000-0000-000000000105', 'requester2', 'Requester 2', 'requester2@demo.test', 'None', 'requester', 'legal_affairs', 'Active'),
+  ('00000000-0000-0000-0000-000000000106', 'requester3', 'Requester 3', 'requester3@demo.test', 'None', 'requester', 'legal_affairs', 'Active'),
+  ('00000000-0000-0000-0000-000000000107', 'reviewer2', 'Reviewer 2', 'reviewer2@demo.test', 'None', 'legal_reviewer', 'legal_affairs', 'Active')
 on conflict (id) do update set
   username = excluded.username,
   full_name = excluded.full_name,
@@ -164,29 +170,31 @@ insert into public.legal_requests (
   assigned_reviewer_id, priority, risk_level, status, deadline, submitted_at,
   ai_summary, manager_decision, department_decision
 ) values
+  -- Requester1: AI analysis is complete and assigned to Reviewer1; no human review has occurred yet.
   (
     'LA-2026-001',
     'Review sample vendor agreement',
-    'Procurement needs Legal Affairs to review a service agreement before signature.',
+    'Requester1 needs Legal Affairs to review a service agreement before signature.',
     '00000000-0000-0000-0000-000000000101',
-    'procurement',
+    'legal_affairs',
     'LEG-B',
     '00000000-0000-0000-0000-000000000102',
     'High',
     'Medium',
-    'Under Review',
+    'AI Review Complete',
     '2026-07-05',
     '2026-06-30 09:15:00+04',
-    'AI draft: This appears to be a vendor service agreement. Key review areas include payment terms, termination, liability, confidentiality, and signature authority.',
+    'AI draft: This appears to be a vendor service agreement. Key review areas include payment terms, termination, liability, confidentiality, and signature authority. It is awaiting Reviewer1’s human review.',
     'Pending Legal Manager Review',
     'Pending Department Review'
   ),
+  -- Requester2: Legal Reviewer 1 has completed a human review and requested more information.
   (
     'LA-2026-002',
     'HR legal opinion on employment policy',
-    'HR is requesting legal clarification about an internal employment policy update.',
-    '00000000-0000-0000-0000-000000000101',
-    'hr',
+    'Requester2 is requesting legal clarification about an internal employment policy update.',
+    '00000000-0000-0000-0000-000000000105',
+    'legal_affairs',
     'LEG-A',
     '00000000-0000-0000-0000-000000000102',
     'Medium',
@@ -198,22 +206,23 @@ insert into public.legal_requests (
     'Pending Legal Manager Review',
     'Pending Department Review'
   ),
+  -- Requester3: Legal Reviewer 2 reviewed the request; the manager and department approver approved it.
   (
     'LA-2026-003',
     'Research data sharing agreement',
-    'Research Office requires review of a data sharing agreement with an external university partner.',
-    '00000000-0000-0000-0000-000000000101',
-    'research_office',
+    'Requester3 requires review of a data sharing agreement with an external university partner.',
+    '00000000-0000-0000-0000-000000000106',
+    'legal_affairs',
     'LEG-C',
-    '00000000-0000-0000-0000-000000000102',
+    '00000000-0000-0000-0000-000000000107',
     'Urgent',
     'High',
-    'Assigned to Legal Reviewer',
+    'Sent for Internal Approval',
     '2026-07-02',
     '2026-06-30 12:10:00+04',
     'AI draft: This document may involve personal or sensitive research data. Review data usage, confidentiality, publication rights, IP, and liability clauses.',
-    'Pending Legal Manager Review',
-    'Pending Department Review'
+    'Response Approved by Legal Manager',
+    'Department Approved'
   )
 on conflict (id) do update set
   title = excluded.title,
@@ -313,17 +322,29 @@ insert into public.document_ai_suggestions (document_id, page, suggestion_type, 
 on conflict do nothing;
 
 insert into public.reviewer_comments (request_id, reviewer_id, comment_text, created_at) values
-  ('LA-2026-001', '00000000-0000-0000-0000-000000000102', 'Please confirm whether Finance has reviewed the payment schedule.', '2026-06-30 10:10:00+04'),
-  ('LA-2026-001', '00000000-0000-0000-0000-000000000102', 'Liability clause needs additional review before approval.', '2026-06-30 10:30:00+04'),
-  ('LA-2026-002', '00000000-0000-0000-0000-000000000102', 'Requester should provide the current approved policy for comparison.', '2026-06-30 11:35:00+04')
+  ('LA-2026-002', '00000000-0000-0000-0000-000000000102', 'Requester should provide the current approved policy for comparison.', '2026-06-30 11:35:00+04'),
+  ('LA-2026-003', '00000000-0000-0000-0000-000000000107', 'The data-sharing obligations, confidentiality wording, and publication rights have been reviewed. The agreement can proceed for management approval.', '2026-06-30 13:05:00+04')
 on conflict do nothing;
 
 insert into public.audit_logs (request_id, action, actor_id, actor_name, created_at) values
-  ('LA-2026-001', 'Request created', '00000000-0000-0000-0000-000000000101', 'Demo Requester', '2026-06-30 09:15:00+04'),
-  ('LA-2026-001', 'Document uploaded', '00000000-0000-0000-0000-000000000101', 'Demo Requester', '2026-06-30 09:17:00+04'),
-  ('LA-2026-001', 'Assigned to Legal Reviewer', '00000000-0000-0000-0000-000000000103', 'Fatima Salem', '2026-06-30 10:05:00+04'),
-  ('LA-2026-002', 'Additional information requested', '00000000-0000-0000-0000-000000000102', 'Omar Hassan', '2026-06-30 11:20:00+04'),
-  ('LA-2026-003', 'AI draft summary generated', null, 'AI Assistant', '2026-06-30 12:10:00+04')
+  ('LA-2026-001', 'Request created', '00000000-0000-0000-0000-000000000101', 'Requester 1', '2026-06-30 09:15:00+04'),
+  ('LA-2026-001', 'Document uploaded', '00000000-0000-0000-0000-000000000101', 'Requester 1', '2026-06-30 09:17:00+04'),
+  ('LA-2026-001', 'AI legal review generated', null, 'AI Assistant', '2026-06-30 09:19:00+04'),
+  ('LA-2026-002', 'Request created', '00000000-0000-0000-0000-000000000105', 'Requester 2', '2026-06-30 11:20:00+04'),
+  ('LA-2026-002', 'Reviewer requested additional information', '00000000-0000-0000-0000-000000000102', 'Reviewer 1', '2026-06-30 11:35:00+04'),
+  ('LA-2026-003', 'Request created', '00000000-0000-0000-0000-000000000106', 'Requester 3', '2026-06-30 12:10:00+04'),
+  ('LA-2026-003', 'AI legal review generated', null, 'AI Assistant', '2026-06-30 12:12:00+04'),
+  ('LA-2026-003', 'Reviewer completed legal review', '00000000-0000-0000-0000-000000000107', 'Reviewer 2', '2026-06-30 13:05:00+04'),
+  ('LA-2026-003', 'Response approved by Legal Manager', '00000000-0000-0000-0000-000000000103', 'Legal Manager 1', '2026-06-30 13:25:00+04'),
+  ('LA-2026-003', 'Department approval recorded', '00000000-0000-0000-0000-000000000104', 'Department Approver LA', '2026-06-30 13:40:00+04')
+on conflict do nothing;
+
+insert into public.manager_actions (request_id, manager_id, action, note, created_at) values
+  ('LA-2026-003', '00000000-0000-0000-0000-000000000103', 'Response Approved by Legal Manager', 'Legal Manager 1 approved the reviewer recommendation.', '2026-06-30 13:25:00+04')
+on conflict do nothing;
+
+insert into public.department_approvals (request_id, approver_id, decision, comment_text, created_at, updated_at) values
+  ('LA-2026-003', '00000000-0000-0000-0000-000000000104', 'Department Approved', 'Department Approver LA approved the completed review.', '2026-06-30 13:40:00+04', '2026-06-30 13:40:00+04')
 on conflict do nothing;
 
 -- Full sample request for backend testing:

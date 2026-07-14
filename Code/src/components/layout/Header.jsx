@@ -260,7 +260,7 @@ function Header({
                       required
                     />
                     <p className="text-xs text-slate-600">
-                      At least 12 characters with uppercase, lowercase, and a number.
+                      At least 6 characters. Letters, numbers, spaces, and special characters are accepted.
                     </p>
                     {passwordError && (
                       <p className="text-sm font-semibold text-red-700">{passwordError}</p>
