@@ -42,7 +42,7 @@ function RequestForm({ onCreateRequest, currentUser }) {
 
     if (!isPdf) {
       setSelectedPdfFile(null);
-      setFileError("Please attach a PDF file only for Version 1.");
+      setFileError("Please attach a PDF file only.");
       event.target.value = "";
       return;
     }
@@ -242,7 +242,7 @@ function RequestForm({ onCreateRequest, currentUser }) {
             onChange={handlePdfChange}
           />
           <p className="text-xs text-slate-500 mt-1">
-            Version 1 accepts PDF files only. The file is analyzed through the
+            PDF files only. The file is analyzed through the
             Supabase legal-review Edge Function when configured.
           </p>
           {selectedPdfFile && (

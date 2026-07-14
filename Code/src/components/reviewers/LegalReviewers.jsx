@@ -128,7 +128,7 @@ function LegalReviewers({
                   )}
                 </div>
                 <p className="text-sm text-slate-500 mt-1">
-                  Requests assigned to this reviewer in the frontend demo.
+                  Requests currently assigned to this reviewer.
                 </p>
               </div>
 

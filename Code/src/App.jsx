@@ -337,7 +337,8 @@ function App() {
     setAuditLogs(backendAuditLogs);
     setEngineState(backendEngineState);
     setEngineEvents(backendEngineEvents);
-    setBackendMessage("Loaded data from Supabase PostgreSQL.");
+    // A successful background load does not need a persistent banner in the UI.
+    setBackendMessage("");
   }
 
   const hasActiveAiReview = requests.some((request) =>

@@ -67,9 +67,7 @@ function LoginPage({
           </p>
           <h1 className="text-3xl font-bold text-slate-900 mt-2">Login</h1>
           <p className="text-slate-500 mt-2">
-            {showDemoAccounts
-              ? "Login with Supabase Auth. Demo users are listed below."
-              : "Login with your Legal Affairs account."}
+            Login with your Legal Affairs account.
           </p>
         </div>
 
@@ -142,17 +140,6 @@ function LoginPage({
           Forgot password?
         </button>
 
-        {showDemoAccounts && (
-          <div className="mt-6 rounded-xl bg-slate-50 p-3 text-xs text-slate-600">
-            <p className="font-bold text-slate-900">Easy local demo accounts</p>
-            <p>requester / password123</p>
-            <p>reviewer / password123</p>
-            <p>manager / password123</p>
-            <p>approver / password123</p>
-            <p>admin / password123</p>
-            <p>owner / password123</p>
-          </div>
-        )}
 
         <p className="text-center text-sm text-slate-600 mt-6">
           New user?{" "}

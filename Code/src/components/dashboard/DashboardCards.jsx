@@ -45,7 +45,7 @@ function DashboardCards({ requests }) {
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-slate-900">Dashboard</h2>
         <p className="text-slate-500 mt-1">
-          Overview of Legal Affairs workload for Version 1.
+          Overview of Legal Affairs workload.
         </p>
       </div>
 
@@ -70,14 +70,6 @@ function DashboardCards({ requests }) {
         ))}
       </div>
 
-      <div className="mt-6 bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
-        <h3 className="font-bold text-slate-900 mb-3">Version 1 Focus</h3>
-        <p className="text-slate-600">
-          This dashboard summarizes the request records loaded from Supabase.
-          A future reporting API can add overdue counts, turnaround time, and
-          department-based analytics.
-        </p>
-      </div>
     </section>
   );
 }
