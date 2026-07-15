@@ -222,6 +222,7 @@ function isStaleProcessingJob(request) {
 }
 
 function EngineTerminalCard({ requestsWithJobs, engineEvents }) {
+  const [clearedAt, setClearedAt] = useState(null);
   const currentlyProcessing = requestsWithJobs.find(
     (request) => request.aiReviewJob?.status === "processing",
   );
@@ -291,6 +292,7 @@ function EngineTerminalCard({ requestsWithJobs, engineEvents }) {
   }));
 
   const terminalLines = [...jobTerminalLines, ...engineTerminalLines]
+    .filter((line) => !clearedAt || new Date(line.at || 0) > clearedAt)
     .sort((a, b) => new Date(a.at || 0) - new Date(b.at || 0))
     .slice(-250);
 
@@ -309,9 +311,12 @@ function EngineTerminalCard({ requestsWithJobs, engineEvents }) {
             appear at the bottom.
           </p>
         </div>
-        <span className="rounded-full bg-emerald-400/10 px-3 py-1 text-xs font-bold text-emerald-300">
-          Live from ai_review_jobs
-        </span>
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={() => setClearedAt(new Date())} className="rounded-lg border border-slate-600 px-3 py-1 text-xs font-bold text-slate-200 hover:bg-slate-800">Clear Terminal</button>
+          <span className="rounded-full bg-emerald-400/10 px-3 py-1 text-xs font-bold text-emerald-300">
+            Live from ai_review_jobs
+          </span>
+        </div>
       </div>
 
       <div className="mb-4 grid grid-cols-1 gap-3 lg:grid-cols-2">

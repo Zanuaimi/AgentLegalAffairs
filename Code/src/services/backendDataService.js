@@ -90,6 +90,7 @@ function mapRequest(row, relatedData) {
       aiSuggestions: mapSuggestionRows(
         relatedData.suggestionsByDocument[document.id] || [],
       ),
+      isCurrent: document.is_current !== false,
     }),
   );
 
@@ -126,6 +127,9 @@ function mapRequest(row, relatedData) {
     documents,
     aiSummary: row.ai_summary,
     aiReviewResult: row.ai_review_result,
+    previousDocumentId: row.previous_document_id || null,
+    previousAiSummary: row.previous_ai_summary || null,
+    previousAiReviewResult: row.previous_ai_review_result || null,
     aiReviewJob: mapAiReviewJob(relatedData.aiJobsByRequest[row.id]?.[0]),
     managerDecision: row.manager_decision,
     departmentDecision: row.department_decision,
@@ -209,7 +213,12 @@ export async function fetchBackendRequests() {
     aiJobsResult,
     activeQueueResult,
   ] = await Promise.all([
-    client.from("request_documents").select("*").in("request_id", requestIds),
+    client
+      .from("request_documents")
+      .select("*")
+      .in("request_id", requestIds)
+      .order("is_current", { ascending: false })
+      .order("created_at", { ascending: false }),
     client
       .from("request_checklist_items")
       .select("*, legal_review_criteria(criteria, sort_order)")
@@ -459,6 +468,35 @@ export async function createBackendRequest(newRequest, currentUser) {
 }
 
 
+export async function resubmitRequestPdf({ requestId, file }) {
+  const client = requireSupabase();
+  const storagePath = `${requestId}/revisions/${Date.now()}-${file.name}`;
+  const { error: uploadError } = await client.storage
+    .from("legal-documents")
+    .upload(storagePath, file, { contentType: file.type || "application/pdf" });
+  if (uploadError) throw new Error(`Could not upload the replacement PDF: ${uploadError.message}`);
+
+  const { data: document, error: documentError } = await client
+    .from("request_documents")
+    .insert({
+      request_id: requestId,
+      file_name: file.name,
+      mime_type: file.type || "application/pdf",
+      storage_path: storagePath,
+      is_current: true,
+    })
+    .select("id")
+    .single();
+  if (documentError) throw new Error(`Could not save replacement PDF details: ${documentError.message}`);
+
+  const { error: resubmitError } = await client.rpc("resubmit_request_pdf", {
+    p_request_id: requestId,
+    p_new_document_id: document.id,
+  });
+  if (resubmitError) throw new Error(resubmitError.message);
+  return document.id;
+}
+
 export async function assignReviewerAsManager({ requestId, reviewerId }) {
   const client = requireSupabase();
   const { data, error } = await client.rpc("assign_reviewer_as_manager", {
@@ -573,6 +611,20 @@ export async function setLegalAffairEngineRunning(isRunning, currentUser) {
 export async function rebuildAiReviewQueue() {
   const client = requireSupabase();
   const { data, error } = await client.rpc("rebuild_ai_review_queue");
+  if (error) throw error;
+  return data || 0;
+}
+
+export async function ownerResetAiResults() {
+  const client = requireSupabase();
+  const { data, error } = await client.rpc("owner_reset_ai_results");
+  if (error) throw error;
+  return data || 0;
+}
+
+export async function ownerDeleteClosedRequests() {
+  const client = requireSupabase();
+  const { data, error } = await client.rpc("owner_delete_closed_requests");
   if (error) throw error;
   return data || 0;
 }

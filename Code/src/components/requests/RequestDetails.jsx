@@ -7,6 +7,7 @@ import ReviewerRoutingPanel from "./ReviewerRoutingPanel";
 import DepartmentApprovalPanel from "./DepartmentApprovalPanel";
 import ManagerActions from "./ManagerActions";
 import PdfReviewModal from "./PdfReviewModal";
+import RequestPdfResubmissionPanel from "./RequestPdfResubmissionPanel";
 
 function ReviewStatusCard({
   request,
@@ -112,6 +113,7 @@ function RequestDetails({
   onAssignReviewer,
   onRouteRequest,
   onDeleteRequest,
+  onResubmitPdf,
 }) {
   // selectedDocument stores the PDF the user clicked, so we can show it in the popup.
   const [selectedDocument, setSelectedDocument] = useState(null);
@@ -247,6 +249,9 @@ function RequestDetails({
                           onClick={() => setSelectedDocument(document)}
                         >
                           📄 {documentName}
+                          {document.isCurrent && request.previousDocumentId && (
+                            <span className="ml-2 rounded-full bg-green-100 px-2 py-1 text-xs text-green-700">New PDF</span>
+                          )}
                         </button>
                       </li>
                     );
@@ -257,6 +262,16 @@ function RequestDetails({
           </div>
 
 
+          {isRequester && request.status === "Waiting for More Information" && (
+            <RequestPdfResubmissionPanel onResubmit={onResubmitPdf} />
+          )}
+          {request.previousAiReviewResult && (
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+              <h3 className="font-bold text-slate-900">Previous PDF AI Review</h3>
+              <p className="mt-1 text-sm text-slate-600">The previous PDF result is kept for comparison while the new PDF is reviewed.</p>
+              <p className="mt-3 text-sm text-slate-700">{request.previousAiSummary || request.previousAiReviewResult.draft_review_note || "Previous AI review result archived."}</p>
+            </div>
+          )}
           <AiLegalReviewPanel review={request.aiReviewResult} />
           <ReviewStatusCard
             request={{ ...request, managerDecision, departmentDecision }}

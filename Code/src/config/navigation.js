@@ -17,6 +17,7 @@ export const navigationByRole = {
     { id: "reviewers", label: "Legal Reviewers" },
     { id: "details", label: "Request Details" },
     { id: "admin", label: "Admin" },
+    { id: "owner-controls", label: "Owner" },
     { id: "legal-engine", label: "Legal Affair Engine" },
     { id: "audit", label: "Audit Log" },
   ],

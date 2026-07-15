@@ -11,6 +11,7 @@ import RequestForm from "./components/requests/RequestForm";
 import RequestDetails from "./components/requests/RequestDetails";
 import AdminUsers from "./components/admin/AdminUsers";
 import LegalAffairEngine from "./components/admin/LegalAffairEngine";
+import OwnerControls from "./components/admin/OwnerControls";
 import AuditLog from "./components/audit/AuditLog";
 import LegalReviewers from "./components/reviewers/LegalReviewers";
 import { navigationByRole } from "./config/navigation";
@@ -35,6 +36,9 @@ import {
   routeRequestAsReviewer,
   rebuildAiReviewQueue,
   deleteRequestAsOwner,
+  ownerResetAiResults,
+  ownerDeleteClosedRequests,
+  resubmitRequestPdf,
   recordCurrentUserActivity,
   fetchBackendAuditLogs,
   fetchBackendRequests,
@@ -660,6 +664,24 @@ function App() {
     }
   }
 
+  async function handleResubmitPdf(requestId, file) {
+    await resubmitRequestPdf({ requestId, file });
+    await refreshRequestsAndEngineState();
+    triggerAiReviewQueue().catch(() => {});
+  }
+
+  async function handleOwnerResetAiResults() {
+    const count = await ownerResetAiResults();
+    await refreshRequestsAndEngineState();
+    return count;
+  }
+
+  async function handleOwnerDeleteClosedRequests() {
+    const count = await ownerDeleteClosedRequests();
+    await refreshRequestsAndEngineState();
+    return count;
+  }
+
   async function handleDeleteRequest(requestId) {
     await deleteRequestAsOwner(requestId);
     setRequests((currentRequests) => currentRequests.filter((request) => request.id !== requestId));
@@ -1074,6 +1096,7 @@ function App() {
             handleReviewerRoute(selectedRequest.id, destination, commentText)
           }
           onDeleteRequest={currentRole === "Owner" ? () => handleDeleteRequest(selectedRequest.id) : null}
+          onResubmitPdf={(file) => handleResubmitPdf(selectedRequest.id, file)}
         />
       );
     }
@@ -1085,6 +1108,15 @@ function App() {
           requests={requests}
           activeUserIds={activeUserIds}
           onSelectRequest={handleSelectRequest}
+        />
+      );
+    }
+
+    if (currentPage === "owner-controls") {
+      return (
+        <OwnerControls
+          onResetAiResults={handleOwnerResetAiResults}
+          onDeleteClosedRequests={handleOwnerDeleteClosedRequests}
         />
       );
     }
