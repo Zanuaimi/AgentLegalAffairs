@@ -11,6 +11,10 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 // - If the function/server restarts, queued or stale processing jobs remain in the DB.
 // - AI output is draft support only. Legal Affairs humans make final decisions.
 
+declare const EdgeRuntime: {
+  waitUntil: (promise: Promise<unknown>) => void;
+};
+
 declare const Deno: {
   serve: (
     handler: (request: Request) => Response | Promise<Response>,
@@ -589,6 +593,62 @@ function describeGeminiBlockedResponse(geminiJson: any) {
   return "Gemini returned no review text. The model may have been unable to respond because of context limits, safety filtering, or temporary service issues.";
 }
 
+function scheduleNextQueuedReview({
+  supabase,
+  supabaseUrl,
+  serviceRoleKey,
+  staleAfterMinutes,
+}: any) {
+  // Each invocation processes one PDF. Scheduling the next job in the background
+  // avoids a long browser request while allowing the queue to drain automatically.
+  const continuation = (async () => {
+    const { data: nextJob, error } = await supabase
+      .from("ai_review_jobs")
+      .select("id")
+      .eq("status", "queued")
+      .limit(1)
+      .maybeSingle();
+
+    if (error || !nextJob) return;
+
+    await logEngineEvent(
+      supabase,
+      "next_job_auto_scheduled",
+      "status",
+      "AI review completed; scheduling the next queued request automatically.",
+    );
+
+    const response = await fetch(`${supabaseUrl}/functions/v1/legal-review`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: serviceRoleKey,
+        Authorization: `Bearer ${serviceRoleKey}`,
+      },
+      body: JSON.stringify({ action: "process-next", staleAfterMinutes }),
+    });
+
+    if (!response.ok) {
+      const detail = await response.text();
+      await logEngineEvent(
+        supabase,
+        "next_job_auto_schedule_failed",
+        "error",
+        `Could not start the next queued AI review: ${detail || response.statusText}`,
+      );
+    }
+  })().catch(async (error) => {
+    await logEngineEvent(
+      supabase,
+      "next_job_auto_schedule_failed",
+      "error",
+      `Could not schedule the next queued AI review: ${describeUnknownError(error)}`,
+    ).catch(() => {});
+  });
+
+  EdgeRuntime.waitUntil(continuation);
+}
+
 async function runGeminiReview(job: any, fileBase64: string) {
   const forceMock = Deno.env.get("USE_MOCK_AI_REVIEW") === "true";
   const geminiApiKey = Deno.env.get("GEMINI_API_KEY");
@@ -797,6 +857,12 @@ Deno.serve(async (request: Request) => {
         `Completed AI review for request ${job.request_id}.`,
         { requestId: job.request_id, jobId: job.job_id, metadata: { aiMode: result.ai_mode || "gemini" } },
       );
+      scheduleNextQueuedReview({
+        supabase,
+        supabaseUrl,
+        serviceRoleKey,
+        staleAfterMinutes,
+      });
 
       return respond({
         processed: true,
