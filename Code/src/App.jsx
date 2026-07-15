@@ -966,7 +966,9 @@ function App() {
     if (currentPage === "dashboard") {
       return (
         <DashboardCards
-          requests={visibleRequests}
+          requests={
+            currentRole === "Legal Reviewer" ? reviewerReviewRequests : visibleRequests
+          }
           onSelectFilter={(filter) => {
             setDashboardRequestFilter(filter);
             setCurrentPage("requests");
@@ -979,18 +981,22 @@ function App() {
       return (
         <RequestTable
           requests={
-            dashboardRequestFilter
-              ? dashboardFilteredRequests
-              : currentRole === "Requester"
-                ? requesterCurrentRequests
-                : visibleRequests
+            currentRole === "Legal Reviewer"
+              ? reviewerReviewRequests
+              : dashboardRequestFilter
+                ? dashboardFilteredRequests
+                : currentRole === "Requester"
+                  ? requesterCurrentRequests
+                  : visibleRequests
           }
           onSelectRequest={handleSelectRequest}
           canOpenDetails={accessiblePageIds.includes("details")}
           title={
             currentRole === "Requester"
               ? "My Current Requests"
-              : dashboardRequestFilter === "all"
+              : currentRole === "Legal Reviewer"
+                ? "Requests Assigned to You"
+                : dashboardRequestFilter === "all"
                 ? "Global Requests"
                 : dashboardRequestFilter === "pending"
                   ? "Pending Requests"
@@ -1005,7 +1011,9 @@ function App() {
           description={
             currentRole === "Requester"
               ? "View your active submitted requests. Closed requests are kept in My Closed Requests."
-              : currentRole === "Department Approver"
+              : currentRole === "Legal Reviewer"
+                ? "Requests assigned to you for Legal Reviewer action. Closed requests are excluded."
+                : currentRole === "Department Approver"
                 ? `Review legal requests for your current department: ${currentDepartment}.`
                 : "Track request category, department, priority, reviewer, deadline, and status."
           }
