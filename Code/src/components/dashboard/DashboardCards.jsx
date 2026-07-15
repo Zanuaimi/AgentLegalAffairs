@@ -1,13 +1,20 @@
 import InfoButton from "../common/InfoButton";
 
-function DashboardCards({ requests }) {
+function DashboardCards({ requests, onSelectFilter }) {
   // These calculated values make the dashboard update when the request list changes.
   const totalRequests = requests.length;
   const pendingRequests = requests.filter(
-    (request) => request.status !== "Closed" && request.status !== "Archived",
+    (request) =>
+      !["Closed", "Archived", "Approved"].includes(request.status),
   ).length;
   const underReview = requests.filter(
-    (request) => request.status === "Under Review",
+    (request) =>
+      ![
+        "Closed",
+        "Archived",
+        "Approved",
+        "Waiting for More Information",
+      ].includes(request.status),
   ).length;
   const highRisk = requests.filter(
     (request) => request.riskLevel === "High",
@@ -18,25 +25,29 @@ function DashboardCards({ requests }) {
       label: "Total Requests",
       value: totalRequests,
       color: "bg-blue-600",
-      info: "All legal requests loaded from the backend for the current session."
+      info: "All legal requests loaded from the backend for the current session.",
+      filter: "all",
     },
     {
       label: "Pending Items",
       value: pendingRequests,
       color: "bg-amber-500",
-      info: "Requests that are not Closed or Archived yet.",
+      info: "Requests that are not Closed, Archived, or Approved yet.",
+      filter: "pending",
     },
     {
       label: "Under Review",
       value: underReview,
       color: "bg-purple-600",
-      info: "Requests whose current status is Under Review.",
+      info: "Active AI, reviewer, Legal Manager, and Department Approver review work.",
+      filter: "under-review",
     },
     {
       label: "High Risk",
       value: highRisk,
       color: "bg-rose-600",
-      info: "Requests marked with High risk level by the request or AI review workflow."
+      info: "Requests marked with High risk level by the request or AI review workflow.",
+      filter: "high-risk",
     },
   ];
 
@@ -51,9 +62,11 @@ function DashboardCards({ requests }) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
         {cards.map((card) => (
-          <div
+          <button
             key={card.label}
-            className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5"
+            type="button"
+            onClick={() => onSelectFilter(card.filter)}
+            className="w-full bg-white rounded-2xl shadow-sm border border-slate-200 p-5 text-left transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md"
           >
             <div className={`w-12 h-12 ${card.color} rounded-xl mb-4`} />
             <div className="flex items-center justify-between gap-3">
@@ -66,7 +79,7 @@ function DashboardCards({ requests }) {
             <p className="text-3xl font-bold text-slate-900 mt-2">
               {card.value}
             </p>
-          </div>
+          </button>
         ))}
       </div>
 

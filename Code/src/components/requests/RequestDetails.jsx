@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import AiLegalReviewPanel from "../review/AiLegalReviewPanel";
-import AiSummaryBox from "../review/AiSummaryBox";
+
 import ContractChecklist from "../review/ContractChecklist";
 import ReviewerComments from "../review/ReviewerComments";
 import ReviewerRoutingPanel from "./ReviewerRoutingPanel";
@@ -35,16 +35,20 @@ function ReviewStatusCard({
           <p className="text-slate-500">Current Request Status</p>
           <p className="mt-1 font-bold text-slate-900">{request.status}</p>
         </div>
-        <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
-          <p className="text-slate-500">AI Review</p>
-          <p className="mt-1 font-bold text-slate-900">
-            {request.aiReviewJob?.status === "processing"
-              ? `Processing${request.aiReviewJob.currentStep ? ` — ${request.aiReviewJob.currentStep}` : ""}`
-              : request.aiReviewJob?.status === "queued"
-                ? `Queued${request.aiReviewJob.priorityQueuePosition ? ` — position #${request.aiReviewJob.priorityQueuePosition}` : ""}`
-                : request.aiReviewJob?.status || "Not queued"}
-          </p>
-        </div>
+        {request.aiReviewJob &&
+          request.aiReviewJob.status !== "completed" &&
+          request.status !== "AI Review Complete" && (
+            <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
+              <p className="text-slate-500">AI Review</p>
+              <p className="mt-1 font-bold text-slate-900">
+                {request.aiReviewJob.status === "processing"
+                  ? `Processing${request.aiReviewJob.currentStep ? ` — ${request.aiReviewJob.currentStep}` : ""}`
+                  : request.aiReviewJob.status === "queued"
+                    ? `Queued${request.aiReviewJob.priorityQueuePosition ? ` — position #${request.aiReviewJob.priorityQueuePosition}` : ""}`
+                    : request.aiReviewJob.status}
+              </p>
+            </div>
+          )}
         <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
           <p className="text-slate-500">Legal Reviewer</p>
           <p className="mt-1 font-bold text-slate-900">
@@ -252,7 +256,7 @@ function RequestDetails({
             </div>
           </div>
 
-          <AiSummaryBox summary={request.aiSummary} />
+
           <AiLegalReviewPanel review={request.aiReviewResult} />
           <ReviewStatusCard
             request={{ ...request, managerDecision, departmentDecision }}

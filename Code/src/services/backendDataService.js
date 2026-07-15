@@ -348,10 +348,18 @@ export async function createBackendRequest(newRequest, currentUser) {
       .from("legal-documents")
       .upload(storagePath, newRequest.uploadFile, {
         contentType: newRequest.uploadFile.type || "application/pdf",
-        upsert: true,
       });
 
-    if (uploadError) throw uploadError;
+    if (uploadError) {
+      // A new filename is generated for every upload, so upsert is unnecessary.
+      // Removing it avoids Storage requiring an UPDATE RLS policy for a new PDF.
+      await client.rpc("delete_own_incomplete_request", {
+        p_request_id: newRequest.id,
+      }).catch(() => {});
+      throw new Error(
+        `PDF upload to private Supabase Storage failed: ${uploadError.message || "Storage rejected the upload"}. The incomplete request was removed; please try again.`,
+      );
+    }
 
   }
 
@@ -367,7 +375,11 @@ export async function createBackendRequest(newRequest, currentUser) {
     .select("id")
     .single();
 
-  if (documentError) throw documentError;
+  if (documentError) {
+    throw new Error(
+      `PDF metadata could not be saved after upload: ${documentError.message || "Supabase rejected the document record"}.`,
+    );
+  }
 
   const { data: criteriaRows, error: criteriaError } = await client
     .from("legal_review_criteria")

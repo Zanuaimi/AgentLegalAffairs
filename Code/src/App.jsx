@@ -131,6 +131,7 @@ function App() {
   // selectedRequestId controls which request appears on the Request Details page.
   // It starts as null so users must open a request from a table before seeing details.
   const [selectedRequestId, setSelectedRequestId] = useState(null);
+  const [dashboardRequestFilter, setDashboardRequestFilter] = useState(null);
 
   // currentRole/currentDepartment come from the logged-in user's database profile.
   const [currentRole, setCurrentRole] = useState("Requester");
@@ -167,6 +168,22 @@ function App() {
     selectedRequestId,
   });
   const hasSelectedVisibleRequest = Boolean(selectedRequest);
+  const dashboardFilteredRequests = visibleRequests.filter((request) => {
+    if (!dashboardRequestFilter || dashboardRequestFilter === "all") return true;
+    if (dashboardRequestFilter === "pending") {
+      return !["Closed", "Archived", "Approved"].includes(request.status);
+    }
+    if (dashboardRequestFilter === "under-review") {
+      return ![
+        "Closed",
+        "Archived",
+        "Approved",
+        "Waiting for More Information",
+      ].includes(request.status);
+    }
+    if (dashboardRequestFilter === "high-risk") return request.riskLevel === "High";
+    return true;
+  });
   const requesterCurrentRequests =
     currentRole === "Requester"
       ? visibleRequests.filter((request) => request.status !== "Closed")
@@ -925,20 +942,40 @@ function App() {
 
   function renderCurrentPage() {
     if (currentPage === "dashboard") {
-      return <DashboardCards requests={requests} />;
+      return (
+        <DashboardCards
+          requests={visibleRequests}
+          onSelectFilter={(filter) => {
+            setDashboardRequestFilter(filter);
+            setCurrentPage("requests");
+          }}
+        />
+      );
     }
 
     if (currentPage === "requests") {
       return (
         <RequestTable
           requests={
-            currentRole === "Requester" ? requesterCurrentRequests : visibleRequests
+            dashboardRequestFilter
+              ? dashboardFilteredRequests
+              : currentRole === "Requester"
+                ? requesterCurrentRequests
+                : visibleRequests
           }
           onSelectRequest={handleSelectRequest}
           canOpenDetails={accessiblePageIds.includes("details")}
           title={
             currentRole === "Requester"
               ? "My Current Requests"
+              : dashboardRequestFilter === "all"
+                ? "Global Requests"
+                : dashboardRequestFilter === "pending"
+                  ? "Pending Requests"
+                  : dashboardRequestFilter === "under-review"
+                    ? "Requests Under Review"
+                    : dashboardRequestFilter === "high-risk"
+                      ? "High Risk Requests"
               : currentRole === "Department Approver"
                 ? `Department Legal Requests for ${currentDepartment}`
                 : "Legal Requests"
