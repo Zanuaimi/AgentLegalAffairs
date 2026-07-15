@@ -971,7 +971,11 @@ function App() {
           }
           onSelectFilter={(filter) => {
             setDashboardRequestFilter(filter);
-            setCurrentPage("requests");
+            setCurrentPage(
+              currentRole === "Legal Reviewer"
+                ? "reviewer-review-queue"
+                : "requests",
+            );
           }}
         />
       );
