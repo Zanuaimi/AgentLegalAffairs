@@ -1,5 +1,14 @@
 import { useState } from "react";
 
+function describeOwnerActionError(error) {
+  if (error instanceof Error && error.message) return error.message;
+  if (error && typeof error === "object") {
+    const message = error.message || error.details || error.hint || error.error;
+    if (message) return String(message);
+  }
+  return "Owner action failed. Check that the latest Supabase migrations were deployed.";
+}
+
 function OwnerControls({ onResetAiResults, onDeleteClosedRequests }) {
   const [message, setMessage] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -14,7 +23,7 @@ function OwnerControls({ onResetAiResults, onDeleteClosedRequests }) {
       const count = await pendingAction.action();
       setMessage(`${count} request${count === 1 ? " was" : "s were"} updated.`);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Owner action failed.");
+      setMessage(describeOwnerActionError(error));
     } finally {
       setPendingAction(null);
       setIsSaving(false);
