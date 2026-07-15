@@ -113,7 +113,7 @@ function RequestDetails({
   onAssignReviewer,
   onRouteRequest,
   onDeleteRequest,
-  onResubmitPdf,
+  onUpdateDocuments,
 }) {
   // selectedDocument stores the PDF the user clicked, so we can show it in the popup.
   const [selectedDocument, setSelectedDocument] = useState(null);
@@ -263,7 +263,10 @@ function RequestDetails({
 
 
           {isRequester && request.status === "Waiting for More Information" && (
-            <RequestPdfResubmissionPanel onResubmit={onResubmitPdf} />
+            <RequestPdfResubmissionPanel
+              documents={request.documents}
+              onUpdateDocuments={onUpdateDocuments}
+            />
           )}
           {request.previousAiReviewResult && (
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">

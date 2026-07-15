@@ -468,33 +468,42 @@ export async function createBackendRequest(newRequest, currentUser) {
 }
 
 
-export async function resubmitRequestPdf({ requestId, file }) {
+export async function updateRequesterDocuments({ requestId, files, removeDocumentIds }) {
   const client = requireSupabase();
-  const storagePath = `${requestId}/revisions/${Date.now()}-${file.name}`;
-  const { error: uploadError } = await client.storage
-    .from("legal-documents")
-    .upload(storagePath, file, { contentType: file.type || "application/pdf" });
-  if (uploadError) throw new Error(`Could not upload the replacement PDF: ${uploadError.message}`);
+  const uploadedDocumentIds = [];
 
-  const { data: document, error: documentError } = await client
-    .from("request_documents")
-    .insert({
-      request_id: requestId,
-      file_name: file.name,
-      mime_type: file.type || "application/pdf",
-      storage_path: storagePath,
-      is_current: true,
-    })
-    .select("id")
-    .single();
-  if (documentError) throw new Error(`Could not save replacement PDF details: ${documentError.message}`);
+  for (const file of files) {
+    const storagePath = `${requestId}/revisions/${Date.now()}-${file.name}`;
+    const { error: uploadError } = await client.storage
+      .from("legal-documents")
+      .upload(storagePath, file, { contentType: file.type || "application/pdf" });
+    if (uploadError) throw new Error(`Could not upload ${file.name}: ${uploadError.message}`);
 
-  const { error: resubmitError } = await client.rpc("resubmit_request_pdf", {
-    p_request_id: requestId,
-    p_new_document_id: document.id,
-  });
-  if (resubmitError) throw new Error(resubmitError.message);
-  return document.id;
+    const { data: document, error: documentError } = await client
+      .from("request_documents")
+      .insert({
+        request_id: requestId,
+        file_name: file.name,
+        mime_type: file.type || "application/pdf",
+        storage_path: storagePath,
+        is_current: true,
+      })
+      .select("id")
+      .single();
+    if (documentError) throw new Error(`Could not save ${file.name}: ${documentError.message}`);
+    uploadedDocumentIds.push(document.id);
+  }
+
+  const { error: updateError } = await client.rpc(
+    "finalize_requester_document_update",
+    {
+      p_request_id: requestId,
+      p_remove_document_ids: removeDocumentIds,
+      p_new_document_ids: uploadedDocumentIds,
+    },
+  );
+  if (updateError) throw new Error(updateError.message);
+  return uploadedDocumentIds;
 }
 
 export async function assignReviewerAsManager({ requestId, reviewerId }) {

@@ -38,7 +38,7 @@ import {
   deleteRequestAsOwner,
   ownerResetAiResults,
   ownerDeleteClosedRequests,
-  resubmitRequestPdf,
+  updateRequesterDocuments,
   recordCurrentUserActivity,
   fetchBackendAuditLogs,
   fetchBackendRequests,
@@ -664,8 +664,8 @@ function App() {
     }
   }
 
-  async function handleResubmitPdf(requestId, file) {
-    await resubmitRequestPdf({ requestId, file });
+  async function handleRequesterDocumentUpdate(requestId, update) {
+    await updateRequesterDocuments({ requestId, ...update });
     await refreshRequestsAndEngineState();
     triggerAiReviewQueue().catch(() => {});
   }
@@ -1096,7 +1096,9 @@ function App() {
             handleReviewerRoute(selectedRequest.id, destination, commentText)
           }
           onDeleteRequest={currentRole === "Owner" ? () => handleDeleteRequest(selectedRequest.id) : null}
-          onResubmitPdf={(file) => handleResubmitPdf(selectedRequest.id, file)}
+          onUpdateDocuments={(update) =>
+            handleRequesterDocumentUpdate(selectedRequest.id, update)
+          }
         />
       );
     }

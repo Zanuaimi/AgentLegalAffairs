@@ -23,7 +23,6 @@ export const navigationByRole = {
   ],
   "Legal Reviewer": [
     { id: "dashboard", label: "Dashboard" },
-    { id: "requests", label: "Global Requests" },
     { id: "reviewer-review-queue", label: "Requests Assigned to You" },
     { id: "details", label: "Request Details" },
   ],
