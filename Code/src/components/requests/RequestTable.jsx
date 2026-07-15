@@ -42,6 +42,11 @@ function RequestTable({
     const sorted = [...requests];
 
     sorted.sort((firstRequest, secondRequest) => {
+      // Closed requests remain available for reference but always sort after active work.
+      const firstIsClosed = firstRequest.status === "Closed";
+      const secondIsClosed = secondRequest.status === "Closed";
+      if (firstIsClosed !== secondIsClosed) return firstIsClosed ? 1 : -1;
+
       if (sortConfig.column === "submittedAt") {
         const firstTime = Date.parse(firstRequest.submittedAt || "") || 0;
         const secondTime = Date.parse(secondRequest.submittedAt || "") || 0;
